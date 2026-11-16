@@ -20,6 +20,7 @@ import {DiagnosticsModal} from './components/DiagnosticsModal';
 import {DualShock2SVG} from './components/DualShock2SVG';
 import {LastPressedCard} from './components/LastPressedCard';
 import {LegalModal} from './components/LegalModal';
+import {OfflineIndicator} from './components/OfflineIndicator';
 import {Pad2PSLogo} from './components/Pad2PSLogo';
 import {
   CHROMA_BG_MAP,
@@ -1373,6 +1374,7 @@ export default function App() {
         lang={lang}
         t={t}
       />
+      <OfflineIndicator t={t} />
     </div>
   );
 }

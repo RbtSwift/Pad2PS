@@ -127,6 +127,13 @@ export interface Translations {
   footerNotice: string;
   footerTermsButton: string;
   legalCloseButton: string;
+  // PWA Install & Offline
+  installApp: string;
+  installAppTitle: string;
+  installIosTitle: string;
+  installIosStep1: string;
+  installIosStep2: string;
+  offlineBadge: string;
 }
 
 const PT_TRANSLATIONS: Translations = {
@@ -248,6 +255,12 @@ const PT_TRANSLATIONS: Translations = {
     'Pad2PS — Ferramenta independente feita por fãs. Sem vínculo com Sony Interactive Entertainment ou Microsoft.',
   footerTermsButton: 'Termos de Uso & Privacidade',
   legalCloseButton: 'Entendi / Fechar',
+  installApp: 'Instalar App',
+  installAppTitle: 'Instalar Pad2PS no dispositivo',
+  installIosTitle: 'Instalar no iPhone / iPad',
+  installIosStep1: '1. Toque no botão Compartilhar na barra do Safari.',
+  installIosStep2: '2. Role para baixo e toque em Adicionar à Tela de Início.',
+  offlineBadge: 'Modo Offline — Executando pelo cache local',
 };
 
 const EN_TRANSLATIONS: Translations = {
@@ -369,6 +382,12 @@ const EN_TRANSLATIONS: Translations = {
     'Pad2PS — Independent fan-made utility. Not affiliated with Sony Interactive Entertainment or Microsoft.',
   footerTermsButton: 'Terms of Use & Privacy',
   legalCloseButton: 'Got it / Close',
+  installApp: 'Install App',
+  installAppTitle: 'Install Pad2PS on your device',
+  installIosTitle: 'Install on iPhone / iPad',
+  installIosStep1: '1. Tap the Share button in the Safari toolbar.',
+  installIosStep2: '2. Scroll down and tap Add to Home Screen.',
+  offlineBadge: 'Offline Mode — Running from local cache',
 };
 
 export function getTranslations(lang: AppLanguage): Translations {

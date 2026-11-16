@@ -25,6 +25,33 @@ export default defineConfig(() => {
           if (fs.existsSync(distDir) && fs.existsSync(srcAssets)) {
             fs.cpSync(srcAssets, distAssets, {recursive: true, force: true});
           }
+
+          // Inject built hashed JS/CSS asset URLs into dist/sw.js for full offline precaching
+          const distSwPath = path.resolve(distDir, 'sw.js');
+          const distBundleAssets = path.resolve(distDir, 'assets');
+          if (fs.existsSync(distSwPath) && fs.existsSync(distBundleAssets)) {
+            const extraAssets = fs
+              .readdirSync(distBundleAssets)
+              .filter((name) => /\.(js|css|svg|png|woff2?)$/i.test(name))
+              .map((name) => `/assets/${name}`);
+
+            if (extraAssets.length > 0) {
+              let swContent = fs.readFileSync(distSwPath, 'utf8');
+              const buildStamp = `v1-${Date.now()}`;
+              swContent = swContent.replace(
+                "const CACHE_VERSION = 'v1';",
+                `const CACHE_VERSION = '${buildStamp}';`
+              );
+              const injectedEntries = extraAssets
+                .map((assetPath) => `  '${assetPath}',`)
+                .join('\n');
+              swContent = swContent.replace(
+                'const PRECACHE_URLS = [',
+                `const PRECACHE_URLS = [\n${injectedEntries}`
+              );
+              fs.writeFileSync(distSwPath, swContent, 'utf8');
+            }
+          }
         },
       },
     ],

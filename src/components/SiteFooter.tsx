@@ -1,5 +1,7 @@
-import {Scale} from 'lucide-react';
+import {Download, Scale, X} from 'lucide-react';
+import {useState} from 'react';
 import type {Translations} from '../data/i18n';
+import {usePWAInstall} from '../hooks/usePWAInstall';
 
 interface SiteFooterProps {
   t: Translations;
@@ -7,6 +9,19 @@ interface SiteFooterProps {
 }
 
 export function SiteFooter({t, onOpenLegal}: SiteFooterProps) {
+  const {isInstallable, isInstalled, isIOS, install} = usePWAInstall();
+  const [showIOSGuide, setShowIOSGuide] = useState(false);
+
+  const showInstallButton = !isInstalled && (isInstallable || isIOS);
+
+  const handleInstallClick = async () => {
+    if (isInstallable) {
+      await install();
+    } else if (isIOS) {
+      setShowIOSGuide(true);
+    }
+  };
+
   return (
     <div
       className="pt-2 border-t flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-[#A1A1AA]"
@@ -105,6 +120,23 @@ export function SiteFooter({t, onOpenLegal}: SiteFooterProps) {
           <span className="font-mono text-[11px]">Paçoca (@Pad2PS)</span>
         </a>
 
+        {/* Discrete PWA Install App Button */}
+        {showInstallButton && (
+          <button
+            type="button"
+            onClick={handleInstallClick}
+            title={t.installAppTitle}
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#121216]/90 border text-[#FAFAFA] hover:text-white transition-all hover:shadow-[0_0_12px_rgba(var(--accent-rgb),0.45)] cursor-pointer whitespace-nowrap"
+            style={{
+              borderColor: 'rgba(var(--accent-rgb), 0.45)',
+              backgroundColor: 'rgba(var(--accent-rgb), 0.14)',
+            }}
+          >
+            <Download className="w-3 h-3" style={{color: 'var(--accent-color)'}} />
+            <span className="font-medium">{t.installApp}</span>
+          </button>
+        )}
+
         {/* Legal / Terms Modal Trigger */}
         <button
           type="button"
@@ -116,6 +148,56 @@ export function SiteFooter({t, onOpenLegal}: SiteFooterProps) {
           <span>{t.footerTermsButton}</span>
         </button>
       </div>
+
+      {/* iOS Safari Add-to-Home-Screen Guide Modal */}
+      {showIOSGuide && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="pad2ps-ios-install-title"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+          onClick={() => setShowIOSGuide(false)}
+        >
+          <div
+            className="w-full max-w-sm rounded-xl bg-[#121216] border p-5 shadow-[0_20px_50px_rgba(0,0,0,0.85)]"
+            style={{borderColor: 'rgba(var(--accent-rgb), 0.4)'}}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between gap-2 mb-3">
+              <h3
+                id="pad2ps-ios-install-title"
+                className="text-sm font-semibold text-[#FAFAFA]"
+              >
+                {t.installIosTitle}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowIOSGuide(false)}
+                aria-label={t.close}
+                className="p-1 rounded-md text-[#A1A1AA] hover:text-white hover:bg-white/10 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="space-y-2 text-xs text-[#A1A1AA] leading-relaxed">
+              <p>{t.installIosStep1}</p>
+              <p>{t.installIosStep2}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowIOSGuide(false)}
+              className="mt-4 w-full py-2 rounded-lg text-xs font-semibold text-white cursor-pointer"
+              style={{
+                backgroundColor: 'rgba(var(--accent-rgb), 0.26)',
+                border: '1px solid var(--accent-color)',
+              }}
+            >
+              {t.close}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
