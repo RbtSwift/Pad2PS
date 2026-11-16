@@ -6,6 +6,12 @@
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
 }
 
+:root {
+  --accent-color: #FF2E93;
+  --accent-rgb: 255, 46, 147;
+  --accent-glow: 0 0 18px rgba(255, 46, 147, 0.42), 0 0 4px rgba(255, 46, 147, 0.55);
+}
+
 @layer base {
   html,
   body {
@@ -18,18 +24,27 @@
 .cyber-grid-bg {
   background-color: #09090B;
   background-image:
-    radial-gradient(ellipse 65% 55% at 50% 45%, rgba(236, 72, 153, 0.085) 0%, rgba(255, 46, 147, 0.025) 45%, transparent 75%),
-    linear-gradient(to right, rgba(236, 72, 153, 0.045) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(236, 72, 153, 0.045) 1px, transparent 1px);
+    radial-gradient(ellipse 65% 55% at 50% 45%, rgba(var(--accent-rgb), 0.09) 0%, rgba(var(--accent-rgb), 0.025) 45%, transparent 75%),
+    linear-gradient(to right, rgba(var(--accent-rgb), 0.045) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(var(--accent-rgb), 0.045) 1px, transparent 1px);
   background-size: 100% 100%, 36px 36px, 36px 36px;
 }
 
-.neon-glow-pink {
-  box-shadow: 0 0 18px rgba(255, 46, 147, 0.35), 0 0 4px rgba(236, 72, 153, 0.5);
+.neon-glow-accent {
+  box-shadow: var(--accent-glow);
 }
 
-.neon-text-pink {
-  text-shadow: 0 0 14px rgba(255, 46, 147, 0.65);
+.neon-text-accent {
+  text-shadow: 0 0 14px rgba(var(--accent-rgb), 0.65);
+}
+
+.accent-panel {
+  background-color: #121216;
+  border: 1px solid rgba(var(--accent-rgb), 0.22);
+}
+
+.accent-border-subtle {
+  border-color: rgba(var(--accent-rgb), 0.16);
 }
 
 .svg-btn-interactive {
@@ -40,14 +55,31 @@
 
 .svg-btn-pressed {
   transform: scale(0.92);
-  filter: drop-shadow(0 0 8px rgba(255, 46, 147, 0.9)) drop-shadow(0 0 16px rgba(236, 72, 153, 0.6));
+  filter: drop-shadow(0 0 8px rgba(var(--accent-rgb), 0.9)) drop-shadow(0 0 16px rgba(var(--accent-rgb), 0.6));
+}
+
+@keyframes error-flash {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-3px);
+  }
+  75% {
+    transform: translateX(3px);
+  }
+}
+
+.animate-error-flash {
+  animation: error-flash 260ms ease-in-out 2;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .svg-btn-interactive {
     transition: none;
   }
-  .animate-pulse {
+  .animate-pulse,
+  .animate-error-flash {
     animation: none;
   }
 }

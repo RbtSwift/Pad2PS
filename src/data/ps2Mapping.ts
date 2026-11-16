@@ -1,3 +1,5 @@
+export type ConsoleLayout = 'ps1' | 'ps2' | 'ps3' | 'psp';
+
 export type Ps2ButtonId =
   | 'cross'
   | 'circle'
@@ -14,7 +16,8 @@ export type Ps2ButtonId =
   | 'up'
   | 'down'
   | 'left'
-  | 'right';
+  | 'right'
+  | 'ps';
 
 export interface Ps2ButtonMapping {
   index: number;
@@ -191,13 +194,100 @@ export const PS2_BUTTON_MAP: Record<number, Ps2ButtonMapping> = {
     xinputShort: 'D-Dir',
     category: 'dpad',
   },
+  16: {
+    index: 16,
+    id: 'ps',
+    ps2Symbol: 'PS',
+    ps2Short: 'PS',
+    ps2Name: 'Botão PS (Home)',
+    xinputLabel: 'Botão Guide / Home no GameSir / Xbox',
+    xinputShort: 'Guide',
+    category: 'system',
+  },
 };
+
+export const PS2_BUTTON_BY_ID: Record<Ps2ButtonId, Ps2ButtonMapping> = Object.values(
+  PS2_BUTTON_MAP
+).reduce(
+  (acc, item) => {
+    acc[item.id] = item;
+    return acc;
+  },
+  {} as Record<Ps2ButtonId, Ps2ButtonMapping>
+);
 
 export const PS2_BUTTON_LIST: Ps2ButtonMapping[] = Object.values(PS2_BUTTON_MAP).sort(
   (a, b) => a.index - b.index
 );
 
-export const QUICK_REFERENCE_INDICES = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] as const;
+export const CONSOLE_META: Record<
+  ConsoleLayout,
+  {label: string; shortLabel: string; hardwareName: string}
+> = {
+  ps1: {
+    label: 'PS1 Clássico',
+    shortLabel: 'PS1',
+    hardwareName: 'PlayStation 1 (Digital)',
+  },
+  ps2: {
+    label: 'PS2 DualShock 2',
+    shortLabel: 'PS2',
+    hardwareName: 'PlayStation 2 (DualShock 2)',
+  },
+  ps3: {
+    label: 'PS3 DualShock 3',
+    shortLabel: 'PS3',
+    hardwareName: 'PlayStation 3 (DualShock 3)',
+  },
+  psp: {
+    label: 'PSP Portátil',
+    shortLabel: 'PSP',
+    hardwareName: 'PlayStation Portable (PSP)',
+  },
+};
+
+export function getQuickReferenceIndices(layout: ConsoleLayout): number[] {
+  switch (layout) {
+    case 'ps1':
+      return [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+    case 'ps2':
+      return [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+    case 'ps3':
+      return [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 16];
+    case 'psp':
+      return [0, 1, 2, 3, 4, 5, 8, 9];
+  }
+}
+
+export function getConsoleButtonDisplayName(
+  mapping: Ps2ButtonMapping,
+  layout: ConsoleLayout
+): string {
+  if (layout === 'psp') {
+    if (mapping.id === 'l1') {
+      return 'Gatilho L (Ombro Esq.)';
+    }
+    if (mapping.id === 'r1') {
+      return 'Gatilho R (Ombro Dir.)';
+    }
+  }
+  return mapping.ps2Name;
+}
+
+export function getConsoleButtonShort(
+  mapping: Ps2ButtonMapping,
+  layout: ConsoleLayout
+): string {
+  if (layout === 'psp') {
+    if (mapping.id === 'l1') {
+      return 'L';
+    }
+    if (mapping.id === 'r1') {
+      return 'R';
+    }
+  }
+  return mapping.ps2Short;
+}
 
 export const DEADZONE = 0.1;
 

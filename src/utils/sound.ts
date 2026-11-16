@@ -202,6 +202,7 @@ export function playButtonClickSound(buttonId: Ps2ButtonId): void {
     // System & Stick clicks: quick discrete double pulse
     case 'start':
     case 'select':
+    case 'ps':
       playDoublePulse(ctx, destination, true);
       break;
     case 'l3':

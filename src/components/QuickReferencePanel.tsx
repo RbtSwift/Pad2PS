@@ -1,38 +1,46 @@
 import {ChevronDown, ChevronUp} from 'lucide-react';
 import {useState} from 'react';
-import {PS2_BUTTON_MAP, QUICK_REFERENCE_INDICES} from '../data/ps2Mapping';
+import {
+  CONSOLE_META,
+  type ConsoleLayout,
+  getQuickReferenceIndices,
+  PS2_BUTTON_MAP,
+} from '../data/ps2Mapping';
 import {Ps2Symbol} from './Ps2Symbol';
 
 interface QuickReferencePanelProps {
+  layout: ConsoleLayout;
   pressedButtons: boolean[];
   onTestButtonDown: (index: number) => void;
   onTestButtonUp: (index: number) => void;
 }
 
 export function QuickReferencePanel({
+  layout,
   pressedButtons,
   onTestButtonDown,
   onTestButtonUp,
 }: QuickReferencePanelProps) {
   const [isOpen, setIsOpen] = useState<boolean>(true);
+  const indices = getQuickReferenceIndices(layout);
 
   return (
     <section
       aria-label="Tabela Rápida de Referência"
-      className="bg-[#121216] border border-pink-500/20 rounded-xl overflow-hidden flex flex-col min-h-0"
+      className="accent-panel rounded-xl overflow-hidden flex flex-col min-h-0"
     >
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
         aria-expanded={isOpen}
-        className="w-full px-4 py-3 flex items-center justify-between gap-2 text-left hover:bg-pink-500/5 transition-colors cursor-pointer"
+        className="w-full px-4 py-3 flex items-center justify-between gap-2 text-left hover:bg-white/[0.03] transition-colors cursor-pointer"
       >
         <div>
           <h2 className="text-xs font-semibold text-[#FAFAFA]">
             Tabela Rápida de Referência
           </h2>
           <p className="text-[11px] text-[#A1A1AA]">
-            Equivalência X-Input (GameSir / Xbox) → PS2
+            X-Input (GameSir / Xbox) → {CONSOLE_META[layout].shortLabel}
           </p>
         </div>
         <span className="text-[#A1A1AA] shrink-0">
@@ -42,7 +50,7 @@ export function QuickReferencePanel({
 
       {isOpen && (
         <div className="px-3 pb-3 pt-1 grid grid-cols-2 gap-1.5 overflow-y-auto">
-          {QUICK_REFERENCE_INDICES.map((index) => {
+          {indices.map((index) => {
             const item = PS2_BUTTON_MAP[index];
             const active = Boolean(pressedButtons[index]);
             return (
@@ -58,23 +66,32 @@ export function QuickReferencePanel({
                 }}
                 onPointerCancel={() => onTestButtonUp(index)}
                 className={`flex items-center justify-between gap-2 px-2.5 py-2 rounded-lg border text-left transition-all duration-75 cursor-pointer select-none ${
-                  active
-                    ? 'bg-[#FF2E93]/20 border-[#FF2E93] text-white neon-glow-pink scale-[0.98]'
-                    : 'bg-[#09090B]/70 border-pink-500/10 text-[#FAFAFA] hover:border-pink-500/35'
+                  active ? 'text-white neon-glow-accent scale-[0.98]' : 'bg-[#09090B]/70 text-[#FAFAFA]'
                 }`}
+                style={
+                  active
+                    ? {
+                        backgroundColor: 'rgba(var(--accent-rgb), 0.24)',
+                        borderColor: 'var(--accent-color)',
+                      }
+                    : {borderColor: 'rgba(var(--accent-rgb), 0.14)'}
+                }
               >
                 <span className="font-mono text-xs font-semibold text-[#A1A1AA] whitespace-nowrap">
                   {item.xinputShort}
                 </span>
-                <span className="text-[10px] text-pink-500/60" aria-hidden="true">
+                <span
+                  className="text-[10px]"
+                  style={{color: 'rgba(var(--accent-rgb), 0.65)'}}
+                  aria-hidden="true"
+                >
                   =
                 </span>
                 <span
-                  className={`flex items-center justify-center min-w-[26px] text-xs font-bold ${
-                    active ? 'text-white' : 'text-[#FF2E93]'
-                  }`}
+                  className="flex items-center justify-center min-w-[26px] text-xs font-bold"
+                  style={{color: active ? '#FFFFFF' : 'var(--accent-color)'}}
                 >
-                  <Ps2Symbol id={item.id} className="w-4 h-4" />
+                  <Ps2Symbol id={item.id} className="w-4 h-4" layout={layout} />
                 </span>
               </button>
             );

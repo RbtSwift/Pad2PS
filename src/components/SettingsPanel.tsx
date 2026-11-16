@@ -83,7 +83,7 @@ export function SettingsPanel({
 
     const content = [
       '==================================================',
-      'PS2 Pad Guide - Ajustes Finos do Controle',
+      'Pad2PS - Ajustes Finos do Controle',
       '==================================================',
       `Controle: ${controllerName || 'Padrão / Não conectado'}`,
       `Data/Hora: ${formattedDateTime}`,
@@ -144,13 +144,24 @@ export function SettingsPanel({
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md bg-[#121216] border border-pink-500/35 rounded-2xl p-5 shadow-[0_24px_60px_rgba(0,0,0,0.85)] neon-glow-pink flex flex-col gap-4"
+        className="w-full max-w-md bg-[#121216] rounded-2xl p-5 shadow-[0_24px_60px_rgba(0,0,0,0.85)] neon-glow-accent flex flex-col gap-4"
+        style={{border: '1px solid rgba(var(--accent-rgb), 0.38)'}}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-start justify-between gap-3 pb-3 border-b border-pink-500/15">
+        <div
+          className="flex items-start justify-between gap-3 pb-3 border-b"
+          style={{borderColor: 'rgba(var(--accent-rgb), 0.16)'}}
+        >
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-pink-500/15 border border-pink-500/35 flex items-center justify-center text-[#FF2E93]">
+            <div
+              className="w-8 h-8 rounded-lg flex items-center justify-center"
+              style={{
+                backgroundColor: 'rgba(var(--accent-rgb), 0.15)',
+                border: '1px solid rgba(var(--accent-rgb), 0.38)',
+                color: 'var(--accent-color)',
+              }}
+            >
               <SlidersHorizontal className="w-4 h-4" />
             </div>
             <div>
@@ -167,7 +178,8 @@ export function SettingsPanel({
             type="button"
             onClick={onClose}
             aria-label="Fechar painel de ajustes"
-            className="w-8 h-8 rounded-lg border border-pink-500/20 text-[#A1A1AA] hover:text-[#FAFAFA] hover:border-pink-500/50 flex items-center justify-center transition-colors cursor-pointer"
+            className="w-8 h-8 rounded-lg border text-[#A1A1AA] hover:text-[#FAFAFA] flex items-center justify-center transition-colors cursor-pointer"
+            style={{borderColor: 'rgba(var(--accent-rgb), 0.24)'}}
           >
             <X className="w-4 h-4" />
           </button>
@@ -180,7 +192,10 @@ export function SettingsPanel({
               Zona Morta (Deadzone)
             </label>
             <div className="flex items-center gap-2">
-              <span className="font-mono text-sm font-bold text-[#FF2E93] tabular-nums">
+              <span
+                className="font-mono text-sm font-bold tabular-nums"
+                style={{color: 'var(--accent-color)'}}
+              >
                 {deadzone.toFixed(2)}
               </span>
               <span className="font-mono text-xs text-[#A1A1AA] tabular-nums">
@@ -208,9 +223,10 @@ export function SettingsPanel({
                 onDeadzoneChange(clampDeadzone(Number.parseFloat(e.target.value)));
               }}
               style={{
-                background: `linear-gradient(to right, #FF2E93 0%, #EC4899 ${sliderProgressPct}%, #27272A ${sliderProgressPct}%, #27272A 100%)`,
+                background: `linear-gradient(to right, var(--accent-color) 0%, var(--accent-color) ${sliderProgressPct}%, #27272A ${sliderProgressPct}%, #27272A 100%)`,
+                accentColor: 'var(--accent-color)',
               }}
-              className="w-full h-2 rounded-full appearance-none cursor-pointer accent-[#FF2E93]"
+              className="w-full h-2 rounded-full appearance-none cursor-pointer"
             />
             <div className="mt-1.5 flex items-center justify-between font-mono text-[11px] text-[#A1A1AA] tabular-nums">
               <span>0.05 (Sensível)</span>
@@ -232,10 +248,16 @@ export function SettingsPanel({
                     onDeadzoneChange(preset.value);
                   }}
                   className={`px-2 py-1.5 rounded-lg border text-[11px] font-mono transition-all cursor-pointer whitespace-nowrap ${
-                    active
-                      ? 'bg-[#FF2E93]/20 border-[#FF2E93] text-white neon-glow-pink'
-                      : 'bg-[#09090B]/70 border-pink-500/15 text-[#A1A1AA] hover:text-[#FAFAFA] hover:border-pink-500/40'
+                    active ? 'text-white neon-glow-accent' : 'bg-[#09090B]/70 text-[#A1A1AA] hover:text-[#FAFAFA]'
                   }`}
+                  style={
+                    active
+                      ? {
+                          backgroundColor: 'rgba(var(--accent-rgb), 0.24)',
+                          borderColor: 'var(--accent-color)',
+                        }
+                      : {borderColor: 'rgba(var(--accent-rgb), 0.16)'}
+                  }
                 >
                   {preset.label}
                 </button>
@@ -245,7 +267,10 @@ export function SettingsPanel({
         </div>
 
         {/* Live Drift Calibration Monitor */}
-        <div className="bg-[#09090B]/80 border border-pink-500/15 rounded-xl p-3 space-y-2">
+        <div
+          className="bg-[#09090B]/80 border rounded-xl p-3 space-y-2"
+          style={{borderColor: 'rgba(var(--accent-rgb), 0.18)'}}
+        >
           <div className="flex items-center justify-between text-[11px]">
             <span className="font-medium text-[#FAFAFA]">Monitor em Tempo Real (Bruto vs. Filtrado)</span>
             <span className="font-mono text-[#A1A1AA] tabular-nums">Limite: {deadzone.toFixed(2)}</span>
@@ -255,18 +280,27 @@ export function SettingsPanel({
             <div className="space-y-1">
               <div className="flex items-center justify-between text-[#A1A1AA]">
                 <span>Stick L</span>
-                <span className={leftSuppressed ? 'text-emerald-400' : 'text-pink-300'}>
+                <span
+                  className={leftSuppressed ? 'text-emerald-400' : ''}
+                  style={!leftSuppressed ? {color: 'var(--accent-color)'} : undefined}
+                >
                   {leftSuppressed ? 'Drift filtrado' : `${leftStick.x.toFixed(2)}, ${leftStick.y.toFixed(2)}`}
                 </span>
               </div>
               <div className="h-1.5 rounded-full bg-zinc-900 relative overflow-hidden">
                 <div
-                  className="h-full bg-pink-500/40 transition-[width] duration-75"
-                  style={{width: `${Math.round(rawLeftMag * 100)}%`}}
+                  className="h-full transition-[width] duration-75"
+                  style={{
+                    width: `${Math.round(rawLeftMag * 100)}%`,
+                    backgroundColor: 'rgba(var(--accent-rgb), 0.45)',
+                  }}
                 />
                 <div
-                  className="absolute top-0 bottom-0 w-0.5 bg-[#FF2E93]"
-                  style={{left: `${Math.round(deadzone * 100)}%`}}
+                  className="absolute top-0 bottom-0 w-0.5"
+                  style={{
+                    left: `${Math.round(deadzone * 100)}%`,
+                    backgroundColor: 'var(--accent-color)',
+                  }}
                 />
               </div>
             </div>
@@ -274,26 +308,38 @@ export function SettingsPanel({
             <div className="space-y-1">
               <div className="flex items-center justify-between text-[#A1A1AA]">
                 <span>Stick R</span>
-                <span className={rightSuppressed ? 'text-emerald-400' : 'text-pink-300'}>
+                <span
+                  className={rightSuppressed ? 'text-emerald-400' : ''}
+                  style={!rightSuppressed ? {color: 'var(--accent-color)'} : undefined}
+                >
                   {rightSuppressed ? 'Drift filtrado' : `${rightStick.x.toFixed(2)}, ${rightStick.y.toFixed(2)}`}
                 </span>
               </div>
               <div className="h-1.5 rounded-full bg-zinc-900 relative overflow-hidden">
                 <div
-                  className="h-full bg-pink-500/40 transition-[width] duration-75"
-                  style={{width: `${Math.round(rawRightMag * 100)}%`}}
+                  className="h-full transition-[width] duration-75"
+                  style={{
+                    width: `${Math.round(rawRightMag * 100)}%`,
+                    backgroundColor: 'rgba(var(--accent-rgb), 0.45)',
+                  }}
                 />
                 <div
-                  className="absolute top-0 bottom-0 w-0.5 bg-[#FF2E93]"
-                  style={{left: `${Math.round(deadzone * 100)}%`}}
+                  className="absolute top-0 bottom-0 w-0.5"
+                  style={{
+                    left: `${Math.round(deadzone * 100)}%`,
+                    backgroundColor: 'var(--accent-color)',
+                  }}
                 />
               </div>
             </div>
           </div>
         </div>
 
-        {/* Persistence Actions (localStorage auto + .txt export/import) */}
-        <div className="pt-2 border-t border-pink-500/15 flex flex-col gap-2.5">
+        {/* Persistence Actions */}
+        <div
+          className="pt-2 border-t flex flex-col gap-2.5"
+          style={{borderColor: 'rgba(var(--accent-rgb), 0.16)'}}
+        >
           <div className="flex flex-wrap items-center justify-between gap-2">
             <span className="text-[11px] text-emerald-400/90">
               Salvo automaticamente no navegador
@@ -306,7 +352,7 @@ export function SettingsPanel({
                   setImportMessage(null);
                   onDeadzoneChange(DEFAULT_DEADZONE);
                 }}
-                className="inline-flex items-center gap-1 text-[11px] text-[#A1A1AA] hover:text-[#FF2E93] transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1 text-[11px] text-[#A1A1AA] hover:text-white transition-colors cursor-pointer"
               >
                 <RotateCcw className="w-3 h-3" />
                 <span>Restaurar padrão (0.10)</span>
@@ -318,18 +364,20 @@ export function SettingsPanel({
             <button
               type="button"
               onClick={handleExportSettingsTxt}
-              className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium bg-[#09090B]/90 border border-pink-500/35 text-pink-200 hover:bg-[#FF2E93]/15 hover:border-[#FF2E93] hover:text-white transition-colors cursor-pointer whitespace-nowrap"
+              className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium bg-[#09090B]/90 border text-[#FAFAFA] hover:text-white transition-colors cursor-pointer whitespace-nowrap"
+              style={{borderColor: 'rgba(var(--accent-rgb), 0.38)'}}
             >
-              <Download className="w-3.5 h-3.5 text-[#FF2E93]" />
+              <Download className="w-3.5 h-3.5" style={{color: 'var(--accent-color)'}} />
               <span>Salvar ajuste .txt</span>
             </button>
 
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium border border-pink-500/25 text-[#FAFAFA] hover:bg-pink-500/15 hover:border-pink-500/50 transition-colors cursor-pointer whitespace-nowrap"
+              className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium border text-[#FAFAFA] hover:bg-white/5 transition-colors cursor-pointer whitespace-nowrap"
+              style={{borderColor: 'rgba(var(--accent-rgb), 0.25)'}}
             >
-              <Upload className="w-3.5 h-3.5 text-[#FF2E93]" />
+              <Upload className="w-3.5 h-3.5" style={{color: 'var(--accent-color)'}} />
               <span>Carregar .txt</span>
             </button>
 
@@ -343,7 +391,9 @@ export function SettingsPanel({
           </div>
 
           {importMessage && (
-            <p className="text-[11px] text-pink-300 text-center">{importMessage}</p>
+            <p className="text-[11px] text-center" style={{color: 'var(--accent-color)'}}>
+              {importMessage}
+            </p>
           )}
         </div>
       </div>

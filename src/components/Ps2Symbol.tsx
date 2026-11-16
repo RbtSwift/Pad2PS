@@ -1,11 +1,12 @@
-import type {Ps2ButtonId} from '../data/ps2Mapping';
+import type {ConsoleLayout, Ps2ButtonId} from '../data/ps2Mapping';
 
 interface Ps2SymbolProps {
   id: Ps2ButtonId;
   className?: string;
+  layout?: ConsoleLayout;
 }
 
-export function Ps2Symbol({id, className = 'w-6 h-6'}: Ps2SymbolProps) {
+export function Ps2Symbol({id, className = 'w-6 h-6', layout = 'ps2'}: Ps2SymbolProps) {
   switch (id) {
     case 'triangle':
       return (
@@ -94,11 +95,22 @@ export function Ps2Symbol({id, className = 'w-6 h-6'}: Ps2SymbolProps) {
         </svg>
       );
     case 'l1':
-    case 'l2':
+      return (
+        <span className="font-mono font-bold tracking-tight leading-none uppercase">
+          {layout === 'psp' ? 'L' : 'L1'}
+        </span>
+      );
     case 'r1':
+      return (
+        <span className="font-mono font-bold tracking-tight leading-none uppercase">
+          {layout === 'psp' ? 'R' : 'R1'}
+        </span>
+      );
+    case 'l2':
     case 'r2':
     case 'l3':
     case 'r3':
+    case 'ps':
       return (
         <span className="font-mono font-bold tracking-tight leading-none uppercase">
           {id.toUpperCase()}

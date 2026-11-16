@@ -19,7 +19,9 @@ export function ControllerNameEditor({
   const inputRef = useRef<HTMLInputElement>(null);
 
   const displayedName = customName || rawDeviceName;
-  const isCustomized = Boolean(customName && customName.trim() !== '' && customName !== rawDeviceName);
+  const isCustomized = Boolean(
+    customName && customName.trim() !== '' && customName !== rawDeviceName
+  );
 
   useEffect(() => {
     if (isEditing) {
@@ -68,18 +70,22 @@ export function ControllerNameEditor({
           maxLength={48}
           aria-label="Editar nome do controle"
           placeholder={rawDeviceName}
-          className="h-7 w-44 sm:w-56 px-2.5 rounded-md bg-[#09090B] border border-[#FF2E93] text-xs font-mono text-[#FAFAFA] outline-none shadow-[0_0_12px_rgba(255,46,147,0.3)]"
+          className="h-7 w-40 sm:w-52 px-2.5 rounded-md bg-[#09090B] text-xs font-mono text-[#FAFAFA] outline-none neon-glow-accent"
+          style={{border: '1px solid var(--accent-color)'}}
         />
         <button
           type="button"
           onMouseDown={(e) => {
-            // Prevent input onBlur from firing before click
             e.preventDefault();
           }}
           onClick={commitEdit}
           aria-label="Confirmar nome do controle"
           title="Confirmar"
-          className="w-7 h-7 rounded-md bg-[#FF2E93]/20 border border-[#FF2E93]/60 text-[#FF2E93] hover:bg-[#FF2E93] hover:text-white flex items-center justify-center transition-colors cursor-pointer shrink-0"
+          className="w-7 h-7 rounded-md flex items-center justify-center transition-colors cursor-pointer shrink-0 text-white"
+          style={{
+            backgroundColor: 'rgba(var(--accent-rgb), 0.25)',
+            border: '1px solid var(--accent-color)',
+          }}
         >
           <Check className="w-3.5 h-3.5" />
         </button>
@@ -93,13 +99,14 @@ export function ControllerNameEditor({
         type="button"
         onClick={() => setIsEditing(true)}
         title={`Clique para editar (${rawDeviceName})`}
-        className="inline-flex items-center gap-1.5 px-1.5 py-0.5 rounded-md hover:bg-pink-500/10 text-left transition-colors cursor-pointer min-w-0"
+        className="inline-flex items-center gap-1.5 px-1.5 py-0.5 rounded-md hover:bg-white/5 text-left transition-colors cursor-pointer min-w-0"
       >
-        <span className="font-mono text-[11px] text-[#A1A1AA] group-hover:text-[#FAFAFA] max-w-[180px] sm:max-w-[240px] truncate transition-colors">
+        <span className="font-mono text-[11px] text-[#A1A1AA] group-hover:text-[#FAFAFA] max-w-[160px] sm:max-w-[210px] truncate transition-colors">
           {displayedName}
         </span>
         <Pencil
-          className="w-3 h-3 text-pink-400/70 group-hover:text-[#FF2E93] shrink-0 transition-colors"
+          className="w-3 h-3 shrink-0 transition-colors opacity-75 group-hover:opacity-100"
+          style={{color: 'var(--accent-color)'}}
           aria-hidden="true"
         />
       </button>
@@ -110,7 +117,7 @@ export function ControllerNameEditor({
           onClick={onResetCustomName}
           title={`Restaurar nome original: ${rawDeviceName}`}
           aria-label="Restaurar nome padrão do controle"
-          className="opacity-70 sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100 w-6 h-6 rounded-md text-[#A1A1AA] hover:text-[#FF2E93] hover:bg-pink-500/10 flex items-center justify-center transition-all cursor-pointer shrink-0"
+          className="opacity-70 sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100 w-6 h-6 rounded-md text-[#A1A1AA] hover:text-white hover:bg-white/5 flex items-center justify-center transition-all cursor-pointer shrink-0"
         >
           <RotateCcw className="w-3 h-3" />
         </button>

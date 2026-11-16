@@ -26,14 +26,16 @@ export interface GamepadHookState {
   rawRightStick: StickState;
   activeButtons: Ps2ButtonMapping[];
   lastPressed: Ps2ButtonMapping | null;
+  latestPressEvent: ComboEntry | null;
   comboHistory: ComboEntry[];
   pressSimulated: (index: number, triggerValue?: number) => void;
   releaseSimulated: (index: number) => void;
   setSimulatedStick: (side: 'left' | 'right', x: number, y: number) => void;
   clearHistory: () => void;
+  triggerRumble: () => Promise<'ok' | 'unsupported' | 'disconnected'>;
 }
 
-const BUTTON_COUNT = 16;
+const BUTTON_COUNT = 17;
 const MAX_HISTORY = 10;
 
 export function useGamepad(soundEnabled: boolean, deadzone = 0.1): GamepadHookState {
@@ -50,6 +52,7 @@ export function useGamepad(soundEnabled: boolean, deadzone = 0.1): GamepadHookSt
   const [rawLeftStick, setRawLeftStick] = useState<StickState>({x: 0, y: 0});
   const [rawRightStick, setRawRightStick] = useState<StickState>({x: 0, y: 0});
   const [lastPressed, setLastPressed] = useState<Ps2ButtonMapping | null>(null);
+  const [latestPressEvent, setLatestPressEvent] = useState<ComboEntry | null>(null);
   const [comboHistory, setComboHistory] = useState<ComboEntry[]>([]);
 
   const soundEnabledRef = useRef<boolean>(soundEnabled);
@@ -71,16 +74,15 @@ export function useGamepad(soundEnabled: boolean, deadzone = 0.1): GamepadHookSt
   const isConnectedRef = useRef<boolean>(false);
 
   const recordButtonPress = useCallback((mapping: Ps2ButtonMapping) => {
+    const entry: ComboEntry = {
+      uid: uidCounterRef.current++,
+      button: mapping,
+      timestamp: Date.now(),
+    };
     setLastPressed(mapping);
+    setLatestPressEvent(entry);
     setComboHistory((prev) => {
-      const next: ComboEntry[] = [
-        ...prev,
-        {
-          uid: uidCounterRef.current++,
-          button: mapping,
-          timestamp: Date.now(),
-        },
-      ];
+      const next: ComboEntry[] = [...prev, entry];
       return next.slice(-MAX_HISTORY);
     });
     if (soundEnabledRef.current) {
@@ -314,6 +316,55 @@ export function useGamepad(soundEnabled: boolean, deadzone = 0.1): GamepadHookSt
     };
   }, [recordButtonPress]);
 
+  const triggerRumble = useCallback(async (): Promise<'ok' | 'unsupported' | 'disconnected'> => {
+    if (typeof window === 'undefined' || !navigator.getGamepads) {
+      return 'unsupported';
+    }
+    const pads = navigator.getGamepads();
+    let activePad: Gamepad | null = null;
+    if (pads) {
+      for (let i = 0; i < pads.length; i++) {
+        const p = pads[i];
+        if (p && p.connected) {
+          activePad = p;
+          break;
+        }
+      }
+    }
+    if (!activePad) {
+      return 'disconnected';
+    }
+    const actuator = activePad.vibrationActuator as
+      | {
+          playEffect?: (
+            type: string,
+            params: {
+              startDelay?: number;
+              duration?: number;
+              weakMagnitude?: number;
+              strongMagnitude?: number;
+            }
+          ) => Promise<string>;
+        }
+      | undefined;
+
+    if (!actuator || typeof actuator.playEffect !== 'function') {
+      return 'unsupported';
+    }
+
+    try {
+      await actuator.playEffect('dual-rumble', {
+        startDelay: 0,
+        duration: 400,
+        weakMagnitude: 0.75,
+        strongMagnitude: 1.0,
+      });
+      return 'ok';
+    } catch {
+      return 'unsupported';
+    }
+  }, []);
+
   const activeButtons: Ps2ButtonMapping[] = [];
   for (let i = 0; i < BUTTON_COUNT; i++) {
     if (pressedButtons[i] && PS2_BUTTON_MAP[i]) {
@@ -334,10 +385,12 @@ export function useGamepad(soundEnabled: boolean, deadzone = 0.1): GamepadHookSt
     rawRightStick,
     activeButtons,
     lastPressed,
+    latestPressEvent,
     comboHistory,
     pressSimulated,
     releaseSimulated,
     setSimulatedStick,
     clearHistory,
+    triggerRumble,
   };
 }
