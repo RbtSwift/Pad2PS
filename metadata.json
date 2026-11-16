@@ -1,0 +1,8 @@
+{
+  "name": "PS2 Pad Guide",
+  "description": "Guia Visual e Testador de Controle DualShock 2 em tempo real — tradutor de comandos X-Input (Xbox / GameSir) para PlayStation 2.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
