@@ -1,0 +1,121 @@
+import {Scale} from 'lucide-react';
+import type {Translations} from '../data/i18n';
+
+interface SiteFooterProps {
+  t: Translations;
+  onOpenLegal: () => void;
+}
+
+export function SiteFooter({t, onOpenLegal}: SiteFooterProps) {
+  return (
+    <div
+      className="pt-2 border-t flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-[#A1A1AA]"
+      style={{borderColor: 'rgba(var(--accent-rgb), 0.14)'}}
+    >
+      <p className="text-center sm:text-left text-zinc-500 leading-snug">
+        {t.footerNotice}
+      </p>
+
+      <div className="flex flex-wrap items-center justify-center gap-2 shrink-0">
+        {/* Official X (Twitter) Link */}
+        <a
+          href="https://x.com/Pad2PS"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="X (@Pad2PS)"
+          title="X (@Pad2PS)"
+          className="group inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#121216]/90 border text-[#A1A1AA] hover:text-white transition-all hover:shadow-[0_0_12px_rgba(var(--accent-rgb),0.38)] whitespace-nowrap"
+          style={{borderColor: 'rgba(var(--accent-rgb), 0.22)'}}
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            className="w-3.5 h-3.5 shrink-0 transition-colors group-hover:text-[var(--accent-color)]"
+            aria-hidden="true"
+          >
+            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+          </svg>
+          <span className="font-mono text-[11px]">X (@Pad2PS)</span>
+        </a>
+
+        {/* Official Paçoca Social Link */}
+        <a
+          href="https://pacoca.net/@Pad2PS"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Paçoca (@Pad2PS)"
+          title="Paçoca (@Pad2PS)"
+          className="group inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#121216]/90 border text-[#A1A1AA] hover:text-white transition-all hover:shadow-[0_0_12px_rgba(var(--accent-rgb),0.38)] whitespace-nowrap"
+          style={{borderColor: 'rgba(var(--accent-rgb), 0.22)'}}
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            className="w-4 h-4 shrink-0 transition-transform duration-150 group-hover:scale-105"
+            aria-hidden="true"
+          >
+            {/* Cylindrical paçoca body */}
+            <path
+              d="M5.5 6.2V18.2C5.5 20.0 8.4 21.3 12 21.3C15.6 21.3 18.5 20.0 18.5 18.2V6.2Z"
+              className="fill-zinc-400/20 stroke-current group-hover:fill-[#C68B59] group-hover:stroke-[#3B2314] transition-colors duration-150"
+              strokeWidth="1.4"
+              strokeLinejoin="round"
+            />
+            {/* Slightly lighter oval top lid */}
+            <ellipse
+              cx="12"
+              cy="6.2"
+              rx="6.5"
+              ry="2.6"
+              className="fill-zinc-300/35 stroke-current group-hover:fill-[#DDA574] group-hover:stroke-[#3B2314] transition-colors duration-150"
+              strokeWidth="1.4"
+            />
+            {/* Left classic oval pie-eye (cutout facing left) */}
+            <path
+              d="M7.81 11.27 A1.75 2.2 0 1 1 7.81 13.13 L9.4 12.2 Z"
+              className="fill-current group-hover:fill-[#3B2314] transition-colors duration-150"
+            />
+            {/* Right classic oval pie-eye (cutout facing left) */}
+            <path
+              d="M13.01 11.27 A1.75 2.2 0 1 1 13.01 13.13 L14.6 12.2 Z"
+              className="fill-current group-hover:fill-[#3B2314] transition-colors duration-150"
+            />
+            {/* Small curved nose */}
+            <path
+              d="M11.35 14.5 Q12 15.2 12.65 14.5"
+              className="stroke-current group-hover:stroke-[#3B2314] transition-colors duration-150"
+              strokeWidth="1.25"
+              strokeLinecap="round"
+            />
+            {/* Friendly smile */}
+            <path
+              d="M9.2 16.5 Q12 18.4 14.8 16.5"
+              className="stroke-current group-hover:stroke-[#3B2314] transition-colors duration-150"
+              strokeWidth="1.3"
+              strokeLinecap="round"
+            />
+            {/* Dimples at smile corners */}
+            <path
+              d="M8.6 16.1 L9.3 17.0 M15.4 16.1 L14.7 17.0"
+              className="stroke-current group-hover:stroke-[#3B2314] transition-colors duration-150"
+              strokeWidth="1.15"
+              strokeLinecap="round"
+            />
+          </svg>
+          <span className="font-mono text-[11px]">Paçoca (@Pad2PS)</span>
+        </a>
+
+        {/* Legal / Terms Modal Trigger */}
+        <button
+          type="button"
+          onClick={onOpenLegal}
+          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#121216]/90 border text-[#A1A1AA] hover:text-white transition-all hover:shadow-[0_0_12px_rgba(var(--accent-rgb),0.32)] cursor-pointer whitespace-nowrap"
+          style={{borderColor: 'rgba(var(--accent-rgb), 0.22)'}}
+        >
+          <Scale className="w-3 h-3" style={{color: 'var(--accent-color)'}} />
+          <span>{t.footerTermsButton}</span>
+        </button>
+      </div>
+    </div>
+  );
+}

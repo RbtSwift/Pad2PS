@@ -19,6 +19,7 @@ import {ControllerNameEditor} from './components/ControllerNameEditor';
 import {DiagnosticsModal} from './components/DiagnosticsModal';
 import {DualShock2SVG} from './components/DualShock2SVG';
 import {LastPressedCard} from './components/LastPressedCard';
+import {LegalModal} from './components/LegalModal';
 import {Pad2PSLogo} from './components/Pad2PSLogo';
 import {
   CHROMA_BG_MAP,
@@ -28,6 +29,7 @@ import {
 } from './components/PiPControllerPortal';
 import {QuickReferencePanel} from './components/QuickReferencePanel';
 import {SessionStatsWidget} from './components/SessionStatsWidget';
+import {SiteFooter} from './components/SiteFooter';
 import {
   clampDeadzone,
   DEFAULT_DEADZONE,
@@ -231,6 +233,7 @@ export default function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
   const [isDiagnosticsOpen, setIsDiagnosticsOpen] = useState<boolean>(false);
   const [isComboDrawerOpen, setIsComboDrawerOpen] = useState<boolean>(false);
+  const [isLegalOpen, setIsLegalOpen] = useState<boolean>(false);
 
   // Remap Mode state
   const [isRemapMode, setIsRemapMode] = useState<boolean>(false);
@@ -248,6 +251,7 @@ export default function App() {
   const [rumbleNotice, setRumbleNotice] = useState<string | null>(null);
 
   const t = getTranslations(lang);
+  const isPipActive = Boolean(pipWindow && !pipWindow.closed);
 
   useEffect(() => {
     try {
@@ -1272,7 +1276,7 @@ export default function App() {
 
         {/* Bottom Bar */}
         {!isCompact && (
-          <footer className="shrink-0">
+          <footer className="shrink-0 flex flex-col gap-2">
             <ComboHistoryBar
               history={comboHistory}
               controllerName={effectiveControllerName}
@@ -1282,6 +1286,9 @@ export default function App() {
               t={t}
               onClear={clearHistory}
             />
+            {!isPipActive && (
+              <SiteFooter t={t} onOpenLegal={() => setIsLegalOpen(true)} />
+            )}
           </footer>
         )}
       </div>
@@ -1358,6 +1365,13 @@ export default function App() {
           setIsRemapMode(true);
           setRemapTargetPsIndex(null);
         }}
+      />
+      {/* Legal / Terms of Use, Privacy & Disclaimer Modal */}
+      <LegalModal
+        isOpen={isLegalOpen}
+        onClose={() => setIsLegalOpen(false)}
+        lang={lang}
+        t={t}
       />
     </div>
   );

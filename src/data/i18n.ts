@@ -123,6 +123,10 @@ export interface Translations {
   logoMenuFullSub: string;
   logoMenuIcon: string;
   logoMenuIconSub: string;
+  // Footer & Legal
+  footerNotice: string;
+  footerTermsButton: string;
+  legalCloseButton: string;
 }
 
 const PT_TRANSLATIONS: Translations = {
@@ -240,6 +244,10 @@ const PT_TRANSLATIONS: Translations = {
   logoMenuFullSub: 'Ícone + texto Pad2PS',
   logoMenuIcon: 'Apenas logo controle (.png)',
   logoMenuIconSub: 'Ícone quadrado 1:1 (512px)',
+  footerNotice:
+    'Pad2PS — Ferramenta independente feita por fãs. Sem vínculo com Sony Interactive Entertainment ou Microsoft.',
+  footerTermsButton: 'Termos de Uso & Privacidade',
+  legalCloseButton: 'Entendi / Fechar',
 };
 
 const EN_TRANSLATIONS: Translations = {
@@ -357,6 +365,10 @@ const EN_TRANSLATIONS: Translations = {
   logoMenuFullSub: 'Icon + Pad2PS wordmark',
   logoMenuIcon: 'Controller icon only (.png)',
   logoMenuIconSub: 'Square 1:1 icon (512px)',
+  footerNotice:
+    'Pad2PS — Independent fan-made utility. Not affiliated with Sony Interactive Entertainment or Microsoft.',
+  footerTermsButton: 'Terms of Use & Privacy',
+  legalCloseButton: 'Got it / Close',
 };
 
 export function getTranslations(lang: AppLanguage): Translations {
