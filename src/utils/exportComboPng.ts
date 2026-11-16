@@ -1,4 +1,5 @@
 import type {ComboDefinition} from '../data/comboLibrary';
+import {type AppLanguage, getTranslations} from '../data/i18n';
 import type {ConsoleLayout, Ps2ButtonId} from '../data/ps2Mapping';
 
 interface ExportCombosPngOptions {
@@ -6,6 +7,7 @@ interface ExportCombosPngOptions {
   combos: ComboDefinition[];
   controllerName: string | null;
   layout?: ConsoleLayout;
+  lang?: AppLanguage;
   fileNameSuffix?: string;
 }
 
@@ -239,11 +241,14 @@ export async function exportCombosToPng({
   combos,
   controllerName,
   layout = 'ps2',
+  lang = 'pt',
   fileNameSuffix,
 }: ExportCombosPngOptions): Promise<void> {
   if (typeof document === 'undefined' || combos.length === 0) {
     return;
   }
+
+  const t = getTranslations(lang);
 
   if (document.fonts?.ready) {
     await document.fonts.ready.catch(() => {});
@@ -333,7 +338,7 @@ export async function exportCombosToPng({
   ctx.font = '700 14px "JetBrains Mono", monospace';
   ctx.textAlign = 'left';
   ctx.textBaseline = 'top';
-  ctx.fillText('GUIA DE COMBOS & CÓDIGOS', contentX, cursorY);
+  ctx.fillText(t.pngGuideCategory, contentX, cursorY);
 
   cursorY += 26;
   ctx.fillStyle = '#FAFAFA';
@@ -344,7 +349,12 @@ export async function exportCombosToPng({
     cursorY += 52;
     ctx.fillStyle = '#A1A1AA';
     ctx.font = '500 16px "JetBrains Mono", monospace';
-    ctx.fillText(`Controle: ${controllerName}`, contentX, cursorY, innerCardWidth - CARD_PAD_X * 2);
+    ctx.fillText(
+      `${t.pngControllerPrefix}: ${controllerName}`,
+      contentX,
+      cursorY,
+      innerCardWidth - CARD_PAD_X * 2
+    );
   }
 
   const dividerY = OUTER_PAD + headerHeight;
@@ -436,7 +446,7 @@ export async function exportCombosToPng({
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(
-    'Gerado com Pad2PS • pad2ps.vercel.app',
+    t.pngFooter,
     CANVAS_WIDTH / 2,
     footerLineY + footerHeight / 2
   );

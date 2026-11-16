@@ -1,5 +1,6 @@
 import {ChevronDown, ChevronUp} from 'lucide-react';
 import {useState} from 'react';
+import type {Translations} from '../data/i18n';
 import {
   CONSOLE_META,
   type ConsoleLayout,
@@ -11,6 +12,8 @@ import {Ps2Symbol} from './Ps2Symbol';
 interface QuickReferencePanelProps {
   layout: ConsoleLayout;
   pressedButtons: boolean[];
+  remapMap?: Record<number, number>;
+  t: Translations;
   onTestButtonDown: (index: number) => void;
   onTestButtonUp: (index: number) => void;
 }
@@ -18,15 +21,35 @@ interface QuickReferencePanelProps {
 export function QuickReferencePanel({
   layout,
   pressedButtons,
+  remapMap = {},
+  t,
   onTestButtonDown,
   onTestButtonUp,
 }: QuickReferencePanelProps) {
   const [isOpen, setIsOpen] = useState<boolean>(true);
   const indices = getQuickReferenceIndices(layout);
 
+  const getPhysicalShortForPsIndex = (psIndex: number): {short: string; isRemapped: boolean} => {
+    for (const [physStr, targetIdx] of Object.entries(remapMap)) {
+      if (targetIdx === psIndex) {
+        const physIdx = Number(physStr);
+        if (PS2_BUTTON_MAP[physIdx]) {
+          return {
+            short: PS2_BUTTON_MAP[physIdx].xinputShort,
+            isRemapped: physIdx !== psIndex,
+          };
+        }
+      }
+    }
+    return {
+      short: PS2_BUTTON_MAP[psIndex].xinputShort,
+      isRemapped: false,
+    };
+  };
+
   return (
     <section
-      aria-label="Tabela Rápida de Referência"
+      aria-label={t.quickRefTitle}
       className="accent-panel rounded-xl overflow-hidden flex flex-col min-h-0"
     >
       <button
@@ -36,11 +59,9 @@ export function QuickReferencePanel({
         className="w-full px-4 py-3 flex items-center justify-between gap-2 text-left hover:bg-white/[0.03] transition-colors cursor-pointer"
       >
         <div>
-          <h2 className="text-xs font-semibold text-[#FAFAFA]">
-            Tabela Rápida de Referência
-          </h2>
+          <h2 className="text-xs font-semibold text-[#FAFAFA]">{t.quickRefTitle}</h2>
           <p className="text-[11px] text-[#A1A1AA]">
-            X-Input (GameSir / Xbox) → {CONSOLE_META[layout].shortLabel}
+            {t.quickRefSubtitle} → {CONSOLE_META[layout].shortLabel}
           </p>
         </div>
         <span className="text-[#A1A1AA] shrink-0">
@@ -53,6 +74,7 @@ export function QuickReferencePanel({
           {indices.map((index) => {
             const item = PS2_BUTTON_MAP[index];
             const active = Boolean(pressedButtons[index]);
+            const {short: physicalShort, isRemapped} = getPhysicalShortForPsIndex(index);
             return (
               <button
                 key={item.id}
@@ -77,8 +99,11 @@ export function QuickReferencePanel({
                     : {borderColor: 'rgba(var(--accent-rgb), 0.14)'}
                 }
               >
-                <span className="font-mono text-xs font-semibold text-[#A1A1AA] whitespace-nowrap">
-                  {item.xinputShort}
+                <span
+                  className="font-mono text-xs font-semibold whitespace-nowrap"
+                  style={{color: isRemapped && !active ? 'var(--accent-color)' : active ? '#FFFFFF' : '#A1A1AA'}}
+                >
+                  {physicalShort}
                 </span>
                 <span
                   className="text-[10px]"

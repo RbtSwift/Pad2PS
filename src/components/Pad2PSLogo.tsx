@@ -1,5 +1,6 @@
 import {Download, Gamepad2, ImageDown} from 'lucide-react';
 import {useEffect, useRef, useState} from 'react';
+import type {Translations} from '../data/i18n';
 import {exportLogoIconToPng, exportLogoToPng} from '../utils/exportLogoPng';
 
 interface Pad2PSIconProps {
@@ -76,9 +77,10 @@ export function Pad2PSIcon({
 
 interface Pad2PSLogoProps {
   compact?: boolean;
+  t?: Translations;
 }
 
-export function Pad2PSLogo({compact = false}: Pad2PSLogoProps) {
+export function Pad2PSLogo({compact = false, t}: Pad2PSLogoProps) {
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
   const [isDownloading, setIsDownloading] = useState<boolean>(false);
   const menuContainerRef = useRef<HTMLDivElement>(null);
@@ -178,7 +180,7 @@ export function Pad2PSLogo({compact = false}: Pad2PSLogoProps) {
 
         {!compact && (
           <p className="text-[11px] sm:text-xs text-[#A1A1AA] truncate mt-0.5">
-            Tradutor Visual X-Input para PlayStation
+            {t?.appSubtitle ?? 'Tradutor Visual X-Input para PlayStation'}
           </p>
         )}
       </div>
@@ -187,7 +189,7 @@ export function Pad2PSLogo({compact = false}: Pad2PSLogoProps) {
       {isMenuOpen && (
         <div
           role="menu"
-          aria-label="Opções para baixar logo em PNG"
+          aria-label="PNG Logo"
           className="absolute left-0 top-full mt-2 z-50 w-56 rounded-xl bg-[#121216] border p-1.5 shadow-[0_16px_40px_rgba(0,0,0,0.85)] neon-glow-accent"
           style={{borderColor: 'rgba(var(--accent-rgb), 0.35)'}}
         >
@@ -199,8 +201,8 @@ export function Pad2PSLogo({compact = false}: Pad2PSLogoProps) {
           >
             <ImageDown className="w-3.5 h-3.5 shrink-0" style={{color: 'var(--accent-color)'}} />
             <div className="min-w-0">
-              <p className="font-medium leading-tight">Logo completa (.png)</p>
-              <p className="text-[10px] text-[#A1A1AA]">Ícone + texto Pad2PS</p>
+              <p className="font-medium leading-tight">{t?.logoMenuFull ?? 'Logo completa (.png)'}</p>
+              <p className="text-[10px] text-[#A1A1AA]">{t?.logoMenuFullSub ?? 'Ícone + texto Pad2PS'}</p>
             </div>
           </button>
 
@@ -212,8 +214,8 @@ export function Pad2PSLogo({compact = false}: Pad2PSLogoProps) {
           >
             <Gamepad2 className="w-3.5 h-3.5 shrink-0" style={{color: 'var(--accent-color)'}} />
             <div className="min-w-0">
-              <p className="font-medium leading-tight">Apenas logo controle (.png)</p>
-              <p className="text-[10px] text-[#A1A1AA]">Ícone quadrado 1:1 (512px)</p>
+              <p className="font-medium leading-tight">{t?.logoMenuIcon ?? 'Apenas logo controle (.png)'}</p>
+              <p className="text-[10px] text-[#A1A1AA]">{t?.logoMenuIconSub ?? 'Ícone quadrado 1:1 (512px)'}</p>
             </div>
           </button>
         </div>

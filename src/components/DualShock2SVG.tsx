@@ -9,6 +9,9 @@ interface DualShock2SVGProps {
   leftStick: StickState;
   rightStick: StickState;
   isCompact?: boolean;
+  isRemapMode?: boolean;
+  remapTargetIndex?: number | null;
+  onSelectRemapTarget?: (index: number) => void;
   onButtonDown: (index: number) => void;
   onButtonUp: (index: number) => void;
 }
@@ -27,37 +30,60 @@ export function DualShock2SVG({
   leftStick,
   rightStick,
   isCompact = false,
+  isRemapMode = false,
+  remapTargetIndex = null,
+  onSelectRemapTarget,
   onButtonDown,
   onButtonUp,
 }: DualShock2SVGProps) {
-  const isPressed = (idx: number) => Boolean(pressedButtons[idx]);
+  const isPressed = (idx: number) => Boolean(pressedButtons[idx]) || (isRemapMode && remapTargetIndex === idx);
 
   const bindBtn = (index: number, label: string) => ({
     role: 'button' as const,
     tabIndex: 0,
     'aria-label': label,
     className: `cursor-pointer outline-none svg-btn-interactive ${
-      isPressed(index) ? 'svg-btn-pressed' : 'hover:brightness-125'
+      isRemapMode && remapTargetIndex === index
+        ? 'animate-pulse drop-shadow-[0_0_12px_#FFFFFF]'
+        : isPressed(index)
+          ? 'svg-btn-pressed'
+          : 'hover:brightness-125'
     }`,
     onPointerDown: (e: React.PointerEvent<SVGGElement>) => {
       e.preventDefault();
+      if (isRemapMode && onSelectRemapTarget) {
+        onSelectRemapTarget(index);
+        return;
+      }
       onButtonDown(index);
     },
-    onPointerUp: () => onButtonUp(index),
-    onPointerLeave: () => {
-      if (isPressed(index)) {
+    onPointerUp: () => {
+      if (!isRemapMode) {
         onButtonUp(index);
       }
     },
-    onPointerCancel: () => onButtonUp(index),
+    onPointerLeave: () => {
+      if (!isRemapMode && Boolean(pressedButtons[index])) {
+        onButtonUp(index);
+      }
+    },
+    onPointerCancel: () => {
+      if (!isRemapMode) {
+        onButtonUp(index);
+      }
+    },
     onKeyDown: (e: React.KeyboardEvent<SVGGElement>) => {
       if (e.key === ' ' || e.key === 'Enter') {
         e.preventDefault();
+        if (isRemapMode && onSelectRemapTarget) {
+          onSelectRemapTarget(index);
+          return;
+        }
         onButtonDown(index);
       }
     },
     onKeyUp: (e: React.KeyboardEvent<SVGGElement>) => {
-      if (e.key === ' ' || e.key === 'Enter') {
+      if (!isRemapMode && (e.key === ' ' || e.key === 'Enter')) {
         onButtonUp(index);
       }
     },

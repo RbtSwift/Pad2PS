@@ -1,5 +1,6 @@
 import {CheckCircle2, RotateCcw, Target, X} from 'lucide-react';
 import type {ComboDefinition} from '../data/comboLibrary';
+import type {Translations} from '../data/i18n';
 import type {ConsoleLayout} from '../data/ps2Mapping';
 import {Ps2Symbol} from './Ps2Symbol';
 
@@ -8,6 +9,7 @@ interface TrainingBarProps {
   currentStep: number;
   errorFlash: boolean;
   layout: ConsoleLayout;
+  t: Translations;
   onRestart: () => void;
   onStop: () => void;
 }
@@ -17,6 +19,7 @@ export function TrainingBar({
   currentStep,
   errorFlash,
   layout,
+  t,
   onRestart,
   onStop,
 }: TrainingBarProps) {
@@ -24,7 +27,7 @@ export function TrainingBar({
 
   return (
     <section
-      aria-label="Modo Treino de Sequência"
+      aria-label={t.combosTrainBtn}
       className="shrink-0 bg-[#121216] rounded-xl px-4 py-3 flex flex-col gap-2.5 neon-glow-accent"
       style={{
         border: isCompleted
@@ -57,8 +60,8 @@ export function TrainingBar({
             </span>
             <span className="font-mono text-[11px] text-[#A1A1AA] tabular-nums">
               {isCompleted
-                ? 'Sequência completa!'
-                : `Passo ${currentStep + 1} de ${combo.sequence.length}`}
+                ? t.trainingComplete
+                : t.trainingStepOf(currentStep + 1, combo.sequence.length)}
             </span>
           </div>
         </div>
@@ -71,7 +74,7 @@ export function TrainingBar({
             style={{borderColor: 'rgba(var(--accent-rgb), 0.28)'}}
           >
             <RotateCcw className="w-3 h-3" style={{color: 'var(--accent-color)'}} />
-            <span>{isCompleted ? 'Treinar Novamente' : 'Reiniciar'}</span>
+            <span>{isCompleted ? t.trainingAgain : t.trainingRestart}</span>
           </button>
           <button
             type="button"
@@ -79,7 +82,7 @@ export function TrainingBar({
             className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-zinc-700 text-xs font-medium text-[#A1A1AA] hover:text-[#FAFAFA] hover:border-zinc-500 transition-colors cursor-pointer whitespace-nowrap"
           >
             <X className="w-3 h-3" />
-            <span>Encerrar Treino</span>
+            <span>{t.trainingStop}</span>
           </button>
         </div>
       </div>

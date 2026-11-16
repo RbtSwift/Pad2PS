@@ -1,5 +1,6 @@
-import {Download, RotateCcw, SlidersHorizontal, Upload, X} from 'lucide-react';
+import {ArrowLeftRight, Download, RotateCcw, SlidersHorizontal, Upload, X} from 'lucide-react';
 import {useEffect, useRef, useState} from 'react';
+import type {AppLanguage, Translations} from '../data/i18n';
 import type {StickState} from '../hooks/useGamepad';
 
 export const MIN_DEADZONE = 0.05;
@@ -17,14 +18,10 @@ interface SettingsPanelProps {
   rightStick: StickState;
   rawLeftStick: StickState;
   rawRightStick: StickState;
+  lang: AppLanguage;
+  t: Translations;
+  onOpenRemap?: () => void;
 }
-
-const PRESETS = [
-  {value: 0.05, label: '0.05 · Preciso'},
-  {value: 0.1, label: '0.10 · Padrão'},
-  {value: 0.15, label: '0.15 · Suave'},
-  {value: 0.25, label: '0.25 · Anti-Drift'},
-];
 
 export function clampDeadzone(value: number): number {
   const clamped = Math.max(MIN_DEADZONE, Math.min(MAX_DEADZONE, value));
@@ -42,9 +39,27 @@ export function SettingsPanel({
   rightStick,
   rawLeftStick,
   rawRightStick,
+  lang,
+  t,
+  onOpenRemap,
 }: SettingsPanelProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [importMessage, setImportMessage] = useState<string | null>(null);
+
+  const presets =
+    lang === 'en'
+      ? [
+          {value: 0.05, label: '0.05 · Precise'},
+          {value: 0.1, label: '0.10 · Default'},
+          {value: 0.15, label: '0.15 · Smooth'},
+          {value: 0.25, label: '0.25 · Anti-Drift'},
+        ]
+      : [
+          {value: 0.05, label: '0.05 · Preciso'},
+          {value: 0.1, label: '0.10 · Padrão'},
+          {value: 0.15, label: '0.15 · Suave'},
+          {value: 0.25, label: '0.25 · Anti-Drift'},
+        ];
 
   useEffect(() => {
     if (!isOpen) {
@@ -76,37 +91,57 @@ export function SettingsPanel({
     const yyyy = now.getFullYear();
     const mm = String(now.getMonth() + 1).padStart(2, '0');
     const dd = String(now.getDate()).padStart(2, '0');
-    const formattedDateTime = now.toLocaleString('pt-BR', {
+    const formattedDateTime = now.toLocaleString(lang === 'en' ? 'en-US' : 'pt-BR', {
       dateStyle: 'short',
       timeStyle: 'medium',
     });
 
-    const content = [
-      '==================================================',
-      'Pad2PS - Ajustes Finos do Controle',
-      '==================================================',
-      `Controle: ${controllerName || 'Padrão / Não conectado'}`,
-      `Data/Hora: ${formattedDateTime}`,
-      '',
-      `deadzone=${deadzone.toFixed(2)}`,
-      `sound_enabled=${soundEnabled}`,
-      '',
-      'Notas:',
-      `- Zona morta configurada para ${(deadzone * 100).toFixed(0)}% (faixa: 0.05 a 0.25).`,
-      '- Você pode importar este arquivo .txt novamente no painel de Ajustes.',
-      '',
-    ].join('\n');
+    const content = (
+      lang === 'en'
+        ? [
+            '==================================================',
+            'Pad2PS - Controller Fine-Tuning Profile',
+            '==================================================',
+            `Controller: ${controllerName || 'Default / Disconnected'}`,
+            `Date/Time: ${formattedDateTime}`,
+            '',
+            `deadzone=${deadzone.toFixed(2)}`,
+            `sound_enabled=${soundEnabled}`,
+            '',
+            'Notes:',
+            `- Deadzone set to ${(deadzone * 100).toFixed(0)}% (range: 0.05 to 0.25).`,
+            '- You can re-import this .txt file inside Settings.',
+            '',
+          ]
+        : [
+            '==================================================',
+            'Pad2PS - Ajustes Finos do Controle',
+            '==================================================',
+            `Controle: ${controllerName || 'Padrão / Não conectado'}`,
+            `Data/Hora: ${formattedDateTime}`,
+            '',
+            `deadzone=${deadzone.toFixed(2)}`,
+            `sound_enabled=${soundEnabled}`,
+            '',
+            'Notas:',
+            `- Zona morta configurada para ${(deadzone * 100).toFixed(0)}% (faixa: 0.05 a 0.25).`,
+            '- Você pode importar este arquivo .txt novamente no painel de Ajustes.',
+            '',
+          ]
+    ).join('\n');
 
     const blob = new Blob([content], {type: 'text/plain;charset=utf-8'});
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `config-ps2-pad-${yyyy}-${mm}-${dd}.txt`;
+    link.download = `pad2ps-config-${yyyy}-${mm}-${dd}.txt`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-    setImportMessage('Preferência salva em arquivo .txt');
+    setImportMessage(
+      lang === 'en' ? 'Settings saved to .txt file' : 'Preferência salva em arquivo .txt'
+    );
   };
 
   const handleImportTxt = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -119,19 +154,35 @@ export function SettingsPanel({
       const text = await file.text();
       const match = text.match(/deadzone\s*[:=]\s*([0-9]+(?:[.,][0-9]+)?)/i);
       if (!match) {
-        setImportMessage('Nenhuma configuração de deadzone encontrada no arquivo.');
+        setImportMessage(
+          lang === 'en'
+            ? 'No deadzone configuration found in file.'
+            : 'Nenhuma configuração de deadzone encontrada no arquivo.'
+        );
         return;
       }
       const parsed = Number.parseFloat(match[1].replace(',', '.'));
       if (Number.isNaN(parsed)) {
-        setImportMessage('Valor de deadzone inválido no arquivo.');
+        setImportMessage(
+          lang === 'en'
+            ? 'Invalid deadzone value in file.'
+            : 'Valor de deadzone inválido no arquivo.'
+        );
         return;
       }
       const next = clampDeadzone(parsed);
       onDeadzoneChange(next);
-      setImportMessage(`Deadzone ${next.toFixed(2)} carregada do .txt`);
+      setImportMessage(
+        lang === 'en'
+          ? `Deadzone ${next.toFixed(2)} loaded from .txt`
+          : `Deadzone ${next.toFixed(2)} carregada do .txt`
+      );
     } catch {
-      setImportMessage('Não foi possível ler o arquivo selecionado.');
+      setImportMessage(
+        lang === 'en'
+          ? 'Could not read the selected file.'
+          : 'Não foi possível ler o arquivo selecionado.'
+      );
     }
   };
 
@@ -144,7 +195,7 @@ export function SettingsPanel({
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md bg-[#121216] rounded-2xl p-5 shadow-[0_24px_60px_rgba(0,0,0,0.85)] neon-glow-accent flex flex-col gap-4"
+        className="w-full max-w-md bg-[#121216] rounded-2xl p-5 shadow-[0_24px_60px_rgba(0,0,0,0.85)] neon-glow-accent flex flex-col gap-4 max-h-[92vh] overflow-y-auto"
         style={{border: '1px solid rgba(var(--accent-rgb), 0.38)'}}
         onClick={(e) => e.stopPropagation()}
       >
@@ -166,18 +217,16 @@ export function SettingsPanel({
             </div>
             <div>
               <h2 id="settings-modal-title" className="font-display text-base font-bold text-[#FAFAFA]">
-                Ajustes Finos
+                {t.settingsTitle}
               </h2>
-              <p className="text-xs text-[#A1A1AA]">
-                Calibração dos sticks analógicos e preferências
-              </p>
+              <p className="text-xs text-[#A1A1AA]">{t.settingsSubtitle}</p>
             </div>
           </div>
 
           <button
             type="button"
             onClick={onClose}
-            aria-label="Fechar painel de ajustes"
+            aria-label={t.close}
             className="w-8 h-8 rounded-lg border text-[#A1A1AA] hover:text-[#FAFAFA] flex items-center justify-center transition-colors cursor-pointer"
             style={{borderColor: 'rgba(var(--accent-rgb), 0.24)'}}
           >
@@ -189,7 +238,7 @@ export function SettingsPanel({
         <div className="space-y-3">
           <div className="flex items-center justify-between gap-2">
             <label htmlFor="deadzone-slider" className="text-sm font-semibold text-[#FAFAFA]">
-              Zona Morta (Deadzone)
+              {t.deadzoneLabel} (Deadzone)
             </label>
             <div className="flex items-center gap-2">
               <span
@@ -204,11 +253,7 @@ export function SettingsPanel({
             </div>
           </div>
 
-          <p className="text-xs text-[#A1A1AA] leading-relaxed">
-            Define o limite mínimo de inclinação antes de registrar movimento nos analógicos{' '}
-            <span className="font-mono text-[#FAFAFA]">L</span> e{' '}
-            <span className="font-mono text-[#FAFAFA]">R</span>, evitando tremores ou drift.
-          </p>
+          <p className="text-xs text-[#A1A1AA] leading-relaxed">{t.settingsDeadzoneDesc}</p>
 
           <div className="pt-1">
             <input
@@ -229,15 +274,15 @@ export function SettingsPanel({
               className="w-full h-2 rounded-full appearance-none cursor-pointer"
             />
             <div className="mt-1.5 flex items-center justify-between font-mono text-[11px] text-[#A1A1AA] tabular-nums">
-              <span>0.05 (Sensível)</span>
+              <span>{lang === 'en' ? '0.05 (Sensitive)' : '0.05 (Sensível)'}</span>
               <span>0.15</span>
-              <span>0.25 (Máxima)</span>
+              <span>{lang === 'en' ? '0.25 (Max)' : '0.25 (Máxima)'}</span>
             </div>
           </div>
 
           {/* Quick Presets */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 pt-1">
-            {PRESETS.map((preset) => {
+            {presets.map((preset) => {
               const active = Math.abs(deadzone - preset.value) < 0.001;
               return (
                 <button
@@ -272,8 +317,10 @@ export function SettingsPanel({
           style={{borderColor: 'rgba(var(--accent-rgb), 0.18)'}}
         >
           <div className="flex items-center justify-between text-[11px]">
-            <span className="font-medium text-[#FAFAFA]">Monitor em Tempo Real (Bruto vs. Filtrado)</span>
-            <span className="font-mono text-[#A1A1AA] tabular-nums">Limite: {deadzone.toFixed(2)}</span>
+            <span className="font-medium text-[#FAFAFA]">{t.settingsMonitor}</span>
+            <span className="font-mono text-[#A1A1AA] tabular-nums">
+              {t.settingsLimit}: {deadzone.toFixed(2)}
+            </span>
           </div>
 
           <div className="grid grid-cols-2 gap-3 text-[11px] font-mono tabular-nums">
@@ -284,7 +331,7 @@ export function SettingsPanel({
                   className={leftSuppressed ? 'text-emerald-400' : ''}
                   style={!leftSuppressed ? {color: 'var(--accent-color)'} : undefined}
                 >
-                  {leftSuppressed ? 'Drift filtrado' : `${leftStick.x.toFixed(2)}, ${leftStick.y.toFixed(2)}`}
+                  {leftSuppressed ? t.settingsDriftFiltered : `${leftStick.x.toFixed(2)}, ${leftStick.y.toFixed(2)}`}
                 </span>
               </div>
               <div className="h-1.5 rounded-full bg-zinc-900 relative overflow-hidden">
@@ -312,7 +359,7 @@ export function SettingsPanel({
                   className={rightSuppressed ? 'text-emerald-400' : ''}
                   style={!rightSuppressed ? {color: 'var(--accent-color)'} : undefined}
                 >
-                  {rightSuppressed ? 'Drift filtrado' : `${rightStick.x.toFixed(2)}, ${rightStick.y.toFixed(2)}`}
+                  {rightSuppressed ? t.settingsDriftFiltered : `${rightStick.x.toFixed(2)}, ${rightStick.y.toFixed(2)}`}
                 </span>
               </div>
               <div className="h-1.5 rounded-full bg-zinc-900 relative overflow-hidden">
@@ -335,15 +382,29 @@ export function SettingsPanel({
           </div>
         </div>
 
+        {/* Quick Remap Shortcut */}
+        {onOpenRemap && (
+          <button
+            type="button"
+            onClick={() => {
+              onClose();
+              onOpenRemap();
+            }}
+            className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl border bg-[#09090B]/80 text-xs font-medium text-[#FAFAFA] hover:bg-white/5 transition-colors cursor-pointer"
+            style={{borderColor: 'rgba(var(--accent-rgb), 0.28)'}}
+          >
+            <ArrowLeftRight className="w-3.5 h-3.5" style={{color: 'var(--accent-color)'}} />
+            <span>{t.remapButton}</span>
+          </button>
+        )}
+
         {/* Persistence Actions */}
         <div
           className="pt-2 border-t flex flex-col gap-2.5"
           style={{borderColor: 'rgba(var(--accent-rgb), 0.16)'}}
         >
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <span className="text-[11px] text-emerald-400/90">
-              Salvo automaticamente no navegador
-            </span>
+            <span className="text-[11px] text-emerald-400/90">{t.settingsAutoSaved}</span>
 
             {Math.abs(deadzone - DEFAULT_DEADZONE) >= 0.001 && (
               <button
@@ -355,7 +416,7 @@ export function SettingsPanel({
                 className="inline-flex items-center gap-1 text-[11px] text-[#A1A1AA] hover:text-white transition-colors cursor-pointer"
               >
                 <RotateCcw className="w-3 h-3" />
-                <span>Restaurar padrão (0.10)</span>
+                <span>{t.settingsRestoreDefault}</span>
               </button>
             )}
           </div>
@@ -368,7 +429,7 @@ export function SettingsPanel({
               style={{borderColor: 'rgba(var(--accent-rgb), 0.38)'}}
             >
               <Download className="w-3.5 h-3.5" style={{color: 'var(--accent-color)'}} />
-              <span>Salvar ajuste .txt</span>
+              <span>{t.settingsSaveTxt}</span>
             </button>
 
             <button
@@ -378,7 +439,7 @@ export function SettingsPanel({
               style={{borderColor: 'rgba(var(--accent-rgb), 0.25)'}}
             >
               <Upload className="w-3.5 h-3.5" style={{color: 'var(--accent-color)'}} />
-              <span>Carregar .txt</span>
+              <span>{t.settingsLoadTxt}</span>
             </button>
 
             <input

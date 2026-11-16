@@ -1,8 +1,11 @@
+import type {AppLanguage, Translations} from '../data/i18n';
 import {
   CONSOLE_META,
   type ConsoleLayout,
   getConsoleButtonDisplayName,
   getConsoleButtonShort,
+  getXInputDisplayLabel,
+  PS2_BUTTON_MAP,
   type Ps2ButtonMapping,
 } from '../data/ps2Mapping';
 import type {StickState} from '../hooks/useGamepad';
@@ -16,6 +19,9 @@ interface LastPressedCardProps {
   r2Value: number;
   leftStick: StickState;
   rightStick: StickState;
+  remapMap?: Record<number, number>;
+  lang: AppLanguage;
+  t: Translations;
 }
 
 export function LastPressedCard({
@@ -26,6 +32,9 @@ export function LastPressedCard({
   r2Value,
   leftStick,
   rightStick,
+  remapMap = {},
+  lang,
+  t,
 }: LastPressedCardProps) {
   const isSimultaneous = activeButtons.length > 1;
   const displayMapping = activeButtons.length === 1 ? activeButtons[0] : lastPressed;
@@ -33,21 +42,33 @@ export function LastPressedCard({
   const showLeftStick = layout !== 'ps1';
   const showRightStick = layout === 'ps2' || layout === 'ps3';
 
+  const getPhysicalSourceMapping = (psMapping: Ps2ButtonMapping): Ps2ButtonMapping => {
+    for (const [physStr, targetIdx] of Object.entries(remapMap)) {
+      if (targetIdx === psMapping.index) {
+        const physIdx = Number(physStr);
+        if (PS2_BUTTON_MAP[physIdx]) {
+          return PS2_BUTTON_MAP[physIdx];
+        }
+      }
+    }
+    return psMapping;
+  };
+
   return (
     <section
-      aria-label="Último Botão Pressionado"
+      aria-label={t.lastPressedTitle}
       className="accent-panel rounded-xl p-4 flex flex-col justify-between gap-3"
     >
       <div className="flex items-center justify-between gap-2">
         <h2 className="text-xs font-medium text-[#A1A1AA]">
-          {isSimultaneous ? 'Combinação Simultânea' : 'Último Botão Pressionado'}
+          {isSimultaneous ? t.simultaneousTitle : t.lastPressedTitle}
         </h2>
         {displayMapping && !isSimultaneous && (
           <span
             className="font-mono text-[11px] tabular-nums"
             style={{color: 'var(--accent-color)'}}
           >
-            Índice {displayMapping.index}
+            {t.indexLabel} {displayMapping.index}
           </span>
         )}
         {isSimultaneous && (
@@ -55,7 +76,7 @@ export function LastPressedCard({
             className="font-mono text-[11px] tabular-nums font-semibold"
             style={{color: 'var(--accent-color)'}}
           >
-            {activeButtons.length} ativos
+            {activeButtons.length} {t.activeCount}
           </span>
         )}
       </div>
@@ -86,9 +107,9 @@ export function LastPressedCard({
               {activeButtons.map((b) => getConsoleButtonShort(b, layout)).join(' + ')}
             </p>
             <p className="text-xs text-[#A1A1AA]">
-              No GameSir / Xbox:{' '}
+              {t.onController}:{' '}
               <span className="font-mono font-medium" style={{color: 'var(--accent-color)'}}>
-                {activeButtons.map((b) => b.xinputShort).join(' + ')}
+                {activeButtons.map((b) => getPhysicalSourceMapping(b).xinputShort).join(' + ')}
               </span>
             </p>
           </div>
@@ -116,12 +137,12 @@ export function LastPressedCard({
               {CONSOLE_META[layout].shortLabel}
             </p>
             <p className="font-display text-2xl font-bold text-[#FAFAFA] leading-tight truncate">
-              {getConsoleButtonDisplayName(displayMapping, layout)}
+              {getConsoleButtonDisplayName(displayMapping, layout, lang)}
             </p>
             <p className="text-sm text-[#A1A1AA] leading-snug">
-              Equivalência:{' '}
+              {t.equivalence}:{' '}
               <span className="font-medium" style={{color: 'var(--accent-color)'}}>
-                {displayMapping.xinputLabel}
+                {getXInputDisplayLabel(getPhysicalSourceMapping(displayMapping), lang)}
               </span>
             </p>
           </div>
@@ -138,10 +159,8 @@ export function LastPressedCard({
           >
             <Ps2Symbol id="triangle" className="w-6 h-6" layout={layout} />
           </div>
-          <p className="text-sm font-medium text-[#FAFAFA]">Nenhum comando registrado</p>
-          <p className="text-xs text-[#A1A1AA]">
-            Aperte um botão no controle ou clique no SVG ao lado
-          </p>
+          <p className="text-sm font-medium text-[#FAFAFA]">{t.noCommandTitle}</p>
+          <p className="text-xs text-[#A1A1AA]">{t.noCommandSubtitle}</p>
         </div>
       )}
 
@@ -196,7 +215,7 @@ export function LastPressedCard({
 
           {showLeftStick && (
             <div className="flex items-center justify-between text-[#A1A1AA]">
-              <span>{layout === 'psp' ? 'Analógico' : 'Eixo L'}</span>
+              <span>{layout === 'psp' ? t.analogLabel : t.axisL}</span>
               <span
                 style={
                   leftStick.x !== 0 || leftStick.y !== 0
@@ -211,7 +230,7 @@ export function LastPressedCard({
 
           {showRightStick && (
             <div className="flex items-center justify-between text-[#A1A1AA]">
-              <span>Eixo R</span>
+              <span>{t.axisR}</span>
               <span
                 style={
                   rightStick.x !== 0 || rightStick.y !== 0

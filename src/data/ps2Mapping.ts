@@ -261,8 +261,54 @@ export function getQuickReferenceIndices(layout: ConsoleLayout): number[] {
 
 export function getConsoleButtonDisplayName(
   mapping: Ps2ButtonMapping,
-  layout: ConsoleLayout
+  layout: ConsoleLayout,
+  lang: 'pt' | 'en' = 'pt'
 ): string {
+  if (lang === 'en') {
+    if (layout === 'psp') {
+      if (mapping.id === 'l1') {
+        return 'L Trigger (Left Shoulder)';
+      }
+      if (mapping.id === 'r1') {
+        return 'R Trigger (Right Shoulder)';
+      }
+    }
+    switch (mapping.id) {
+      case 'cross':
+        return 'Cross (X)';
+      case 'circle':
+        return 'Circle (O)';
+      case 'square':
+        return 'Square (□)';
+      case 'triangle':
+        return 'Triangle (△)';
+      case 'l1':
+        return 'L1 (Left Bumper)';
+      case 'r1':
+        return 'R1 (Right Bumper)';
+      case 'l2':
+        return 'L2 (Left Trigger)';
+      case 'r2':
+        return 'R2 (Right Trigger)';
+      case 'l3':
+        return 'L3 (Left Stick Click)';
+      case 'r3':
+        return 'R3 (Right Stick Click)';
+      case 'up':
+        return 'D-Pad Up';
+      case 'down':
+        return 'D-Pad Down';
+      case 'left':
+        return 'D-Pad Left';
+      case 'right':
+        return 'D-Pad Right';
+      case 'ps':
+        return 'PS Button (Home)';
+      default:
+        return mapping.ps2Name;
+    }
+  }
+
   if (layout === 'psp') {
     if (mapping.id === 'l1') {
       return 'Gatilho L (Ombro Esq.)';
@@ -272,6 +318,51 @@ export function getConsoleButtonDisplayName(
     }
   }
   return mapping.ps2Name;
+}
+
+export function getXInputDisplayLabel(
+  mapping: Ps2ButtonMapping,
+  lang: 'pt' | 'en' = 'pt'
+): string {
+  if (lang === 'pt') {
+    return mapping.xinputLabel;
+  }
+  switch (mapping.id) {
+    case 'cross':
+      return 'A Button on GameSir / Xbox';
+    case 'circle':
+      return 'B Button on GameSir / Xbox';
+    case 'square':
+      return 'X Button on GameSir / Xbox';
+    case 'triangle':
+      return 'Y Button on GameSir / Xbox';
+    case 'l1':
+      return 'LB Button on GameSir / Xbox';
+    case 'r1':
+      return 'RB Button on GameSir / Xbox';
+    case 'l2':
+      return 'LT Trigger on GameSir / Xbox';
+    case 'r2':
+      return 'RT Trigger on GameSir / Xbox';
+    case 'select':
+      return 'View / Back Button on GameSir / Xbox';
+    case 'start':
+      return 'Menu / Start Button on GameSir / Xbox';
+    case 'l3':
+      return 'Left Stick Click (LS)';
+    case 'r3':
+      return 'Right Stick Click (RS)';
+    case 'up':
+      return 'D-Pad Up on GameSir / Xbox';
+    case 'down':
+      return 'D-Pad Down on GameSir / Xbox';
+    case 'left':
+      return 'D-Pad Left on GameSir / Xbox';
+    case 'right':
+      return 'D-Pad Right on GameSir / Xbox';
+    case 'ps':
+      return 'Guide / Home Button on GameSir / Xbox';
+  }
 }
 
 export function getConsoleButtonShort(
