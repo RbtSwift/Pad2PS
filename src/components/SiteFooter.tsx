@@ -1,18 +1,22 @@
 import {Download, Scale, X} from 'lucide-react';
-import {useState} from 'react';
+import {type MouseEvent, useState} from 'react';
 import type {Translations} from '../data/i18n';
+import {INSTALLER_PACKAGES} from '../data/installers';
+import {openExternalUrl} from '../hooks/useIsInstalledApp';
 import {usePWAInstall} from '../hooks/usePWAInstall';
+import {getInstallerShortLabel, InstallerIcon} from './InstallSuggestionPopup';
 
 interface SiteFooterProps {
   t: Translations;
+  isApp: boolean;
   onOpenLegal: () => void;
 }
 
-export function SiteFooter({t, onOpenLegal}: SiteFooterProps) {
+export function SiteFooter({t, isApp, onOpenLegal}: SiteFooterProps) {
   const {isInstallable, isInstalled, isIOS, install} = usePWAInstall();
   const [showIOSGuide, setShowIOSGuide] = useState(false);
 
-  const showInstallButton = !isInstalled && (isInstallable || isIOS);
+  const showInstallButton = !isApp && !isInstalled && (isInstallable || isIOS);
 
   const handleInstallClick = async () => {
     if (isInstallable) {
@@ -20,6 +24,17 @@ export function SiteFooter({t, onOpenLegal}: SiteFooterProps) {
     } else if (isIOS) {
       setShowIOSGuide(true);
     }
+  };
+
+  const handleExternalLinkClick = (
+    event: MouseEvent<HTMLAnchorElement>,
+    url: string
+  ) => {
+    if (!isApp) {
+      return;
+    }
+    event.preventDefault();
+    void openExternalUrl(url, true);
   };
 
   return (
@@ -37,6 +52,7 @@ export function SiteFooter({t, onOpenLegal}: SiteFooterProps) {
           href="https://x.com/Pad2PS"
           target="_blank"
           rel="noopener noreferrer"
+          onClick={(e) => handleExternalLinkClick(e, 'https://x.com/Pad2PS')}
           aria-label="X (@Pad2PS)"
           title="X (@Pad2PS)"
           className="group inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#121216]/90 border text-[#A1A1AA] hover:text-white transition-all hover:shadow-[0_0_12px_rgba(var(--accent-rgb),0.38)] whitespace-nowrap"
@@ -58,6 +74,7 @@ export function SiteFooter({t, onOpenLegal}: SiteFooterProps) {
           href="https://pacoca.net/@Pad2PS"
           target="_blank"
           rel="noopener noreferrer"
+          onClick={(e) => handleExternalLinkClick(e, 'https://pacoca.net/@Pad2PS')}
           aria-label="Paçoca (@Pad2PS)"
           title="Paçoca (@Pad2PS)"
           className="group inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#121216]/90 border text-[#A1A1AA] hover:text-white transition-all hover:shadow-[0_0_12px_rgba(var(--accent-rgb),0.38)] whitespace-nowrap"
@@ -120,7 +137,34 @@ export function SiteFooter({t, onOpenLegal}: SiteFooterProps) {
           <span className="font-mono text-[11px]">Paçoca (@Pad2PS)</span>
         </a>
 
-        {/* Discrete PWA Install App Button */}
+        {/* Native Platform Installers (Browser Mode Only) */}
+        {!isApp && (
+          <div
+            role="group"
+            aria-label={t.dlSectionLabel}
+            className="flex flex-wrap items-center justify-center gap-1.5"
+          >
+            {INSTALLER_PACKAGES.map((pkg) => {
+              const label = getInstallerShortLabel(pkg.id, t);
+              return (
+                <a
+                  key={pkg.id}
+                  href={pkg.url}
+                  download={pkg.filename}
+                  rel="noopener noreferrer"
+                  title={`${t.dlSectionLabel}: ${label} (${pkg.filename})`}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#121216]/90 border text-[#A1A1AA] hover:text-white transition-all hover:shadow-[0_0_12px_rgba(var(--accent-rgb),0.36)] whitespace-nowrap"
+                  style={{borderColor: 'rgba(var(--accent-rgb), 0.24)'}}
+                >
+                  <InstallerIcon id={pkg.id} className="w-3 h-3 shrink-0" />
+                  <span className="font-mono text-[11px]">{label}</span>
+                </a>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Discrete PWA Install App Button (Browser Mode Only) */}
         {showInstallButton && (
           <button
             type="button"

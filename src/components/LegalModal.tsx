@@ -1,12 +1,14 @@
 import {ShieldCheck, X} from 'lucide-react';
-import {useEffect} from 'react';
+import {type MouseEvent, useEffect} from 'react';
 import type {AppLanguage, Translations} from '../data/i18n';
+import {openExternalUrl} from '../hooks/useIsInstalledApp';
 
 interface LegalModalProps {
   isOpen: boolean;
   onClose: () => void;
   lang: AppLanguage;
   t: Translations;
+  isApp?: boolean;
 }
 
 interface LegalSection {
@@ -59,7 +61,13 @@ const LEGAL_CONTENT: Record<AppLanguage, {title: string; sections: LegalSection[
   },
 };
 
-export function LegalModal({isOpen, onClose, lang, t}: LegalModalProps) {
+export function LegalModal({
+  isOpen,
+  onClose,
+  lang,
+  t,
+  isApp = false,
+}: LegalModalProps) {
   useEffect(() => {
     if (!isOpen) {
       return;
@@ -79,6 +87,19 @@ export function LegalModal({isOpen, onClose, lang, t}: LegalModalProps) {
 
   const content = LEGAL_CONTENT[lang];
 
+  const handleModalClick = (e: MouseEvent<HTMLDivElement>) => {
+    e.stopPropagation();
+    if (!isApp) {
+      return;
+    }
+    const target = e.target as HTMLElement | null;
+    const anchor = target?.closest('a[href]') as HTMLAnchorElement | null;
+    if (anchor && /^https?:\/\//i.test(anchor.href)) {
+      e.preventDefault();
+      void openExternalUrl(anchor.href, true);
+    }
+  };
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs"
@@ -90,7 +111,7 @@ export function LegalModal({isOpen, onClose, lang, t}: LegalModalProps) {
       <div
         className="w-full max-w-2xl bg-[#121216] rounded-2xl p-5 shadow-[0_24px_60px_rgba(0,0,0,0.85)] neon-glow-accent flex flex-col gap-4 max-h-[88vh]"
         style={{border: '1px solid rgba(var(--accent-rgb), 0.38)'}}
-        onClick={(e) => e.stopPropagation()}
+        onClick={handleModalClick}
       >
         {/* Header */}
         <div

@@ -18,6 +18,7 @@ import {ComboLibraryDrawer} from './components/ComboLibraryDrawer';
 import {ControllerNameEditor} from './components/ControllerNameEditor';
 import {DiagnosticsModal} from './components/DiagnosticsModal';
 import {DualShock2SVG} from './components/DualShock2SVG';
+import {InstallSuggestionPopup} from './components/InstallSuggestionPopup';
 import {LastPressedCard} from './components/LastPressedCard';
 import {LegalModal} from './components/LegalModal';
 import {OfflineIndicator} from './components/OfflineIndicator';
@@ -56,6 +57,7 @@ import {
   NEON_THEMES,
 } from './data/themes';
 import {useGamepad} from './hooks/useGamepad';
+import {useIsInstalledApp} from './hooks/useIsInstalledApp';
 
 const SOUND_STORAGE_KEY = 'ps2-pad-guide:sound-enabled';
 const CUSTOM_NAMES_STORAGE_KEY = 'ps2-pad-guide:custom-names';
@@ -252,6 +254,7 @@ export default function App() {
   const [rumbleNotice, setRumbleNotice] = useState<string | null>(null);
 
   const t = getTranslations(lang);
+  const isApp = useIsInstalledApp();
   const isPipActive = Boolean(pipWindow && !pipWindow.closed);
 
   useEffect(() => {
@@ -1284,7 +1287,11 @@ export default function App() {
               onClear={clearHistory}
             />
             {!isPipActive && (
-              <SiteFooter t={t} onOpenLegal={() => setIsLegalOpen(true)} />
+              <SiteFooter
+                t={t}
+                isApp={isApp}
+                onOpenLegal={() => setIsLegalOpen(true)}
+              />
             )}
           </footer>
         )}
@@ -1368,6 +1375,13 @@ export default function App() {
         isOpen={isLegalOpen}
         onClose={() => setIsLegalOpen(false)}
         lang={lang}
+        t={t}
+        isApp={isApp}
+      />
+      <InstallSuggestionPopup
+        isApp={isApp}
+        isCompact={isCompact}
+        isPipActive={isPipActive}
         t={t}
       />
       <OfflineIndicator t={t} />

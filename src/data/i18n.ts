@@ -134,6 +134,20 @@ export interface Translations {
   installIosStep1: string;
   installIosStep2: string;
   offlineBadge: string;
+  // Browser-only Native Installers & Suggestion Popup
+  popupInstallTitle: string;
+  popupInstallDesc: string;
+  popupOtherPlatforms: string;
+  popupNotNow: string;
+  dlSectionLabel: string;
+  dlWindowsShort: string;
+  dlLinuxDebShort: string;
+  dlLinuxAppImageShort: string;
+  dlAndroidShort: string;
+  dlWindowsPrimary: string;
+  dlLinuxDebPrimary: string;
+  dlLinuxAppImagePrimary: string;
+  dlAndroidPrimary: string;
 }
 
 const PT_TRANSLATIONS: Translations = {
@@ -261,6 +275,20 @@ const PT_TRANSLATIONS: Translations = {
   installIosStep1: '1. Toque no botão Compartilhar na barra do Safari.',
   installIosStep2: '2. Role para baixo e toque em Adicionar à Tela de Início.',
   offlineBadge: 'Modo Offline — Executando pelo cache local',
+  popupInstallTitle: 'Baixar Pad2PS Nativo',
+  popupInstallDesc:
+    'Instale o Pad2PS no seu dispositivo para acesso rápido e tela cheia sem barras do navegador.',
+  popupOtherPlatforms: 'Ver outras plataformas',
+  popupNotNow: 'Agora não',
+  dlSectionLabel: 'Baixar App',
+  dlWindowsShort: 'Windows',
+  dlLinuxDebShort: 'Linux (.deb)',
+  dlLinuxAppImageShort: 'Linux (.AppImage)',
+  dlAndroidShort: 'Android',
+  dlWindowsPrimary: 'Baixar para Windows',
+  dlLinuxDebPrimary: 'Baixar .deb',
+  dlLinuxAppImagePrimary: 'Baixar .AppImage',
+  dlAndroidPrimary: 'Baixar APK para Android',
 };
 
 const EN_TRANSLATIONS: Translations = {
@@ -388,6 +416,20 @@ const EN_TRANSLATIONS: Translations = {
   installIosStep1: '1. Tap the Share button in the Safari toolbar.',
   installIosStep2: '2. Scroll down and tap Add to Home Screen.',
   offlineBadge: 'Offline Mode — Running from local cache',
+  popupInstallTitle: 'Download Native Pad2PS',
+  popupInstallDesc:
+    'Install Pad2PS on your device for quick access and full screen without browser bars.',
+  popupOtherPlatforms: 'Other platforms',
+  popupNotNow: 'Not now',
+  dlSectionLabel: 'Download App',
+  dlWindowsShort: 'Windows',
+  dlLinuxDebShort: 'Linux (.deb)',
+  dlLinuxAppImageShort: 'Linux (.AppImage)',
+  dlAndroidShort: 'Android',
+  dlWindowsPrimary: 'Download for Windows',
+  dlLinuxDebPrimary: 'Download .deb',
+  dlLinuxAppImagePrimary: 'Download .AppImage',
+  dlAndroidPrimary: 'Download Android APK',
 };
 
 export function getTranslations(lang: AppLanguage): Translations {
