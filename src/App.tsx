@@ -20,7 +20,7 @@ import {ControllerNameEditor} from './components/ControllerNameEditor';
 import {DiagnosticsModal} from './components/DiagnosticsModal';
 import {DualShock2SVG} from './components/DualShock2SVG';
 import {EmulatorsModal} from './components/EmulatorsModal';
-import {InstallSuggestionPopup} from './components/InstallSuggestionPopup';
+import {InstallAppModal} from './components/InstallAppModal';
 import {LastPressedCard} from './components/LastPressedCard';
 import {LegalModal} from './components/LegalModal';
 import {OfflineIndicator} from './components/OfflineIndicator';
@@ -250,6 +250,7 @@ export default function App() {
   const [isDiagnosticsOpen, setIsDiagnosticsOpen] = useState<boolean>(false);
   const [isComboDrawerOpen, setIsComboDrawerOpen] = useState<boolean>(false);
   const [isEmulatorsOpen, setIsEmulatorsOpen] = useState<boolean>(false);
+  const [isInstallModalOpen, setIsInstallModalOpen] = useState<boolean>(false);
   const [isLegalOpen, setIsLegalOpen] = useState<boolean>(false);
 
   // Remap Mode state
@@ -1322,6 +1323,7 @@ export default function App() {
                 t={t}
                 isApp={isApp}
                 onOpenLegal={() => setIsLegalOpen(true)}
+                onOpenInstall={() => setIsInstallModalOpen(true)}
               />
             )}
           </footer>
@@ -1421,10 +1423,10 @@ export default function App() {
         t={t}
         isApp={isApp}
       />
-      <InstallSuggestionPopup
+      <InstallAppModal
+        isOpen={isInstallModalOpen}
+        onClose={() => setIsInstallModalOpen(false)}
         isApp={isApp}
-        isCompact={isCompact}
-        isPipActive={isPipActive}
         t={t}
       />
       <OfflineIndicator t={t} />

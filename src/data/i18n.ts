@@ -149,6 +149,10 @@ export interface Translations {
   dlLinuxDebPrimary: string;
   dlLinuxAppImagePrimary: string;
   dlAndroidPrimary: string;
+  installPwaButton: string;
+  installPwaDesc: string;
+  installAllPlatforms: string;
+  installRecommended: string;
   // Emulators suite
   emulatorsTitle: string;
   emulatorsSubtitle: string;
@@ -309,6 +313,10 @@ const PT_TRANSLATIONS: Translations = {
   dlLinuxDebPrimary: 'Baixar .deb',
   dlLinuxAppImagePrimary: 'Baixar .AppImage',
   dlAndroidPrimary: 'Baixar APK para Android',
+  installPwaButton: 'Instalar pelo Navegador (PWA)',
+  installPwaDesc: 'Atalho instantâneo em tela cheia sem instalador externo',
+  installAllPlatforms: 'Baixar Instalador por Plataforma',
+  installRecommended: 'Seu Sistema',
   emulatorsTitle: 'Suíte de Emuladores',
   emulatorsSubtitle: 'Gerador automático de perfis (.ini) e guia rápido de drivers',
   emuTabGenerator: 'Gerador de Config (.ini)',
@@ -467,6 +475,10 @@ const EN_TRANSLATIONS: Translations = {
   dlLinuxDebPrimary: 'Download .deb',
   dlLinuxAppImagePrimary: 'Download .AppImage',
   dlAndroidPrimary: 'Download Android APK',
+  installPwaButton: 'Install via Browser (PWA)',
+  installPwaDesc: 'Instant full-screen app shortcut without an external installer',
+  installAllPlatforms: 'Download Installer by Platform',
+  installRecommended: 'Your OS',
   emulatorsTitle: 'Emulators Suite',
   emulatorsSubtitle: 'Automatic .ini config generator & quick driver setup guide',
   emuTabGenerator: 'Config Generator (.ini)',
