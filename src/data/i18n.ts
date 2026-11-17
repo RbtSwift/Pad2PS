@@ -128,6 +128,9 @@ export interface Translations {
   footerNotice: string;
   footerTermsButton: string;
   legalCloseButton: string;
+  termsBackButton: string;
+  termsPageSubtitle: string;
+  termsPageBadge: string;
   // PWA Install & Offline
   installApp: string;
   installAppTitle: string;
@@ -293,6 +296,10 @@ const PT_TRANSLATIONS: Translations = {
     'Pad2PS — Ferramenta independente feita por fãs. Sem vínculo com Sony Interactive Entertainment ou Microsoft.',
   footerTermsButton: 'Termos de Uso & Privacidade',
   legalCloseButton: 'Entendi / Fechar',
+  termsBackButton: 'Voltar ao Pad2PS',
+  termsPageSubtitle:
+    'Documentação legal, transparência sobre armazenamento local e isenção de responsabilidade.',
+  termsPageBadge: 'Documento Legal',
   installApp: 'Instalar App',
   installAppTitle: 'Instalar Pad2PS no dispositivo',
   installIosTitle: 'Instalar no iPhone / iPad',
@@ -455,6 +462,10 @@ const EN_TRANSLATIONS: Translations = {
     'Pad2PS — Independent fan-made utility. Not affiliated with Sony Interactive Entertainment or Microsoft.',
   footerTermsButton: 'Terms of Use & Privacy',
   legalCloseButton: 'Got it / Close',
+  termsBackButton: 'Back to Pad2PS',
+  termsPageSubtitle:
+    'Legal documentation, local storage transparency, and non-affiliation disclaimer.',
+  termsPageBadge: 'Legal Document',
   installApp: 'Install App',
   installAppTitle: 'Install Pad2PS on your device',
   installIosTitle: 'Install on iPhone / iPad',

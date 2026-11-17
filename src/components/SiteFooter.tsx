@@ -6,14 +6,16 @@ import {openExternalUrl} from '../hooks/useIsInstalledApp';
 interface SiteFooterProps {
   t: Translations;
   isApp: boolean;
-  onOpenLegal: () => void;
+  termsHref: string;
+  onNavigateTerms: () => void;
   onOpenInstall: () => void;
 }
 
 export function SiteFooter({
   t,
   isApp,
-  onOpenLegal,
+  termsHref,
+  onNavigateTerms,
   onOpenInstall,
 }: SiteFooterProps) {
   const handleExternalLinkClick = (
@@ -25,6 +27,20 @@ export function SiteFooter({
     }
     event.preventDefault();
     void openExternalUrl(url, true);
+  };
+
+  const handleTermsLinkClick = (event: MouseEvent<HTMLAnchorElement>) => {
+    if (
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey ||
+      event.button !== 0
+    ) {
+      return;
+    }
+    event.preventDefault();
+    onNavigateTerms();
   };
 
   return (
@@ -142,10 +158,10 @@ export function SiteFooter({
           </button>
         )}
 
-        {/* Legal / Terms Modal Trigger */}
-        <button
-          type="button"
-          onClick={onOpenLegal}
+        {/* Legal / Terms of Use Page Link */}
+        <a
+          href={termsHref}
+          onClick={handleTermsLinkClick}
           className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#121216]/90 border text-[#A1A1AA] hover:text-white transition-all hover:shadow-[0_0_12px_rgba(var(--accent-rgb),0.32)] cursor-pointer whitespace-nowrap"
           style={{borderColor: 'rgba(var(--accent-rgb), 0.22)'}}
         >
@@ -154,7 +170,7 @@ export function SiteFooter({
             style={{color: 'var(--accent-color)'}}
           />
           <span>{t.footerTermsButton}</span>
-        </button>
+        </a>
       </div>
     </div>
   );

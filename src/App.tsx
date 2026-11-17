@@ -22,7 +22,6 @@ import {DualShock2SVG} from './components/DualShock2SVG';
 import {EmulatorsModal} from './components/EmulatorsModal';
 import {InstallAppModal} from './components/InstallAppModal';
 import {LastPressedCard} from './components/LastPressedCard';
-import {LegalModal} from './components/LegalModal';
 import {OfflineIndicator} from './components/OfflineIndicator';
 import {Pad2PSLogo} from './components/Pad2PSLogo';
 import {
@@ -39,6 +38,7 @@ import {
   DEFAULT_DEADZONE,
   SettingsPanel,
 } from './components/SettingsPanel';
+import {TermsPage} from './components/TermsPage';
 import {TrainingBar} from './components/TrainingBar';
 import type {ComboDefinition} from './data/comboLibrary';
 import {
@@ -69,6 +69,27 @@ const LAYOUT_STORAGE_KEY = 'ps2-pad-guide:console-layout';
 const CUSTOM_COMBOS_STORAGE_KEY = 'ps2-pad-guide:custom-combos';
 const LANG_STORAGE_KEY = 'pad2ps:lang';
 const REMAP_STORAGE_KEY = 'pad2ps:button-remap';
+const TERMS_ROUTE = '/termos-de-uso';
+
+function isTermsRoute(pathname: string): boolean {
+  const normalized = pathname.replace(/\/+$/, '') || '/';
+  return normalized === TERMS_ROUTE;
+}
+
+function getCurrentPathname(): string {
+  if (typeof window === 'undefined') {
+    return '/';
+  }
+  return window.location.pathname || '/';
+}
+
+function buildRouteHref(targetPath: string): string {
+  if (typeof window === 'undefined') {
+    return targetPath;
+  }
+  const search = window.location.search || '';
+  return `${targetPath}${search}`;
+}
 
 const LAYOUT_OPTIONS: ConsoleLayout[] = ['ps1', 'ps2', 'ps3', 'psp'];
 
@@ -251,7 +272,7 @@ export default function App() {
   const [isComboDrawerOpen, setIsComboDrawerOpen] = useState<boolean>(false);
   const [isEmulatorsOpen, setIsEmulatorsOpen] = useState<boolean>(false);
   const [isInstallModalOpen, setIsInstallModalOpen] = useState<boolean>(false);
-  const [isLegalOpen, setIsLegalOpen] = useState<boolean>(false);
+  const [currentPath, setCurrentPath] = useState<string>(getCurrentPathname);
 
   // Remap Mode state
   const [isRemapMode, setIsRemapMode] = useState<boolean>(false);
@@ -271,6 +292,46 @@ export default function App() {
   const t = getTranslations(lang);
   const isApp = useIsInstalledApp();
   const isPipActive = Boolean(pipWindow && !pipWindow.closed);
+  const isTermsPage = isTermsRoute(currentPath);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+    const handlePopState = () => {
+      setCurrentPath(getCurrentPathname());
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  useEffect(() => {
+    if (typeof document === 'undefined') {
+      return;
+    }
+    if (isTermsPage) {
+      document.title =
+        lang === 'en'
+          ? 'Terms of Use, Privacy & Disclaimer — Pad2PS'
+          : 'Termos de Uso, Privacidade e Isenção de Responsabilidade — Pad2PS';
+    } else {
+      document.title =
+        lang === 'en'
+          ? 'Pad2PS — Visual X-Input to PlayStation Translator'
+          : 'Pad2PS — Tradutor Visual X-Input para PlayStation';
+    }
+  }, [isTermsPage, lang]);
+
+  const navigateTo = (targetPath: string) => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+    const nextUrl = buildRouteHref(targetPath);
+    if (window.location.pathname !== targetPath) {
+      window.history.pushState({}, '', nextUrl);
+    }
+    setCurrentPath(targetPath);
+  };
 
   useEffect(() => {
     try {
@@ -662,6 +723,34 @@ export default function App() {
     remapTargetPsIndex !== null && PS2_BUTTON_MAP[remapTargetPsIndex]
       ? getConsoleButtonDisplayName(PS2_BUTTON_MAP[remapTargetPsIndex], consoleLayout, lang)
       : null;
+
+  const homeHref = buildRouteHref('/');
+  const termsHref = buildRouteHref(TERMS_ROUTE);
+
+  if (isTermsPage) {
+    return (
+      <>
+        <TermsPage
+          lang={lang}
+          onChangeLang={setLang}
+          themeId={themeId}
+          onChangeTheme={setThemeId}
+          t={t}
+          isApp={isApp}
+          homeHref={homeHref}
+          onNavigateHome={() => navigateTo('/')}
+          onOpenInstall={() => setIsInstallModalOpen(true)}
+        />
+        <InstallAppModal
+          isOpen={isInstallModalOpen}
+          onClose={() => setIsInstallModalOpen(false)}
+          isApp={isApp}
+          t={t}
+        />
+        <OfflineIndicator t={t} />
+      </>
+    );
+  }
 
   return (
     <div className="cyber-grid-bg h-dvh max-h-dvh w-full overflow-hidden flex flex-col text-[#FAFAFA]">
@@ -1322,7 +1411,8 @@ export default function App() {
               <SiteFooter
                 t={t}
                 isApp={isApp}
-                onOpenLegal={() => setIsLegalOpen(true)}
+                termsHref={termsHref}
+                onNavigateTerms={() => navigateTo(TERMS_ROUTE)}
                 onOpenInstall={() => setIsInstallModalOpen(true)}
               />
             )}
@@ -1414,14 +1504,6 @@ export default function App() {
           setIsRemapMode(true);
           setRemapTargetPsIndex(null);
         }}
-      />
-      {/* Legal / Terms of Use, Privacy & Disclaimer Modal */}
-      <LegalModal
-        isOpen={isLegalOpen}
-        onClose={() => setIsLegalOpen(false)}
-        lang={lang}
-        t={t}
-        isApp={isApp}
       />
       <InstallAppModal
         isOpen={isInstallModalOpen}
