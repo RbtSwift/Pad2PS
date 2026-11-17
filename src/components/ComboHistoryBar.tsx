@@ -103,9 +103,9 @@ export function ComboHistoryBar({
   return (
     <section
       aria-label={t.comboHistoryTitle}
-      className="accent-panel rounded-xl px-4 py-2.5 flex items-center justify-between gap-3 sm:gap-4"
+      className="w-full accent-panel rounded-xl px-4 py-2.5 flex flex-wrap sm:flex-nowrap items-center justify-between gap-3 sm:gap-4"
     >
-      <div className="flex items-center gap-3 min-w-0 flex-1">
+      <div className="flex items-center gap-3 min-w-0 flex-1 w-full sm:w-auto">
         <div className="shrink-0">
           <h2 className="text-xs font-semibold text-[#FAFAFA] whitespace-nowrap">
             {t.comboHistoryTitle}
@@ -121,40 +121,42 @@ export function ComboHistoryBar({
           aria-hidden="true"
         />
 
-        {history.length === 0 ? (
-          <p className="text-xs text-zinc-500 truncate">{t.comboHistoryEmpty}</p>
-        ) : (
-          <ol className="flex items-center gap-1.5 overflow-x-auto py-0.5">
-            {history.map((entry, idx) => {
-              const isLatest = idx === history.length - 1;
-              return (
-                <li
-                  key={entry.uid}
-                  title={`${getConsoleButtonDisplayName(entry.button, layout, lang)} (${entry.button.xinputShort})`}
-                  className={`shrink-0 h-9 min-w-[36px] px-2 rounded-lg border flex items-center justify-center transition-all ${
-                    isLatest ? 'text-white neon-glow-accent' : 'bg-[#09090B]/80'
-                  }`}
-                  style={
-                    isLatest
-                      ? {
-                          backgroundColor: 'rgba(var(--accent-rgb), 0.24)',
-                          borderColor: 'var(--accent-color)',
-                        }
-                      : {
-                          borderColor: 'rgba(var(--accent-rgb), 0.22)',
-                          color: 'var(--accent-color)',
-                        }
-                  }
-                >
-                  <Ps2Symbol id={entry.button.id} className="w-4 h-4" layout={layout} />
-                </li>
-              );
-            })}
-          </ol>
-        )}
+        <div className="flex-1 min-w-0">
+          {history.length === 0 ? (
+            <p className="text-xs text-zinc-500 truncate">{t.comboHistoryEmpty}</p>
+          ) : (
+            <ol className="flex items-center gap-1.5 overflow-x-auto py-0.5">
+              {history.map((entry, idx) => {
+                const isLatest = idx === history.length - 1;
+                return (
+                  <li
+                    key={entry.uid}
+                    title={`${getConsoleButtonDisplayName(entry.button, layout, lang)} (${entry.button.xinputShort})`}
+                    className={`shrink-0 h-9 min-w-[36px] px-2 rounded-lg border flex items-center justify-center transition-all ${
+                      isLatest ? 'text-white neon-glow-accent' : 'bg-[#09090B]/80'
+                    }`}
+                    style={
+                      isLatest
+                        ? {
+                            backgroundColor: 'rgba(var(--accent-rgb), 0.24)',
+                            borderColor: 'var(--accent-color)',
+                          }
+                        : {
+                            borderColor: 'rgba(var(--accent-rgb), 0.22)',
+                            color: 'var(--accent-color)',
+                          }
+                    }
+                  >
+                    <Ps2Symbol id={entry.button.id} className="w-4 h-4" layout={layout} />
+                  </li>
+                );
+              })}
+            </ol>
+          )}
+        </div>
       </div>
 
-      <div className="flex items-center gap-2 shrink-0">
+      <div className="flex items-center gap-2 shrink-0 ml-auto">
         <button
           type="button"
           onClick={handleDownloadTxt}

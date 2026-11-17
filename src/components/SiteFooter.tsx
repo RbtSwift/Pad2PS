@@ -24,7 +24,7 @@ export function SiteFooter({t, onOpenLegal}: SiteFooterProps) {
 
   return (
     <div
-      className="pt-2 border-t flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-[#A1A1AA]"
+      className="w-full pt-2.5 border-t flex justify-between items-center flex-wrap gap-4 text-[11px] text-[#A1A1AA]"
       style={{borderColor: 'rgba(var(--accent-rgb), 0.14)'}}
     >
       <p className="text-center sm:text-left text-zinc-500 leading-snug">

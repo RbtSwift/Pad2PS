@@ -646,17 +646,17 @@ export default function App() {
       : null;
 
   return (
-    <div className="cyber-grid-bg min-h-screen lg:h-screen lg:overflow-hidden flex flex-col text-[#FAFAFA]">
-      <div className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 py-3 sm:py-4 flex-1 flex flex-col gap-3 min-h-0">
+    <div className="cyber-grid-bg min-h-screen w-full overflow-x-hidden flex flex-col text-[#FAFAFA]">
+      <div className="w-full max-w-[2400px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-3 sm:py-4 flex-1 flex flex-col gap-3 lg:gap-4 min-h-0">
         {/* Header */}
         <header
-          className={`flex flex-wrap items-center justify-between gap-2.5 pb-2 border-b accent-border-subtle shrink-0 ${
+          className={`w-full flex flex-wrap items-center justify-between gap-2 lg:gap-3 pb-2.5 border-b accent-border-subtle shrink-0 ${
             isCompact ? 'bg-[#121216]/85 backdrop-blur-md px-3.5 py-2 rounded-xl border' : ''
           }`}
         >
           <Pad2PSLogo compact={isCompact} t={t} />
 
-          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 shrink-0 max-w-full">
+          <div className="flex flex-1 flex-wrap items-center justify-end gap-2 lg:gap-3 min-w-0 max-w-full">
             {/* Live Connection Status + Inline Custom Name Editor */}
             <div className="flex items-center gap-2 text-xs min-w-0">
               <span
@@ -980,7 +980,7 @@ export default function App() {
         {!isCompact && !showActivatedStatus && !isRemapMode && (
           <div
             role="status"
-            className="shrink-0 bg-[#121216] rounded-xl px-4 py-2.5 flex items-center justify-between gap-3 neon-glow-accent animate-pulse"
+            className="w-full shrink-0 bg-[#121216] rounded-xl px-4 py-2.5 flex flex-wrap items-center justify-between gap-3 neon-glow-accent animate-pulse"
             style={{border: '1px solid rgba(var(--accent-rgb), 0.4)'}}
           >
             <div className="flex items-center gap-3 min-w-0">
@@ -1004,7 +1004,7 @@ export default function App() {
           <div
             role="region"
             aria-label={t.remapButton}
-            className="shrink-0 bg-[#121216] rounded-xl px-4 py-2.5 flex flex-wrap items-center justify-between gap-3 neon-glow-accent"
+            className="w-full shrink-0 bg-[#121216] rounded-xl px-4 py-2.5 flex flex-wrap items-center justify-between gap-3 neon-glow-accent"
             style={{border: '1px solid var(--accent-color)'}}
           >
             <div className="flex items-center gap-2.5 min-w-0">
@@ -1102,13 +1102,13 @@ export default function App() {
         )}
 
         {/* Main Workspace Grid */}
-        <main className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
+        <main className="flex-1 min-h-0 w-full grid grid-cols-1 lg:grid-cols-12 gap-4 xl:gap-6 items-stretch">
           {/* Centerpiece: Interactive Controller SVG */}
           <section
             aria-label="PlayStation Controller"
             className={`${
-              isCompact ? 'lg:col-span-12' : 'lg:col-span-8'
-            } accent-panel rounded-xl p-3 sm:p-5 flex flex-col items-center justify-between relative min-h-[280px] min-w-0 transition-colors`}
+              isCompact ? 'lg:col-span-12' : 'lg:col-span-7 xl:col-span-8'
+            } accent-panel rounded-xl p-3 sm:p-5 lg:p-6 flex flex-col items-center justify-between relative min-h-[300px] h-full w-full min-w-0 transition-colors`}
             style={
               isCompact && chromaMode !== 'dark'
                 ? {backgroundColor: CHROMA_BG_MAP[chromaMode], backgroundImage: 'none'}
@@ -1195,11 +1195,7 @@ export default function App() {
               )}
             </div>
 
-            <div
-              className={`w-full flex-1 flex items-center justify-center min-h-0 py-1 ${
-                isCompact ? 'max-w-[960px]' : 'max-w-[660px]'
-              }`}
-            >
+            <div className="w-full flex-1 flex items-center justify-center min-h-0 py-2">
               <DualShock2SVG
                 layout={consoleLayout}
                 pressedButtons={pressedButtons}
@@ -1247,7 +1243,7 @@ export default function App() {
 
           {/* Side Column (hidden in Ultra Compact Mode) */}
           {!isCompact && (
-            <aside className="lg:col-span-4 flex flex-col gap-3 min-h-0">
+            <aside className="lg:col-span-5 xl:col-span-4 flex flex-col gap-4 justify-between h-full min-w-0">
               <LastPressedCard
                 layout={consoleLayout}
                 activeButtons={activeButtons}
@@ -1277,7 +1273,7 @@ export default function App() {
 
         {/* Bottom Bar */}
         {!isCompact && (
-          <footer className="shrink-0 flex flex-col gap-2">
+          <footer className="w-full shrink-0 flex flex-col gap-2.5">
             <ComboHistoryBar
               history={comboHistory}
               controllerName={effectiveControllerName}

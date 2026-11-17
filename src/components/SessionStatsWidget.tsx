@@ -15,9 +15,9 @@ export function SessionStatsWidget({stats, t, onReset}: SessionStatsWidgetProps)
   return (
     <section
       aria-label="Estatísticas da Sessão"
-      className="accent-panel rounded-xl px-3.5 py-2.5 flex flex-col gap-2"
+      className="w-full accent-panel rounded-xl px-4 py-3 flex flex-col gap-2.5"
     >
-      <div className="grid grid-cols-3 gap-2 text-[11px]">
+      <div className="grid grid-cols-3 gap-2 sm:gap-3 text-[11px]">
         {/* Total Clicks */}
         <div className="flex flex-col gap-0.5 min-w-0">
           <span className="inline-flex items-center gap-1 text-[#A1A1AA] truncate">

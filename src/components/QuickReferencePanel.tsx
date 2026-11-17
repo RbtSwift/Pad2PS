@@ -50,7 +50,9 @@ export function QuickReferencePanel({
   return (
     <section
       aria-label={t.quickRefTitle}
-      className="accent-panel rounded-xl overflow-hidden flex flex-col min-h-0"
+      className={`w-full accent-panel rounded-xl overflow-hidden flex flex-col min-h-0 ${
+        isOpen ? 'flex-1' : ''
+      }`}
     >
       <button
         type="button"
@@ -70,7 +72,7 @@ export function QuickReferencePanel({
       </button>
 
       {isOpen && (
-        <div className="px-3 pb-3 pt-1 grid grid-cols-2 gap-1.5 overflow-y-auto">
+        <div className="px-3.5 pb-3.5 pt-1 grid grid-cols-2 gap-2 overflow-y-auto flex-1 content-start">
           {indices.map((index) => {
             const item = PS2_BUTTON_MAP[index];
             const active = Boolean(pressedButtons[index]);

@@ -28,7 +28,7 @@ export function TrainingBar({
   return (
     <section
       aria-label={t.combosTrainBtn}
-      className="shrink-0 bg-[#121216] rounded-xl px-4 py-3 flex flex-col gap-2.5 neon-glow-accent"
+      className="w-full shrink-0 bg-[#121216] rounded-xl px-4 py-3 flex flex-col gap-2.5 neon-glow-accent"
       style={{
         border: isCompleted
           ? '1px solid rgba(52, 211, 153, 0.7)'

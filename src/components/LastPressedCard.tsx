@@ -57,7 +57,7 @@ export function LastPressedCard({
   return (
     <section
       aria-label={t.lastPressedTitle}
-      className="accent-panel rounded-xl p-4 flex flex-col justify-between gap-3"
+      className="w-full accent-panel rounded-xl p-4 xl:p-5 flex flex-col justify-between gap-3"
     >
       <div className="flex items-center justify-between gap-2">
         <h2 className="text-xs font-medium text-[#A1A1AA]">
@@ -136,7 +136,7 @@ export function LastPressedCard({
             <p className="text-[11px] font-mono text-[#A1A1AA]">
               {CONSOLE_META[layout].shortLabel}
             </p>
-            <p className="font-display text-2xl font-bold text-[#FAFAFA] leading-tight truncate">
+            <p className="font-display text-[clamp(1.25rem,1.8vw,1.65rem)] font-bold text-[#FAFAFA] leading-tight truncate">
               {getConsoleButtonDisplayName(displayMapping, layout, lang)}
             </p>
             <p className="text-sm text-[#A1A1AA] leading-snug">

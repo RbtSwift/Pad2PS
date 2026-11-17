@@ -14,7 +14,11 @@
 
 @layer base {
   html,
-  body {
+  body,
+  #root {
+    min-height: 100vh;
+    width: 100%;
+    overflow-x: hidden;
     background-color: #09090B;
     color: #FAFAFA;
     font-family: var(--font-sans);
