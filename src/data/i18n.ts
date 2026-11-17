@@ -15,6 +15,7 @@ export interface Translations {
   remapButton: string;
   remapActive: string;
   combosButton: string;
+  emulatorsButton: string;
   compactButton: string;
   expandButton: string;
   settingsButton: string;
@@ -148,6 +149,24 @@ export interface Translations {
   dlLinuxDebPrimary: string;
   dlLinuxAppImagePrimary: string;
   dlAndroidPrimary: string;
+  // Emulators suite
+  emulatorsTitle: string;
+  emulatorsSubtitle: string;
+  emuTabGenerator: string;
+  emuTabGuide: string;
+  emuDownloadIni: string;
+  emuCopyContent: string;
+  emuCopied: string;
+  emuWhereToPaste: string;
+  // Expanded Retro Library & PNG Export modal
+  combosSearchPlaceholder: string;
+  combosTabCheats: string;
+  exportPngBtn: string;
+  pngModalTitle: string;
+  pngTitleLabel: string;
+  pngTitlePlaceholder: string;
+  pngTransparentLabel: string;
+  pngTransparentHint: string;
 }
 
 const PT_TRANSLATIONS: Translations = {
@@ -165,6 +184,7 @@ const PT_TRANSLATIONS: Translations = {
   remapButton: 'Remapear Botões',
   remapActive: 'Remapeando',
   combosButton: 'Códigos & Combos',
+  emulatorsButton: 'Emuladores',
   compactButton: 'Modo Compacto',
   expandButton: 'Expandir',
   settingsButton: 'Ajustes',
@@ -289,6 +309,22 @@ const PT_TRANSLATIONS: Translations = {
   dlLinuxDebPrimary: 'Baixar .deb',
   dlLinuxAppImagePrimary: 'Baixar .AppImage',
   dlAndroidPrimary: 'Baixar APK para Android',
+  emulatorsTitle: 'Suíte de Emuladores',
+  emulatorsSubtitle: 'Gerador automático de perfis (.ini) e guia rápido de drivers',
+  emuTabGenerator: 'Gerador de Config (.ini)',
+  emuTabGuide: 'Guia Rápido por Emulador',
+  emuDownloadIni: 'Baixar Arquivo (.ini)',
+  emuCopyContent: 'Copiar Conteúdo',
+  emuCopied: 'Copiado!',
+  emuWhereToPaste: 'Onde colar/importar',
+  combosSearchPlaceholder: 'Buscar jogo, código ou macete (ex: GTA, God of War)...',
+  combosTabCheats: 'Macetes',
+  exportPngBtn: 'Exportar PNG',
+  pngModalTitle: 'Exportar Sequência como PNG',
+  pngTitleLabel: 'Título do Cartão',
+  pngTitlePlaceholder: 'Ex: Combo Infinito',
+  pngTransparentLabel: 'Fundo Transparente',
+  pngTransparentHint: 'Ideal para sobrepor em vídeos, thumbnails e OBS Studio',
 };
 
 const EN_TRANSLATIONS: Translations = {
@@ -306,6 +342,7 @@ const EN_TRANSLATIONS: Translations = {
   remapButton: 'Remap Buttons',
   remapActive: 'Remapping',
   combosButton: 'Codes & Combos',
+  emulatorsButton: 'Emulators',
   compactButton: 'Compact Mode',
   expandButton: 'Expand',
   settingsButton: 'Settings',
@@ -430,6 +467,22 @@ const EN_TRANSLATIONS: Translations = {
   dlLinuxDebPrimary: 'Download .deb',
   dlLinuxAppImagePrimary: 'Download .AppImage',
   dlAndroidPrimary: 'Download Android APK',
+  emulatorsTitle: 'Emulators Suite',
+  emulatorsSubtitle: 'Automatic .ini config generator & quick driver setup guide',
+  emuTabGenerator: 'Config Generator (.ini)',
+  emuTabGuide: 'Quick Setup Guide',
+  emuDownloadIni: 'Download File (.ini)',
+  emuCopyContent: 'Copy Content',
+  emuCopied: 'Copied!',
+  emuWhereToPaste: 'Where to paste/import',
+  combosSearchPlaceholder: 'Search game, cheat or move (e.g. GTA, God of War)...',
+  combosTabCheats: 'Cheat Codes',
+  exportPngBtn: 'Save as PNG',
+  pngModalTitle: 'Export Sequence as PNG',
+  pngTitleLabel: 'Card Title',
+  pngTitlePlaceholder: 'e.g. Infinite Combo',
+  pngTransparentLabel: 'Transparent Background',
+  pngTransparentHint: 'Clean alpha overlay for video edits, thumbnails & OBS',
 };
 
 export function getTranslations(lang: AppLanguage): Translations {

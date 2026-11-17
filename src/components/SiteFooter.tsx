@@ -39,14 +39,14 @@ export function SiteFooter({t, isApp, onOpenLegal}: SiteFooterProps) {
 
   return (
     <div
-      className="w-full pt-2.5 border-t flex justify-between items-center flex-wrap gap-4 text-[11px] text-[#A1A1AA]"
+      className="w-full pt-1.5 sm:pt-2 border-t flex justify-between items-center flex-wrap gap-x-3 gap-y-1.5 text-[10px] sm:text-[11px] text-[#A1A1AA]"
       style={{borderColor: 'rgba(var(--accent-rgb), 0.14)'}}
     >
-      <p className="text-center sm:text-left text-zinc-500 leading-snug">
+      <p className="text-center sm:text-left text-zinc-500 leading-snug hidden sm:block">
         {t.footerNotice}
       </p>
 
-      <div className="flex flex-wrap items-center justify-center gap-2 shrink-0">
+      <div className="flex flex-wrap items-center justify-center sm:justify-end gap-1.5 shrink-0 w-full sm:w-auto">
         {/* Official X (Twitter) Link */}
         <a
           href="https://x.com/Pad2PS"

@@ -2,6 +2,7 @@ import {
   Activity,
   ArrowLeftRight,
   BookOpen,
+  Cpu,
   Gamepad2,
   Maximize2,
   Minimize2,
@@ -18,6 +19,7 @@ import {ComboLibraryDrawer} from './components/ComboLibraryDrawer';
 import {ControllerNameEditor} from './components/ControllerNameEditor';
 import {DiagnosticsModal} from './components/DiagnosticsModal';
 import {DualShock2SVG} from './components/DualShock2SVG';
+import {EmulatorsModal} from './components/EmulatorsModal';
 import {InstallSuggestionPopup} from './components/InstallSuggestionPopup';
 import {LastPressedCard} from './components/LastPressedCard';
 import {LegalModal} from './components/LegalModal';
@@ -157,14 +159,25 @@ function loadCustomCombos(): ComboDefinition[] {
     if (!Array.isArray(parsed)) {
       return [];
     }
-    return parsed.filter(
-      (item): item is ComboDefinition =>
-        Boolean(item) &&
-        typeof item.id === 'string' &&
-        typeof item.game === 'string' &&
-        typeof item.title === 'string' &&
-        Array.isArray(item.sequence)
-    );
+    return parsed
+      .filter(
+        (item): item is ComboDefinition =>
+          Boolean(item) &&
+          typeof item.id === 'string' &&
+          typeof item.game === 'string' &&
+          typeof item.title === 'string' &&
+          Array.isArray(item.sequence)
+      )
+      .map((item) => ({
+        ...item,
+        console:
+          item.console === 'ps1' ||
+          item.console === 'ps2' ||
+          item.console === 'ps3' ||
+          item.console === 'psp'
+            ? item.console
+            : 'ps2',
+      }));
   } catch {
     return [];
   }
@@ -236,6 +249,7 @@ export default function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
   const [isDiagnosticsOpen, setIsDiagnosticsOpen] = useState<boolean>(false);
   const [isComboDrawerOpen, setIsComboDrawerOpen] = useState<boolean>(false);
+  const [isEmulatorsOpen, setIsEmulatorsOpen] = useState<boolean>(false);
   const [isLegalOpen, setIsLegalOpen] = useState<boolean>(false);
 
   // Remap Mode state
@@ -649,11 +663,11 @@ export default function App() {
       : null;
 
   return (
-    <div className="cyber-grid-bg min-h-screen w-full overflow-x-hidden flex flex-col text-[#FAFAFA]">
-      <div className="w-full max-w-[2400px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-3 sm:py-4 flex-1 flex flex-col gap-3 lg:gap-4 min-h-0">
+    <div className="cyber-grid-bg h-dvh max-h-dvh w-full overflow-hidden flex flex-col text-[#FAFAFA]">
+      <div className="w-full max-w-[2400px] mx-auto px-3 sm:px-5 lg:px-7 xl:px-10 py-2 sm:py-3 flex-1 flex flex-col gap-2 sm:gap-2.5 lg:gap-3 min-h-0 overflow-hidden">
         {/* Header */}
         <header
-          className={`w-full flex flex-wrap items-center justify-between gap-2 lg:gap-3 pb-2.5 border-b accent-border-subtle shrink-0 ${
+          className={`w-full flex flex-wrap items-center justify-between gap-2 lg:gap-3 pb-2 border-b accent-border-subtle shrink-0 ${
             isCompact ? 'bg-[#121216]/85 backdrop-blur-md px-3.5 py-2 rounded-xl border' : ''
           }`}
         >
@@ -872,6 +886,20 @@ export default function App() {
               </button>
             )}
 
+            {/* Emulators Suite Button */}
+            {!isCompact && (
+              <button
+                type="button"
+                onClick={() => setIsEmulatorsOpen(true)}
+                title={t.emulatorsButton}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border bg-[#121216] text-xs font-medium text-[#FAFAFA] hover:bg-white/5 transition-colors cursor-pointer whitespace-nowrap shrink-0"
+                style={{borderColor: 'rgba(var(--accent-rgb), 0.28)'}}
+              >
+                <Cpu className="w-3.5 h-3.5" style={{color: 'var(--accent-color)'}} />
+                <span className="hidden md:inline">{t.emulatorsButton}</span>
+              </button>
+            )}
+
             {/* Combo Library Button */}
             {!isCompact && (
               <button
@@ -983,7 +1011,7 @@ export default function App() {
         {!isCompact && !showActivatedStatus && !isRemapMode && (
           <div
             role="status"
-            className="w-full shrink-0 bg-[#121216] rounded-xl px-4 py-2.5 flex flex-wrap items-center justify-between gap-3 neon-glow-accent animate-pulse"
+            className="w-full shrink-0 bg-[#121216] rounded-xl px-3 sm:px-4 py-1.5 sm:py-2 flex flex-wrap items-center justify-between gap-2 sm:gap-3 neon-glow-accent animate-pulse"
             style={{border: '1px solid rgba(var(--accent-rgb), 0.4)'}}
           >
             <div className="flex items-center gap-3 min-w-0">
@@ -1094,6 +1122,7 @@ export default function App() {
             currentStep={trainingStep}
             errorFlash={trainingErrorFlash}
             layout={consoleLayout}
+            lang={lang}
             t={t}
             onRestart={() => handleStartTraining(activeTraining)}
             onStop={() => {
@@ -1105,13 +1134,19 @@ export default function App() {
         )}
 
         {/* Main Workspace Grid */}
-        <main className="flex-1 min-h-0 w-full grid grid-cols-1 lg:grid-cols-12 gap-4 xl:gap-6 items-stretch">
+        <main
+          className={`flex-1 min-h-0 w-full grid grid-cols-1 lg:grid-cols-12 gap-2 sm:gap-3.5 lg:gap-4 xl:gap-6 items-stretch overflow-hidden ${
+            isCompact
+              ? 'grid-rows-1'
+              : 'grid-rows-[minmax(0,38%)_minmax(0,62%)] sm:grid-rows-[minmax(0,43%)_minmax(0,57%)] lg:grid-rows-1'
+          }`}
+        >
           {/* Centerpiece: Interactive Controller SVG */}
           <section
             aria-label="PlayStation Controller"
             className={`${
               isCompact ? 'lg:col-span-12' : 'lg:col-span-7 xl:col-span-8'
-            } accent-panel rounded-xl p-3 sm:p-5 lg:p-6 flex flex-col items-center justify-between relative min-h-[300px] h-full w-full min-w-0 transition-colors`}
+            } accent-panel rounded-xl p-2.5 sm:p-4 lg:p-5 flex flex-col items-center justify-between gap-1.5 sm:gap-2 relative min-h-0 h-full w-full min-w-0 overflow-hidden transition-colors`}
             style={
               isCompact && chromaMode !== 'dark'
                 ? {backgroundColor: CHROMA_BG_MAP[chromaMode], backgroundImage: 'none'}
@@ -1134,7 +1169,7 @@ export default function App() {
                       role="tab"
                       aria-selected={active}
                       onClick={() => setConsoleLayout(option)}
-                      className={`px-2.5 py-1 rounded-md text-xs font-mono font-semibold transition-all cursor-pointer whitespace-nowrap ${
+                      className={`px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-md text-[11px] sm:text-xs font-mono font-semibold transition-all cursor-pointer whitespace-nowrap ${
                         active ? 'text-white neon-glow-accent' : 'text-[#A1A1AA] hover:text-[#FAFAFA]'
                       }`}
                       style={
@@ -1198,7 +1233,7 @@ export default function App() {
               )}
             </div>
 
-            <div className="w-full flex-1 flex items-center justify-center min-h-0 py-2">
+            <div className="w-full flex-1 flex items-center justify-center min-h-0 overflow-hidden py-1 sm:py-2">
               <DualShock2SVG
                 layout={consoleLayout}
                 pressedButtons={pressedButtons}
@@ -1216,11 +1251,9 @@ export default function App() {
             </div>
 
             {!isCompact && (
-              <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-[11px] text-[#A1A1AA] shrink-0">
+              <div className="hidden sm:flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-[11px] text-[#A1A1AA] shrink-0">
                 <span>{t.clickToTest}</span>
-                <span aria-hidden="true" className="hidden sm:inline">
-                  ·
-                </span>
+                <span aria-hidden="true">·</span>
                 <button
                   type="button"
                   onClick={() => setIsSettingsOpen(true)}
@@ -1229,9 +1262,7 @@ export default function App() {
                 >
                   {t.deadzoneLabel}: {deadzone.toFixed(2)}
                 </button>
-                <span aria-hidden="true" className="hidden sm:inline">
-                  ·
-                </span>
+                <span aria-hidden="true">·</span>
                 <button
                   type="button"
                   onClick={() => setIsDiagnosticsOpen(true)}
@@ -1246,7 +1277,7 @@ export default function App() {
 
           {/* Side Column (hidden in Ultra Compact Mode) */}
           {!isCompact && (
-            <aside className="lg:col-span-5 xl:col-span-4 flex flex-col gap-4 justify-between h-full min-w-0">
+            <aside className="lg:col-span-5 xl:col-span-4 flex flex-col gap-2 sm:gap-2.5 xl:gap-3.5 h-full min-h-0 overflow-hidden">
               <LastPressedCard
                 layout={consoleLayout}
                 activeButtons={activeButtons}
@@ -1276,7 +1307,7 @@ export default function App() {
 
         {/* Bottom Bar */}
         {!isCompact && (
-          <footer className="w-full shrink-0 flex flex-col gap-2.5">
+          <footer className="w-full shrink-0 flex flex-col gap-1.5 sm:gap-2">
             <ComboHistoryBar
               history={comboHistory}
               controllerName={effectiveControllerName}
@@ -1319,12 +1350,24 @@ export default function App() {
         t={t}
       />
 
+      {/* Emulators Suite Modal */}
+      <EmulatorsModal
+        isOpen={isEmulatorsOpen}
+        onClose={() => setIsEmulatorsOpen(false)}
+        remapMap={remapMap}
+        controllerName={effectiveControllerName}
+        deadzone={deadzone}
+        lang={lang}
+        t={t}
+      />
+
       {/* Combo Library Drawer */}
       <ComboLibraryDrawer
         isOpen={isComboDrawerOpen}
         onClose={() => setIsComboDrawerOpen(false)}
         activeTrainingId={activeTraining?.id ?? null}
         layout={consoleLayout}
+        remapMap={remapMap}
         customCombos={customCombos}
         controllerName={effectiveControllerName}
         isControllerConnected={isConnected}

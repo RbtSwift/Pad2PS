@@ -1,4 +1,5 @@
-import {Download, Trash2} from 'lucide-react';
+import {Download, ImageDown, Trash2} from 'lucide-react';
+import {useState} from 'react';
 import type {AppLanguage, Translations} from '../data/i18n';
 import {
   CONSOLE_META,
@@ -8,6 +9,7 @@ import {
   getXInputDisplayLabel,
 } from '../data/ps2Mapping';
 import type {ComboEntry} from '../hooks/useGamepad';
+import {PngExportModal} from './PngExportModal';
 import {Ps2Symbol} from './Ps2Symbol';
 
 interface ComboHistoryBarProps {
@@ -29,6 +31,7 @@ export function ComboHistoryBar({
   t,
   onClear,
 }: ComboHistoryBarProps) {
+  const [isPngModalOpen, setIsPngModalOpen] = useState<boolean>(false);
   const handleDownloadTxt = () => {
     if (history.length === 0) {
       return;
@@ -103,27 +106,27 @@ export function ComboHistoryBar({
   return (
     <section
       aria-label={t.comboHistoryTitle}
-      className="w-full accent-panel rounded-xl px-4 py-2.5 flex flex-wrap sm:flex-nowrap items-center justify-between gap-3 sm:gap-4"
+      className="w-full shrink-0 accent-panel rounded-xl px-3 sm:px-4 py-1.5 sm:py-2 flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 sm:gap-3"
     >
-      <div className="flex items-center gap-3 min-w-0 flex-1 w-full sm:w-auto">
+      <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1 w-full sm:w-auto">
         <div className="shrink-0">
-          <h2 className="text-xs font-semibold text-[#FAFAFA] whitespace-nowrap">
+          <h2 className="text-[11px] sm:text-xs font-semibold text-[#FAFAFA] whitespace-nowrap">
             {t.comboHistoryTitle}
           </h2>
-          <p className="text-[11px] text-[#A1A1AA] whitespace-nowrap">
+          <p className="text-[10px] sm:text-[11px] text-[#A1A1AA] whitespace-nowrap hidden sm:block">
             {t.last10Buttons}
           </p>
         </div>
 
         <div
-          className="h-7 w-px shrink-0 hidden sm:block"
+          className="h-6 w-px shrink-0 hidden sm:block"
           style={{backgroundColor: 'rgba(var(--accent-rgb), 0.18)'}}
           aria-hidden="true"
         />
 
         <div className="flex-1 min-w-0">
           {history.length === 0 ? (
-            <p className="text-xs text-zinc-500 truncate">{t.comboHistoryEmpty}</p>
+            <p className="text-[11px] sm:text-xs text-zinc-500 truncate">{t.comboHistoryEmpty}</p>
           ) : (
             <ol className="flex items-center gap-1.5 overflow-x-auto py-0.5">
               {history.map((entry, idx) => {
@@ -132,7 +135,7 @@ export function ComboHistoryBar({
                   <li
                     key={entry.uid}
                     title={`${getConsoleButtonDisplayName(entry.button, layout, lang)} (${entry.button.xinputShort})`}
-                    className={`shrink-0 h-9 min-w-[36px] px-2 rounded-lg border flex items-center justify-center transition-all ${
+                    className={`shrink-0 h-7 sm:h-8 min-w-[30px] sm:min-w-[34px] px-1.5 sm:px-2 rounded-lg border flex items-center justify-center transition-all ${
                       isLatest ? 'text-white neon-glow-accent' : 'bg-[#09090B]/80'
                     }`}
                     style={
@@ -147,7 +150,7 @@ export function ComboHistoryBar({
                           }
                     }
                   >
-                    <Ps2Symbol id={entry.button.id} className="w-4 h-4" layout={layout} />
+                    <Ps2Symbol id={entry.button.id} className="w-3.5 h-3.5 sm:w-4 sm:h-4" layout={layout} />
                   </li>
                 );
               })}
@@ -156,13 +159,25 @@ export function ComboHistoryBar({
         </div>
       </div>
 
-      <div className="flex items-center gap-2 shrink-0 ml-auto">
+      <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 ml-auto">
+        <button
+          type="button"
+          onClick={() => setIsPngModalOpen(true)}
+          disabled={history.length === 0}
+          title={t.exportPngBtn}
+          className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-medium bg-[#09090B]/80 border text-[#FAFAFA] hover:text-white disabled:opacity-40 disabled:pointer-events-none transition-colors cursor-pointer whitespace-nowrap"
+          style={{borderColor: 'rgba(var(--accent-rgb), 0.38)'}}
+        >
+          <ImageDown className="w-3.5 h-3.5" style={{color: 'var(--accent-color)'}} />
+          <span>{t.exportPngBtn}</span>
+        </button>
+
         <button
           type="button"
           onClick={handleDownloadTxt}
           disabled={history.length === 0}
           title={t.downloadTxt}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-[#09090B]/80 border text-[#FAFAFA] hover:text-white disabled:opacity-40 disabled:pointer-events-none transition-colors cursor-pointer whitespace-nowrap"
+          className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-medium bg-[#09090B]/80 border text-[#FAFAFA] hover:text-white disabled:opacity-40 disabled:pointer-events-none transition-colors cursor-pointer whitespace-nowrap"
           style={{borderColor: 'rgba(var(--accent-rgb), 0.38)'}}
         >
           <Download className="w-3.5 h-3.5" style={{color: 'var(--accent-color)'}} />
@@ -173,13 +188,29 @@ export function ComboHistoryBar({
           type="button"
           onClick={onClear}
           disabled={history.length === 0}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border text-[#FAFAFA] hover:bg-white/5 disabled:opacity-40 disabled:pointer-events-none transition-colors cursor-pointer whitespace-nowrap"
+          className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-medium border text-[#FAFAFA] hover:bg-white/5 disabled:opacity-40 disabled:pointer-events-none transition-colors cursor-pointer whitespace-nowrap"
           style={{borderColor: 'rgba(var(--accent-rgb), 0.25)'}}
         >
           <Trash2 className="w-3.5 h-3.5" style={{color: 'var(--accent-color)'}} />
           <span>{t.clear}</span>
         </button>
       </div>
+
+      <PngExportModal
+        isOpen={isPngModalOpen}
+        onClose={() => setIsPngModalOpen(false)}
+        defaultTitle={lang === 'en' ? 'Infinite Combo' : 'Combo Infinito'}
+        subtitle={
+          controllerName
+            ? `${t.pngControllerPrefix}: ${controllerName}`
+            : CONSOLE_META[layout].hardwareName
+        }
+        sequence={history.map((entry) => entry.button.id)}
+        layout={layout}
+        lang={lang}
+        t={t}
+        defaultFileName="pad2ps-combo.png"
+      />
     </section>
   );
 }

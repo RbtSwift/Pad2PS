@@ -181,10 +181,10 @@ export async function exportLogoToPng(): Promise<void> {
   ctx.stroke();
   ctx.restore();
 
-  drawControllerEmblem(ctx, 96, 95, 210, accentHex, accentRgb, true);
+  drawControllerEmblem(ctx, 72, 62, 260, accentHex, accentRgb, false);
 
   // Draw Wordmark "Pad2PS"
-  const textX = 358;
+  const textX = 362;
   const textY = 204;
   ctx.font = '800 132px "Orbitron", "Outfit", sans-serif';
   ctx.textAlign = 'left';
@@ -229,31 +229,9 @@ export async function exportLogoIconToPng(): Promise<void> {
     return;
   }
 
-  // Deep square rounded backdrop
-  ctx.fillStyle = '#09090B';
-  drawRoundedRect(ctx, 0, 0, size, size, 108);
-  ctx.fill();
-
-  const radial = ctx.createRadialGradient(size / 2, size / 2, 16, size / 2, size / 2, 240);
-  radial.addColorStop(0, `rgba(${accentRgb}, 0.22)`);
-  radial.addColorStop(0.65, `rgba(${accentRgb}, 0.05)`);
-  radial.addColorStop(1, 'rgba(9, 9, 11, 0)');
-  ctx.fillStyle = radial;
-  drawRoundedRect(ctx, 0, 0, size, size, 108);
-  ctx.fill();
-
-  // Outer glowing border
-  ctx.save();
-  ctx.shadowColor = accentHex;
-  ctx.shadowBlur = 22;
-  ctx.strokeStyle = accentHex;
-  ctx.lineWidth = 5;
-  drawRoundedRect(ctx, 18, 18, size - 36, size - 36, 94);
-  ctx.stroke();
-  ctx.restore();
-
-  // Centered controller emblem filling the 1:1 icon cleanly
-  drawControllerEmblem(ctx, 26, 26, size - 52, accentHex, accentRgb, false);
+  // Transparent canvas containing only the glowing controller emblem (no outer square)
+  ctx.clearRect(0, 0, size, size);
+  drawControllerEmblem(ctx, 18, 18, size - 36, accentHex, accentRgb, false);
 
   await triggerCanvasDownload(canvas, 'pad2ps-controle-icone.png');
 }

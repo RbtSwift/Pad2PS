@@ -51,18 +51,18 @@ export function QuickReferencePanel({
     <section
       aria-label={t.quickRefTitle}
       className={`w-full accent-panel rounded-xl overflow-hidden flex flex-col min-h-0 ${
-        isOpen ? 'flex-1' : ''
+        isOpen ? 'flex-1 min-h-[76px]' : 'shrink-0'
       }`}
     >
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
         aria-expanded={isOpen}
-        className="w-full px-4 py-3 flex items-center justify-between gap-2 text-left hover:bg-white/[0.03] transition-colors cursor-pointer"
+        className="w-full px-3.5 sm:px-4 py-2 sm:py-2.5 flex items-center justify-between gap-2 text-left hover:bg-white/[0.03] transition-colors cursor-pointer shrink-0"
       >
-        <div>
-          <h2 className="text-xs font-semibold text-[#FAFAFA]">{t.quickRefTitle}</h2>
-          <p className="text-[11px] text-[#A1A1AA]">
+        <div className="min-w-0">
+          <h2 className="text-xs font-semibold text-[#FAFAFA] truncate">{t.quickRefTitle}</h2>
+          <p className="text-[11px] text-[#A1A1AA] truncate">
             {t.quickRefSubtitle} → {CONSOLE_META[layout].shortLabel}
           </p>
         </div>
@@ -72,7 +72,7 @@ export function QuickReferencePanel({
       </button>
 
       {isOpen && (
-        <div className="px-3.5 pb-3.5 pt-1 grid grid-cols-2 gap-2 overflow-y-auto flex-1 content-start">
+        <div className="px-3 sm:px-3.5 pb-3 pt-1 grid grid-cols-2 gap-1.5 sm:gap-2 overflow-y-auto flex-1 min-h-0 content-start">
           {indices.map((index) => {
             const item = PS2_BUTTON_MAP[index];
             const active = Boolean(pressedButtons[index]);
@@ -89,7 +89,7 @@ export function QuickReferencePanel({
                   }
                 }}
                 onPointerCancel={() => onTestButtonUp(index)}
-                className={`flex items-center justify-between gap-2 px-2.5 py-2 rounded-lg border text-left transition-all duration-75 cursor-pointer select-none ${
+                className={`flex items-center justify-between gap-2 px-2.5 py-1.5 sm:py-2 rounded-lg border text-left transition-all duration-75 cursor-pointer select-none ${
                   active ? 'text-white neon-glow-accent scale-[0.98]' : 'bg-[#09090B]/70 text-[#FAFAFA]'
                 }`}
                 style={

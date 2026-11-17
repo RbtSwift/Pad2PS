@@ -8,6 +8,7 @@ import {
   Plus,
   Radio,
   RotateCcw,
+  Search,
   Share2,
   Trash2,
   Undo2,
@@ -22,20 +23,31 @@ import {
   SUGGESTED_GAMES,
 } from '../data/comboLibrary';
 import type {AppLanguage, Translations} from '../data/i18n';
-import {type ConsoleLayout, PS2_BUTTON_BY_ID, type Ps2ButtonId} from '../data/ps2Mapping';
+import {
+  CONSOLE_META,
+  type ConsoleLayout,
+  PS2_BUTTON_BY_ID,
+  PS2_BUTTON_MAP,
+  type Ps2ButtonId,
+} from '../data/ps2Mapping';
 import type {ComboEntry} from '../hooks/useGamepad';
+import {getPhysicalIndexForPsIndex} from '../utils/emulatorConfigGenerator';
 import {exportCombosToPng} from '../utils/exportComboPng';
+import {PngExportModal} from './PngExportModal';
 import {Ps2Symbol} from './Ps2Symbol';
 
-type LibraryTab = 'all' | 'preset' | 'custom';
+type LibraryTab = 'all' | 'cheats' | 'preset' | 'custom';
+type ConsoleFilter = 'all' | ConsoleLayout;
 const ALL_GAMES_FILTER = '__ALL__';
 const SHARE_PREFIX = 'PAD2PS1:';
+const CONSOLE_FILTER_OPTIONS: ConsoleFilter[] = ['all', 'ps1', 'ps2', 'ps3', 'psp'];
 
 interface ComboLibraryDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   activeTrainingId: string | null;
   layout: ConsoleLayout;
+  remapMap: Record<number, number>;
   customCombos: ComboDefinition[];
   controllerName: string | null;
   isControllerConnected: boolean;
@@ -53,9 +65,36 @@ function isValidPs2ButtonId(value: unknown): value is Ps2ButtonId {
   return typeof value === 'string' && value in PS2_BUTTON_BY_ID;
 }
 
+function getXboxShortLabelForPsButton(
+  psButtonId: Ps2ButtonId,
+  remapMap: Record<number, number>,
+  lang: AppLanguage
+): string {
+  const psMapping = PS2_BUTTON_BY_ID[psButtonId];
+  const physIdx = getPhysicalIndexForPsIndex(psMapping.index, remapMap);
+  const physMapping = PS2_BUTTON_MAP[physIdx] ?? psMapping;
+
+  if (lang === 'en') {
+    switch (physMapping.id) {
+      case 'up':
+        return 'D-Up';
+      case 'down':
+        return 'D-Down';
+      case 'left':
+        return 'D-Left';
+      case 'right':
+        return 'D-Right';
+      default:
+        return physMapping.xinputShort;
+    }
+  }
+  return physMapping.xinputShort;
+}
+
 function encodeShareCombo(combo: ComboDefinition): string {
   const payload = {
     g: combo.game,
+    c: combo.console,
     t: combo.title,
     s: combo.subtitle,
     q: combo.sequence,
@@ -68,7 +107,11 @@ function encodeShareCombo(combo: ComboDefinition): string {
   return SHARE_PREFIX + btoa(binary);
 }
 
-function decodeShareCode(raw: string, fallbackSubtitle: string): ComboDefinition | null {
+function decodeShareCode(
+  raw: string,
+  fallbackSubtitle: string,
+  fallbackConsole: ConsoleLayout
+): ComboDefinition | null {
   const trimmed = raw.trim();
   if (!trimmed.startsWith(SHARE_PREFIX)) {
     return null;
@@ -83,6 +126,7 @@ function decodeShareCode(raw: string, fallbackSubtitle: string): ComboDefinition
     const json = new TextDecoder().decode(bytes);
     const parsed = JSON.parse(json) as {
       g?: unknown;
+      c?: unknown;
       t?: unknown;
       s?: unknown;
       q?: unknown;
@@ -100,9 +144,18 @@ function decodeShareCode(raw: string, fallbackSubtitle: string): ComboDefinition
     if (sequence.length === 0) {
       return null;
     }
+    const parsedConsole: ConsoleLayout =
+      parsed.c === 'ps1' ||
+      parsed.c === 'ps2' ||
+      parsed.c === 'ps3' ||
+      parsed.c === 'psp'
+        ? parsed.c
+        : fallbackConsole;
     return {
       id: `shared-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
       game: parsed.g.trim(),
+      console: parsedConsole,
+      category: 'combo',
       title: parsed.t.trim(),
       subtitle:
         typeof parsed.s === 'string' && parsed.s.trim()
@@ -116,10 +169,16 @@ function decodeShareCode(raw: string, fallbackSubtitle: string): ComboDefinition
   }
 }
 
-function sanitizeImportedCombos(rawData: unknown, fallbackSubtitle: string): ComboDefinition[] {
+function sanitizeImportedCombos(
+  rawData: unknown,
+  fallbackSubtitle: string,
+  fallbackConsole: ConsoleLayout
+): ComboDefinition[] {
   const arr = Array.isArray(rawData)
     ? rawData
-    : rawData && typeof rawData === 'object' && Array.isArray((rawData as {combos?: unknown}).combos)
+    : rawData &&
+        typeof rawData === 'object' &&
+        Array.isArray((rawData as {combos?: unknown}).combos)
       ? (rawData as {combos: unknown[]}).combos
       : null;
 
@@ -146,12 +205,21 @@ function sanitizeImportedCombos(rawData: unknown, fallbackSubtitle: string): Com
     if (seq.length === 0) {
       continue;
     }
+    const parsedConsole: ConsoleLayout =
+      rec.console === 'ps1' ||
+      rec.console === 'ps2' ||
+      rec.console === 'ps3' ||
+      rec.console === 'psp'
+        ? rec.console
+        : fallbackConsole;
     sanitized.push({
       id:
         typeof rec.id === 'string' && rec.id.trim()
           ? rec.id.trim()
           : `import-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
       game: rec.game.trim(),
+      console: parsedConsole,
+      category: rec.category === 'cheat' ? 'cheat' : 'combo',
       title: rec.title.trim(),
       subtitle:
         typeof rec.subtitle === 'string' && rec.subtitle.trim()
@@ -169,6 +237,7 @@ export function ComboLibraryDrawer({
   onClose,
   activeTrainingId,
   layout,
+  remapMap,
   customCombos,
   controllerName,
   isControllerConnected,
@@ -182,24 +251,32 @@ export function ComboLibraryDrawer({
   onStartTraining,
 }: ComboLibraryDrawerProps) {
   const [activeTab, setActiveTab] = useState<LibraryTab>('all');
+  const [consoleFilter, setConsoleFilter] = useState<ConsoleFilter>('all');
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedGame, setSelectedGame] = useState<string>(ALL_GAMES_FILTER);
   const [isCreatorOpen, setIsCreatorOpen] = useState<boolean>(false);
   const [exportingKey, setExportingKey] = useState<string | null>(null);
+  const [pngTargetCombo, setPngTargetCombo] = useState<ComboDefinition | null>(
+    null
+  );
 
   // Share & Backup state
   const [copiedComboId, setCopiedComboId] = useState<string | null>(null);
   const [shareCodeInput, setShareCodeInput] = useState<string>('');
-  const [backupNotice, setBackupNotice] = useState<{type: 'ok' | 'err'; text: string} | null>(
-    null
-  );
+  const [backupNotice, setBackupNotice] = useState<{
+    type: 'ok' | 'err';
+    text: string;
+  } | null>(null);
   const backupFileRef = useRef<HTMLInputElement>(null);
 
   // Builder form state
   const [draftGame, setDraftGame] = useState<string>('');
+  const [draftConsole, setDraftConsole] = useState<ConsoleLayout>(layout);
   const [draftTitle, setDraftTitle] = useState<string>('');
   const [draftSubtitle, setDraftSubtitle] = useState<string>('');
   const [draftSequence, setDraftSequence] = useState<Ps2ButtonId[]>([]);
-  const [isRecordingController, setIsRecordingController] = useState<boolean>(false);
+  const [isRecordingController, setIsRecordingController] =
+    useState<boolean>(false);
   const [formError, setFormError] = useState<string | null>(null);
 
   const lastRecordedUidRef = useRef<number>(latestPressEvent?.uid ?? 0);
@@ -210,13 +287,13 @@ export function ComboLibraryDrawer({
       return;
     }
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
+      if (e.key === 'Escape' && !pngTargetCombo) {
         onClose();
       }
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, pngTargetCombo]);
 
   useEffect(() => {
     if (!copiedComboId) {
@@ -256,15 +333,43 @@ export function ComboLibraryDrawer({
     return [...customCombos, ...COMBO_LIBRARY];
   }, [customCombos]);
 
+  const cheatsCount = useMemo(
+    () => COMBO_LIBRARY.filter((c) => c.category === 'cheat').length,
+    []
+  );
+
   const tabFilteredCombos = useMemo(() => {
-    if (activeTab === 'preset') {
-      return COMBO_LIBRARY;
+    let base = allCombos;
+    if (activeTab === 'cheats') {
+      base = COMBO_LIBRARY.filter((c) => c.category === 'cheat');
+    } else if (activeTab === 'preset') {
+      base = COMBO_LIBRARY;
+    } else if (activeTab === 'custom') {
+      base = customCombos;
     }
-    if (activeTab === 'custom') {
-      return customCombos;
+
+    if (consoleFilter !== 'all') {
+      base = base.filter((c) => (c.console ?? 'ps2') === consoleFilter);
     }
-    return allCombos;
-  }, [activeTab, allCombos, customCombos]);
+
+    const q = searchQuery.trim().toLowerCase();
+    if (q) {
+      base = base.filter((c) => {
+        const title = (lang === 'en' && c.titleEn ? c.titleEn : c.title).toLowerCase();
+        const sub = (
+          lang === 'en' && c.subtitleEn ? c.subtitleEn : c.subtitle
+        ).toLowerCase();
+        return (
+          c.game.toLowerCase().includes(q) ||
+          title.includes(q) ||
+          sub.includes(q) ||
+          (c.console ?? 'ps2').toLowerCase().includes(q)
+        );
+      });
+    }
+
+    return base;
+  }, [activeTab, allCombos, customCombos, consoleFilter, searchQuery, lang]);
 
   const availableGames = useMemo(() => {
     const names = Array.from(new Set(tabFilteredCombos.map((c) => c.game)));
@@ -309,6 +414,8 @@ export function ComboLibraryDrawer({
     return null;
   }
 
+  const hasActiveRemap = Object.keys(remapMap).length > 0;
+
   const toggleRecording = () => {
     if (latestPressEvent) {
       lastRecordedUidRef.current = latestPressEvent.uid;
@@ -349,6 +456,8 @@ export function ComboLibraryDrawer({
 
     onAddCustomCombo({
       game: gameTrimmed,
+      console: draftConsole,
+      category: 'combo',
       title: titleTrimmed,
       subtitle:
         subtitleTrimmed ||
@@ -366,26 +475,14 @@ export function ComboLibraryDrawer({
     setIsCreatorOpen(false);
     setFormError(null);
     setActiveTab('custom');
+    setConsoleFilter('all');
     setSelectedGame(ALL_GAMES_FILTER);
   };
 
-  const handleExportSinglePng = async (combo: ComboDefinition) => {
-    setExportingKey(`single-${combo.id}`);
-    try {
-      await exportCombosToPng({
-        gameTitle: combo.game,
-        combos: [combo],
-        controllerName,
-        layout,
-        lang,
-        fileNameSuffix: `${combo.game}-${combo.title}`,
-      });
-    } finally {
-      setExportingKey(null);
-    }
-  };
-
-  const handleExportGamePng = async (gameName: string, combos: ComboDefinition[]) => {
+  const handleExportGamePng = async (
+    gameName: string,
+    combos: ComboDefinition[]
+  ) => {
     setExportingKey(`game-${gameName}`);
     try {
       await exportCombosToPng({
@@ -425,7 +522,9 @@ export function ComboLibraryDrawer({
     URL.revokeObjectURL(url);
   };
 
-  const handleImportJsonBackup = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImportJsonBackup = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = e.target.files?.[0];
     e.target.value = '';
     if (!file) {
@@ -435,8 +534,10 @@ export function ComboLibraryDrawer({
       const text = await file.text();
       const parsed = JSON.parse(text);
       const fallbackSub =
-        lang === 'en' ? 'Imported from JSON backup' : 'Importado de backup JSON';
-      const combos = sanitizeImportedCombos(parsed, fallbackSub);
+        lang === 'en'
+          ? 'Imported from JSON backup'
+          : 'Importado de backup JSON';
+      const combos = sanitizeImportedCombos(parsed, fallbackSub, layout);
       if (combos.length === 0) {
         setBackupNotice({type: 'err', text: t.combosBackupError});
         return;
@@ -444,7 +545,10 @@ export function ComboLibraryDrawer({
       onImportCustomCombos(combos);
       setActiveTab('custom');
       setSelectedGame(ALL_GAMES_FILTER);
-      setBackupNotice({type: 'ok', text: `${t.combosBackupSuccess} (+${combos.length})`});
+      setBackupNotice({
+        type: 'ok',
+        text: `${t.combosBackupSuccess} (+${combos.length})`,
+      });
     } catch {
       setBackupNotice({type: 'err', text: t.combosBackupError});
     }
@@ -456,7 +560,6 @@ export function ComboLibraryDrawer({
       await navigator.clipboard.writeText(code);
       setCopiedComboId(combo.id);
     } catch {
-      // Fallback: populate share input so user can copy manually
       setShareCodeInput(code);
       setCopiedComboId(combo.id);
     }
@@ -465,8 +568,10 @@ export function ComboLibraryDrawer({
   const handleImportShareCode = (e: React.FormEvent) => {
     e.preventDefault();
     const fallbackSub =
-      lang === 'en' ? 'Shared via Pad2PS code' : 'Compartilhado via código Pad2PS';
-    const decoded = decodeShareCode(shareCodeInput, fallbackSub);
+      lang === 'en'
+        ? 'Shared via Pad2PS code'
+        : 'Compartilhado via código Pad2PS';
+    const decoded = decodeShareCode(shareCodeInput, fallbackSub, layout);
     if (!decoded) {
       setBackupNotice({type: 'err', text: t.combosPasteInvalid});
       return;
@@ -486,7 +591,7 @@ export function ComboLibraryDrawer({
       onClick={onClose}
     >
       <aside
-        className="w-full max-w-lg h-full bg-[#121216] border-l flex flex-col shadow-[0_0_50px_rgba(0,0,0,0.85)]"
+        className="w-full max-w-xl h-full bg-[#121216] border-l flex flex-col shadow-[0_0_50px_rgba(0,0,0,0.85)]"
         style={{borderColor: 'rgba(var(--accent-rgb), 0.35)'}}
         onClick={(e) => e.stopPropagation()}
       >
@@ -513,7 +618,9 @@ export function ComboLibraryDrawer({
               >
                 {t.combosTitle}
               </h2>
-              <p className="text-xs text-[#A1A1AA] truncate">{t.combosSubtitle}</p>
+              <p className="text-xs text-[#A1A1AA] truncate">
+                {t.combosSubtitle}
+              </p>
             </div>
           </div>
 
@@ -534,7 +641,9 @@ export function ComboLibraryDrawer({
               }}
             >
               <Plus className="w-3.5 h-3.5" />
-              <span>{isCreatorOpen ? t.combosCloseCreator : t.combosNewBtn}</span>
+              <span>
+                {isCreatorOpen ? t.combosCloseCreator : t.combosNewBtn}
+              </span>
             </button>
 
             <button
@@ -558,15 +667,40 @@ export function ComboLibraryDrawer({
           >
             <div className="flex items-center justify-between gap-2">
               <h3 className="text-xs font-semibold text-[#FAFAFA]">
-                {lang === 'en' ? 'Create Custom Code or Combo' : 'Criar Código ou Combo Personalizado'}
+                {lang === 'en'
+                  ? 'Create Custom Code or Combo'
+                  : 'Criar Código ou Combo Personalizado'}
               </h3>
               <span className="font-mono text-[11px] text-[#A1A1AA]">
                 {lang === 'en' ? 'Saved in browser' : 'Salvo no navegador'}
               </span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              <div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+              <div className="sm:col-span-1">
+                <label
+                  htmlFor="combo-console-select"
+                  className="block text-[11px] text-[#A1A1AA] mb-1"
+                >
+                  Console
+                </label>
+                <select
+                  id="combo-console-select"
+                  value={draftConsole}
+                  onChange={(e) =>
+                    setDraftConsole(e.target.value as ConsoleLayout)
+                  }
+                  className="w-full h-8 px-2 rounded-lg bg-[#121216] border text-xs text-[#FAFAFA] outline-none focus:border-white"
+                  style={{borderColor: 'rgba(var(--accent-rgb), 0.3)'}}
+                >
+                  <option value="ps1">PS1</option>
+                  <option value="ps2">PS2</option>
+                  <option value="ps3">PS3</option>
+                  <option value="psp">PSP</option>
+                </select>
+              </div>
+
+              <div className="sm:col-span-1">
                 <label
                   htmlFor="combo-game-input"
                   className="block text-[11px] text-[#A1A1AA] mb-1"
@@ -582,7 +716,11 @@ export function ComboLibraryDrawer({
                     setDraftGame(e.target.value);
                     setFormError(null);
                   }}
-                  placeholder={lang === 'en' ? 'e.g. God of War II, Bully...' : 'Ex: God of War II, Bully...'}
+                  placeholder={
+                    lang === 'en'
+                      ? 'e.g. God of War II...'
+                      : 'Ex: God of War II...'
+                  }
                   className="w-full h-8 px-2.5 rounded-lg bg-[#121216] border text-xs text-[#FAFAFA] outline-none focus:border-white"
                   style={{borderColor: 'rgba(var(--accent-rgb), 0.3)'}}
                 />
@@ -593,12 +731,12 @@ export function ComboLibraryDrawer({
                 </datalist>
               </div>
 
-              <div>
+              <div className="sm:col-span-1">
                 <label
                   htmlFor="combo-title-input"
                   className="block text-[11px] text-[#A1A1AA] mb-1"
                 >
-                  {lang === 'en' ? 'Code or Move Name' : 'Nome do Código ou Golpe'}
+                  {lang === 'en' ? 'Code / Move' : 'Código / Golpe'}
                 </label>
                 <input
                   id="combo-title-input"
@@ -608,7 +746,9 @@ export function ComboLibraryDrawer({
                     setDraftTitle(e.target.value);
                     setFormError(null);
                   }}
-                  placeholder={lang === 'en' ? 'e.g. Air Combo, Infinite Ammo...' : 'Ex: Combo Aéreo, Munição...'}
+                  placeholder={
+                    lang === 'en' ? 'e.g. Infinite Ammo...' : 'Ex: Munição...'
+                  }
                   className="w-full h-8 px-2.5 rounded-lg bg-[#121216] border text-xs text-[#FAFAFA] outline-none focus:border-white"
                   style={{borderColor: 'rgba(var(--accent-rgb), 0.3)'}}
                 />
@@ -620,7 +760,9 @@ export function ComboLibraryDrawer({
                 htmlFor="combo-subtitle-input"
                 className="block text-[11px] text-[#A1A1AA] mb-1"
               >
-                {lang === 'en' ? 'Effect or note (optional)' : 'Efeito ou observação (opcional)'}
+                {lang === 'en'
+                  ? 'Effect or note (optional)'
+                  : 'Efeito ou observação (opcional)'}
               </label>
               <input
                 id="combo-subtitle-input"
@@ -674,7 +816,11 @@ export function ComboLibraryDrawer({
                   >
                     <Radio
                       className="w-3 h-3"
-                      style={{color: isRecordingController ? '#FFFFFF' : 'var(--accent-color)'}}
+                      style={{
+                        color: isRecordingController
+                          ? '#FFFFFF'
+                          : 'var(--accent-color)',
+                      }}
                     />
                     <span>
                       {isRecordingController
@@ -689,7 +835,9 @@ export function ComboLibraryDrawer({
 
                   <button
                     type="button"
-                    onClick={() => setDraftSequence((prev) => prev.slice(0, -1))}
+                    onClick={() =>
+                      setDraftSequence((prev) => prev.slice(0, -1))
+                    }
                     disabled={draftSequence.length === 0}
                     className="inline-flex items-center gap-1 px-2 py-1 rounded-md border border-zinc-700 text-[11px] text-[#A1A1AA] hover:text-[#FAFAFA] disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
                   >
@@ -726,7 +874,11 @@ export function ComboLibraryDrawer({
                       className="h-7 min-w-[28px] px-1.5 rounded-md bg-[#09090B] border flex items-center justify-center text-white text-[11px]"
                       style={{borderColor: 'rgba(var(--accent-rgb), 0.45)'}}
                     >
-                      <Ps2Symbol id={btnId} className="w-3.5 h-3.5" layout={layout} />
+                      <Ps2Symbol
+                        id={btnId}
+                        className="w-3.5 h-3.5"
+                        layout={draftConsole}
+                      />
                     </span>
                   ))
                 )}
@@ -748,7 +900,11 @@ export function ComboLibraryDrawer({
                   style={{borderColor: 'rgba(var(--accent-rgb), 0.22)'}}
                 >
                   <span style={{color: 'var(--accent-color)'}}>
-                    <Ps2Symbol id={btn.id} className="w-3.5 h-3.5" layout={layout} />
+                    <Ps2Symbol
+                      id={btn.id}
+                      className="w-3.5 h-3.5"
+                      layout={draftConsole}
+                    />
                   </span>
                 </button>
               ))}
@@ -776,24 +932,82 @@ export function ComboLibraryDrawer({
                   border: '1px solid var(--accent-color)',
                 }}
               >
-                {lang === 'en' ? 'Save Code / Combo' : 'Salvar Código / Combo'}
+                {lang === 'en'
+                  ? 'Save Code / Combo'
+                  : 'Salvar Código / Combo'}
               </button>
             </div>
           </form>
         )}
 
-        {/* Section Tabs + Backup & Friend Code Share Bar */}
+        {/* Search, Console Filter, Section Tabs & Backup Bar */}
         <div
           className="px-5 py-3 border-b space-y-2.5 shrink-0"
           style={{borderColor: 'rgba(var(--accent-rgb), 0.14)'}}
         >
+          {/* Real-time Search + Console Filter */}
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="relative flex-1 min-w-[180px]">
+              <Search
+                className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none"
+                style={{color: 'var(--accent-color)'}}
+              />
+              <input
+                type="search"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder={t.combosSearchPlaceholder}
+                aria-label={t.combosSearchPlaceholder}
+                className="w-full h-8 pl-8 pr-2.5 rounded-lg bg-[#09090B]/90 border text-xs text-[#FAFAFA] placeholder:text-zinc-500 outline-none focus:border-white"
+                style={{borderColor: 'rgba(var(--accent-rgb), 0.24)'}}
+              />
+            </div>
+
+            <div
+              role="group"
+              aria-label="Console filter"
+              className="inline-flex items-center gap-1 p-0.5 rounded-lg bg-[#09090B]/90 border"
+              style={{borderColor: 'rgba(var(--accent-rgb), 0.2)'}}
+            >
+              {CONSOLE_FILTER_OPTIONS.map((cf) => {
+                const active = consoleFilter === cf;
+                return (
+                  <button
+                    key={cf}
+                    type="button"
+                    onClick={() => setConsoleFilter(cf)}
+                    className={`px-2 py-1 rounded-md text-[11px] font-mono font-semibold transition-colors cursor-pointer ${
+                      active
+                        ? 'text-white'
+                        : 'text-[#A1A1AA] hover:text-[#FAFAFA]'
+                    }`}
+                    style={
+                      active
+                        ? {backgroundColor: 'rgba(var(--accent-rgb), 0.28)'}
+                        : undefined
+                    }
+                  >
+                    {cf === 'all' ? t.combosAllGames : CONSOLE_META[cf].shortLabel}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="flex items-center gap-1.5">
+            <div className="flex flex-wrap items-center gap-1.5">
               {(
                 [
                   {id: 'all', label: `${t.combosTabAll} (${allCombos.length})`},
-                  {id: 'preset', label: `${t.combosTabPreset} (${COMBO_LIBRARY.length})`},
-                  {id: 'custom', label: `${t.combosTabCustom} (${customCombos.length})`},
+                  {id: 'cheats', label: `${t.combosTabCheats} (${cheatsCount})`},
+                  {
+                    id: 'preset',
+                    label: `${t.combosTabPreset} (${COMBO_LIBRARY.length})`,
+                  },
+                  {
+                    id: 'custom',
+                    label: `${t.combosTabCustom} (${customCombos.length})`,
+                  },
                 ] as const
               ).map((tab) => {
                 const active = activeTab === tab.id;
@@ -803,10 +1017,14 @@ export function ComboLibraryDrawer({
                     type="button"
                     onClick={() => setActiveTab(tab.id)}
                     className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer whitespace-nowrap ${
-                      active ? 'text-white neon-glow-accent' : 'bg-[#09090B]/80 text-[#A1A1AA] hover:text-[#FAFAFA]'
+                      active
+                        ? 'text-white neon-glow-accent'
+                        : 'bg-[#09090B]/80 text-[#A1A1AA] hover:text-[#FAFAFA]'
                     }`}
                     style={{
-                      backgroundColor: active ? 'rgba(var(--accent-rgb), 0.24)' : undefined,
+                      backgroundColor: active
+                        ? 'rgba(var(--accent-rgb), 0.24)'
+                        : undefined,
                       border: active
                         ? '1px solid var(--accent-color)'
                         : '1px solid rgba(var(--accent-rgb), 0.16)',
@@ -828,7 +1046,10 @@ export function ComboLibraryDrawer({
                 className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-[#09090B]/85 border text-[11px] text-[#FAFAFA] hover:text-white disabled:opacity-40 disabled:pointer-events-none cursor-pointer whitespace-nowrap"
                 style={{borderColor: 'rgba(var(--accent-rgb), 0.25)'}}
               >
-                <Download className="w-3 h-3" style={{color: 'var(--accent-color)'}} />
+                <Download
+                  className="w-3 h-3"
+                  style={{color: 'var(--accent-color)'}}
+                />
                 <span>.json</span>
               </button>
               <button
@@ -838,7 +1059,10 @@ export function ComboLibraryDrawer({
                 className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-[#09090B]/85 border text-[11px] text-[#FAFAFA] hover:text-white cursor-pointer whitespace-nowrap"
                 style={{borderColor: 'rgba(var(--accent-rgb), 0.25)'}}
               >
-                <Upload className="w-3 h-3" style={{color: 'var(--accent-color)'}} />
+                <Upload
+                  className="w-3 h-3"
+                  style={{color: 'var(--accent-color)'}}
+                />
                 <span>{lang === 'en' ? 'Import' : 'Importar'}</span>
               </button>
               <input
@@ -852,7 +1076,10 @@ export function ComboLibraryDrawer({
           </div>
 
           {/* Paste Friend Share Code Bar */}
-          <form onSubmit={handleImportShareCode} className="flex items-center gap-1.5">
+          <form
+            onSubmit={handleImportShareCode}
+            className="flex items-center gap-1.5"
+          >
             <div className="relative flex-1 min-w-0">
               <Share2
                 className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none"
@@ -886,7 +1113,9 @@ export function ComboLibraryDrawer({
           {backupNotice && (
             <p
               className={`text-[11px] ${
-                backupNotice.type === 'err' ? 'text-red-400' : 'text-emerald-400'
+                backupNotice.type === 'err'
+                  ? 'text-red-400'
+                  : 'text-emerald-400'
               }`}
             >
               {backupNotice.text}
@@ -894,7 +1123,7 @@ export function ComboLibraryDrawer({
           )}
 
           {availableGames.length > 1 && (
-            <div className="flex flex-wrap gap-1.5">
+            <div className="flex flex-wrap gap-1.5 max-h-20 overflow-y-auto pr-1">
               {availableGames.map((game) => {
                 const active = selectedGame === game;
                 return (
@@ -903,10 +1132,14 @@ export function ComboLibraryDrawer({
                     type="button"
                     onClick={() => setSelectedGame(game)}
                     className={`px-2 py-1 rounded-md text-[11px] font-medium transition-all cursor-pointer whitespace-nowrap ${
-                      active ? 'text-white' : 'bg-[#09090B]/70 text-[#A1A1AA] hover:text-[#FAFAFA]'
+                      active
+                        ? 'text-white'
+                        : 'bg-[#09090B]/70 text-[#A1A1AA] hover:text-[#FAFAFA]'
                     }`}
                     style={{
-                      backgroundColor: active ? 'rgba(var(--accent-rgb), 0.2)' : undefined,
+                      backgroundColor: active
+                        ? 'rgba(var(--accent-rgb), 0.2)'
+                        : undefined,
                       border: active
                         ? '1px solid var(--accent-color)'
                         : '1px solid rgba(var(--accent-rgb), 0.14)',
@@ -920,17 +1153,19 @@ export function ComboLibraryDrawer({
           )}
         </div>
 
-        {/* Grouped Combo Cards List */}
+        {/* Grouped Combo & Cheat Cards List */}
         <div className="flex-1 overflow-y-auto p-4 space-y-5">
           {groupedByGame.length === 0 ? (
             <div className="h-full min-h-[200px] flex flex-col items-center justify-center text-center px-6 gap-2">
               <p className="text-sm font-medium text-[#FAFAFA]">
-                {activeTab === 'custom' ? t.combosEmptyCustom : t.combosEmptyDefault}
+                {activeTab === 'custom'
+                  ? t.combosEmptyCustom
+                  : t.combosEmptyDefault}
               </p>
               <p className="text-xs text-[#A1A1AA]">
                 {lang === 'en'
-                  ? 'Click "+ New Code / Combo" above or import a JSON backup / friend code.'
-                  : 'Clique em "+ Novo Código / Combo" acima ou importe um backup JSON / código.'}
+                  ? 'Try clearing filters, or click "+ New Code / Combo" above.'
+                  : 'Tente limpar a busca/filtros, ou clique em "+ Novo Código / Combo" acima.'}
               </p>
             </div>
           ) : (
@@ -952,7 +1187,11 @@ export function ComboLibraryDrawer({
                       </h3>
                       <span className="font-mono text-[11px] text-[#A1A1AA] tabular-nums">
                         · {combos.length}{' '}
-                        {combos.length === 1 ? 'item' : lang === 'en' ? 'items' : 'itens'}
+                        {combos.length === 1
+                          ? 'item'
+                          : lang === 'en'
+                            ? 'items'
+                            : 'itens'}
                       </span>
                     </div>
 
@@ -963,19 +1202,33 @@ export function ComboLibraryDrawer({
                       className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#09090B]/90 border text-[11px] font-medium text-[#FAFAFA] hover:text-white transition-colors cursor-pointer whitespace-nowrap disabled:opacity-50"
                       style={{borderColor: 'rgba(var(--accent-rgb), 0.36)'}}
                     >
-                      <ImageDown className="w-3.5 h-3.5" style={{color: 'var(--accent-color)'}} />
+                      <ImageDown
+                        className="w-3.5 h-3.5"
+                        style={{color: 'var(--accent-color)'}}
+                      />
                       <span>
-                        {isExportingGame ? t.combosGeneratingPng : t.combosDownloadGamePng}
+                        {isExportingGame
+                          ? t.combosGeneratingPng
+                          : t.combosDownloadGamePng}
                       </span>
                     </button>
                   </div>
 
-                  {/* Individual Combos in Group */}
+                  {/* Individual Codes / Combos in Group */}
                   <div className="space-y-2.5">
                     {combos.map((combo) => {
                       const isTrainingThis = activeTrainingId === combo.id;
-                      const isExportingSingle = exportingKey === `single-${combo.id}`;
                       const isCopied = copiedComboId === combo.id;
+                      const cardLayout = combo.console ?? layout;
+                      const displayTitle =
+                        lang === 'en' && combo.titleEn
+                          ? combo.titleEn
+                          : combo.title;
+                      const displaySubtitle =
+                        lang === 'en' && combo.subtitleEn
+                          ? combo.subtitleEn
+                          : combo.subtitle;
+
                       return (
                         <div
                           key={combo.id}
@@ -988,9 +1241,19 @@ export function ComboLibraryDrawer({
                         >
                           <div className="flex items-start justify-between gap-2">
                             <div className="min-w-0">
-                              <div className="flex items-center gap-2">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <span
+                                  className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold uppercase"
+                                  style={{
+                                    backgroundColor:
+                                      'rgba(var(--accent-rgb), 0.16)',
+                                    color: 'var(--accent-color)',
+                                  }}
+                                >
+                                  {CONSOLE_META[cardLayout].shortLabel}
+                                </span>
                                 <h4 className="text-sm font-semibold text-[#FAFAFA] leading-snug">
-                                  {combo.title}
+                                  {displayTitle}
                                 </h4>
                                 {combo.isCustom && (
                                   <span className="font-mono text-[10px] text-[#A1A1AA]">
@@ -998,15 +1261,21 @@ export function ComboLibraryDrawer({
                                   </span>
                                 )}
                               </div>
-                              <p className="text-xs text-[#A1A1AA] mt-0.5">{combo.subtitle}</p>
+                              <p className="text-xs text-[#A1A1AA] mt-0.5">
+                                {displaySubtitle}
+                              </p>
                             </div>
 
                             {combo.isCustom && (
                               <button
                                 type="button"
                                 onClick={() => onDeleteCustomCombo(combo.id)}
-                                title={lang === 'en' ? 'Delete custom code' : 'Excluir código personalizado'}
-                                aria-label={combo.title}
+                                title={
+                                  lang === 'en'
+                                    ? 'Delete custom code'
+                                    : 'Excluir código personalizado'
+                                }
+                                aria-label={displayTitle}
                                 className="w-7 h-7 rounded-md text-[#A1A1AA] hover:text-red-400 hover:bg-red-500/10 flex items-center justify-center transition-colors cursor-pointer shrink-0"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
@@ -1014,17 +1283,47 @@ export function ComboLibraryDrawer({
                             )}
                           </div>
 
-                          {/* Sequence Preview */}
-                          <div className="flex flex-wrap items-center gap-1">
-                            {combo.sequence.map((btnId, idx) => (
-                              <span
-                                key={`${combo.id}-${idx}`}
-                                className="h-7 min-w-[28px] px-1.5 rounded-md bg-[#121216] border flex items-center justify-center text-[#FAFAFA] text-[11px]"
-                                style={{borderColor: 'rgba(var(--accent-rgb), 0.22)'}}
-                              >
-                                <Ps2Symbol id={btnId} className="w-3.5 h-3.5" layout={layout} />
+                          {/* Dual Visual Translation: 1) PlayStation Vector Glyphs + 2) Xbox/PC Direct Labels */}
+                          <div className="space-y-1.5">
+                            <div className="flex flex-wrap items-center gap-1">
+                              {combo.sequence.map((btnId, idx) => (
+                                <span
+                                  key={`${combo.id}-ps-${idx}`}
+                                  className="h-7 min-w-[28px] px-1.5 rounded-md bg-[#121216] border flex items-center justify-center text-[#FAFAFA] text-[11px]"
+                                  style={{
+                                    borderColor: 'rgba(var(--accent-rgb), 0.28)',
+                                  }}
+                                >
+                                  <Ps2Symbol
+                                    id={btnId}
+                                    className="w-3.5 h-3.5"
+                                    layout={cardLayout}
+                                  />
+                                </span>
+                              ))}
+                            </div>
+
+                            {/* Direct Xbox / PC Equivalent Row (respecting remapMap) */}
+                            <div className="flex flex-wrap items-center gap-1 text-[10px] font-mono">
+                              <span className="text-zinc-500 mr-1">
+                                Xbox/PC{hasActiveRemap ? ' (Remap)' : ''}:
                               </span>
-                            ))}
+                              {combo.sequence.map((btnId, idx) => {
+                                const xboxShort = getXboxShortLabelForPsButton(
+                                  btnId,
+                                  remapMap,
+                                  lang
+                                );
+                                return (
+                                  <span
+                                    key={`${combo.id}-xb-${idx}`}
+                                    className="px-1.5 py-0.5 rounded bg-[#14141A] border border-zinc-800 text-zinc-200"
+                                  >
+                                    {xboxShort}
+                                  </span>
+                                );
+                              })}
+                            </div>
                           </div>
 
                           <div className="pt-1 flex flex-wrap items-center justify-end gap-1.5">
@@ -1041,25 +1340,31 @@ export function ComboLibraryDrawer({
                               {isCopied ? (
                                 <Check className="w-3.5 h-3.5 text-emerald-400" />
                               ) : (
-                                <Copy className="w-3.5 h-3.5" style={{color: 'var(--accent-color)'}} />
+                                <Copy
+                                  className="w-3.5 h-3.5"
+                                  style={{color: 'var(--accent-color)'}}
+                                />
                               )}
-                              <span>{isCopied ? t.combosShareCopied : t.combosShareCopy}</span>
+                              <span>
+                                {isCopied
+                                  ? t.combosShareCopied
+                                  : t.combosShareCopy}
+                              </span>
                             </button>
 
                             <button
                               type="button"
-                              onClick={() => handleExportSinglePng(combo)}
-                              disabled={isExportingSingle}
-                              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#121216] border text-xs font-medium text-[#FAFAFA] hover:text-white transition-colors cursor-pointer whitespace-nowrap disabled:opacity-50"
-                              style={{borderColor: 'rgba(var(--accent-rgb), 0.28)'}}
+                              onClick={() => setPngTargetCombo(combo)}
+                              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#121216] border text-xs font-medium text-[#FAFAFA] hover:text-white transition-colors cursor-pointer whitespace-nowrap"
+                              style={{
+                                borderColor: 'rgba(var(--accent-rgb), 0.28)',
+                              }}
                             >
                               <ImageDown
                                 className="w-3.5 h-3.5"
                                 style={{color: 'var(--accent-color)'}}
                               />
-                              <span>
-                                {isExportingSingle ? t.combosGeneratingPng : t.combosDownloadPng}
-                              </span>
+                              <span>{t.combosDownloadPng}</span>
                             </button>
 
                             <button
@@ -1079,7 +1384,11 @@ export function ComboLibraryDrawer({
                               }}
                             >
                               <Play className="w-3 h-3" />
-                              <span>{isTrainingThis ? t.combosTrainingNow : t.combosTrainBtn}</span>
+                              <span>
+                                {isTrainingThis
+                                  ? t.combosTrainingNow
+                                  : t.combosTrainBtn}
+                              </span>
                             </button>
                           </div>
                         </div>
@@ -1092,6 +1401,32 @@ export function ComboLibraryDrawer({
           )}
         </div>
       </aside>
+
+      {/* Clean Single Code/Combo PNG Export Modal (with Editable Title & Transparent BG) */}
+      <PngExportModal
+        isOpen={Boolean(pngTargetCombo)}
+        onClose={() => setPngTargetCombo(null)}
+        defaultTitle={
+          pngTargetCombo
+            ? `${
+                lang === 'en' && pngTargetCombo.titleEn
+                  ? pngTargetCombo.titleEn
+                  : pngTargetCombo.title
+              } — ${pngTargetCombo.game}`
+            : ''
+        }
+        subtitle={
+          pngTargetCombo
+            ? lang === 'en' && pngTargetCombo.subtitleEn
+              ? pngTargetCombo.subtitleEn
+              : pngTargetCombo.subtitle
+            : undefined
+        }
+        sequence={pngTargetCombo?.sequence ?? []}
+        layout={pngTargetCombo?.console ?? layout}
+        lang={lang}
+        t={t}
+      />
     </div>
   );
 }

@@ -1,22 +1,35 @@
-import type {Ps2ButtonId} from './ps2Mapping';
+import type {ConsoleLayout, Ps2ButtonId} from './ps2Mapping';
+
+export type ComboCategory = 'cheat' | 'combo';
 
 export interface ComboDefinition {
   id: string;
   game: string;
+  console: ConsoleLayout;
+  category?: ComboCategory;
   title: string;
+  titleEn?: string;
   subtitle: string;
+  subtitleEn?: string;
   sequence: Ps2ButtonId[];
   isCustom?: boolean;
 }
 
 export const SUGGESTED_GAMES: string[] = [
-  'God of War II',
   'GTA San Andreas',
+  'GTA Vice City',
+  'God of War',
+  'God of War II',
   'Resident Evil 4',
+  'Resident Evil 3: Nemesis',
+  "Tony Hawk's Pro Skater 2",
+  "Tony Hawk's Pro Skater 3",
+  'Guitar Hero III',
+  'Crash Bandicoot 3: Warped',
+  'Winning Eleven / PES',
+  'Need for Speed Underground 2',
+  'Mortal Kombat: Shaolin Monks',
   'Tekken 5',
-  'Bully',
-  'Shadow of the Colossus',
-  'Devil May Cry 3',
 ];
 
 export const BUILDER_BUTTON_PALETTE: {id: Ps2ButtonId; label: string}[] = [
@@ -39,42 +52,18 @@ export const BUILDER_BUTTON_PALETTE: {id: Ps2ButtonId; label: string}[] = [
 ];
 
 export const COMBO_LIBRARY: ComboDefinition[] = [
-  // God of War II
-  {
-    id: 'gow2-plume',
-    game: 'God of War II',
-    title: 'Plume of Prometheus',
-    subtitle: 'Combo clássico de finalização com as Lâminas de Atena',
-    sequence: ['square', 'square', 'triangle'],
-  },
-  {
-    id: 'gow2-cyclone',
-    game: 'God of War II',
-    title: 'Cyclone of Chaos',
-    subtitle: 'Ataque giratório em área (segure L1 + □)',
-    sequence: ['l1', 'square'],
-  },
-  {
-    id: 'gow2-valor',
-    game: 'God of War II',
-    title: 'Valor of Hercules',
-    subtitle: 'Sequência pesada de três golpes fortes',
-    sequence: ['triangle', 'triangle', 'triangle'],
-  },
-  {
-    id: 'gow2-spirit',
-    game: 'God of War II',
-    title: 'Spirit of Hercules',
-    subtitle: 'Combo misto aéreo / impacto no chão',
-    sequence: ['triangle', 'triangle', 'square'],
-  },
-
-  // GTA San Andreas
+  // =========================================================
+  // GTA San Andreas (PS2)
+  // =========================================================
   {
     id: 'gtasa-health',
     game: 'GTA San Andreas',
-    title: 'Vida, Colete e $250k',
-    subtitle: 'Restaura saúde, armadura e adiciona dinheiro',
+    console: 'ps2',
+    category: 'cheat',
+    title: 'Vida, Colete e $250.000',
+    titleEn: 'Full Health, Armor & $250k',
+    subtitle: 'Restaura saúde, armadura, repara o carro e adiciona dinheiro',
+    subtitleEn: 'Restores health, armor, repairs vehicle, and adds cash',
     sequence: [
       'r1',
       'r2',
@@ -93,8 +82,12 @@ export const COMBO_LIBRARY: ComboDefinition[] = [
   {
     id: 'gtasa-jetpack',
     game: 'GTA San Andreas',
+    console: 'ps2',
+    category: 'cheat',
     title: 'Invocar Jetpack',
-    subtitle: 'Equipamento de voo instantâneo',
+    titleEn: 'Spawn Jetpack',
+    subtitle: 'Equipamento de voo instantâneo nas costas do CJ',
+    subtitleEn: 'Instant jetpack flight gear equipped on CJ',
     sequence: [
       'l1',
       'l2',
@@ -117,8 +110,12 @@ export const COMBO_LIBRARY: ComboDefinition[] = [
   {
     id: 'gtasa-weapons1',
     game: 'GTA San Andreas',
-    title: 'Armas Tier 1',
-    subtitle: 'Pacote inicial de armas de rua',
+    console: 'ps2',
+    category: 'cheat',
+    title: 'Pacote de Armas Tier 1',
+    titleEn: 'Weapon Set Tier 1',
+    subtitle: 'Soco inglês, taco, pistola 9mm, shotgun, MP5, AK-47 e rifle',
+    subtitleEn: 'Brass knuckles, bat, 9mm, shotgun, Micro SMG, AK-47 & rifle',
     sequence: [
       'r1',
       'r2',
@@ -135,10 +132,38 @@ export const COMBO_LIBRARY: ComboDefinition[] = [
     ],
   },
   {
+    id: 'gtasa-weapons3',
+    game: 'GTA San Andreas',
+    console: 'ps2',
+    category: 'cheat',
+    title: 'Pacote de Armas Tier 3 (Pesado)',
+    titleEn: 'Weapon Set Tier 3 (Heavy)',
+    subtitle: 'Motosserra, Desert Eagle, M4, bazuca teleguiada e C4',
+    subtitleEn: 'Chainsaw, Desert Eagle, M4, heat-seeking RPG & satchel charges',
+    sequence: [
+      'r1',
+      'r2',
+      'l1',
+      'r2',
+      'left',
+      'down',
+      'right',
+      'up',
+      'left',
+      'down',
+      'down',
+      'down',
+    ],
+  },
+  {
     id: 'gtasa-wanted',
     game: 'GTA San Andreas',
+    console: 'ps2',
+    category: 'cheat',
     title: 'Zerar Nível de Procurado',
-    subtitle: 'Remove todas as estrelas da polícia',
+    titleEn: 'Clear Wanted Level',
+    subtitle: 'Remove todas as estrelas da polícia imediatamente',
+    subtitleEn: 'Removes all active police wanted stars immediately',
     sequence: [
       'r1',
       'r1',
@@ -152,43 +177,502 @@ export const COMBO_LIBRARY: ComboDefinition[] = [
       'down',
     ],
   },
+  {
+    id: 'gtasa-flying-cars',
+    game: 'GTA San Andreas',
+    console: 'ps2',
+    category: 'cheat',
+    title: 'Carros Voadores',
+    titleEn: 'Flying Cars',
+    subtitle: 'Permite decolar e planar dirigindo qualquer carro',
+    subtitleEn: 'Lets any car take off and glide like an airplane',
+    sequence: [
+      'square',
+      'down',
+      'l2',
+      'up',
+      'l1',
+      'circle',
+      'up',
+      'cross',
+      'left',
+    ],
+  },
 
-  // Resident Evil 4
+  // =========================================================
+  // GTA Vice City (PS2)
+  // =========================================================
+  {
+    id: 'gtavc-health',
+    game: 'GTA Vice City',
+    console: 'ps2',
+    category: 'cheat',
+    title: 'Vida Máxima',
+    titleEn: 'Full Health',
+    subtitle: 'Recupera toda a barra de vida do Tommy Vercetti',
+    subtitleEn: 'Restores Tommy Vercetti to 100% health',
+    sequence: [
+      'r1',
+      'r2',
+      'l1',
+      'circle',
+      'left',
+      'down',
+      'right',
+      'up',
+      'left',
+      'down',
+      'right',
+      'up',
+    ],
+  },
+  {
+    id: 'gtavc-armor',
+    game: 'GTA Vice City',
+    console: 'ps2',
+    category: 'cheat',
+    title: 'Colete Balístico Completo',
+    titleEn: 'Full Body Armor',
+    subtitle: 'Preenche 100% da proteção de colete',
+    subtitleEn: 'Refills body armor to 100%',
+    sequence: [
+      'r1',
+      'r2',
+      'l1',
+      'cross',
+      'left',
+      'down',
+      'right',
+      'up',
+      'left',
+      'down',
+      'right',
+      'up',
+    ],
+  },
+  {
+    id: 'gtavc-tank',
+    game: 'GTA Vice City',
+    console: 'ps2',
+    category: 'cheat',
+    title: 'Invocar Tanque Rhino',
+    titleEn: 'Spawn Rhino Tank',
+    subtitle: 'Faz aparecer um tanque militar blindado na rua',
+    subtitleEn: 'Spawns an armored military Rhino tank in front of you',
+    sequence: [
+      'circle',
+      'circle',
+      'l1',
+      'circle',
+      'circle',
+      'circle',
+      'l1',
+      'l2',
+      'r1',
+      'triangle',
+      'circle',
+      'triangle',
+    ],
+  },
+
+  // =========================================================
+  // God of War 1 & 2 (PS2)
+  // =========================================================
+  {
+    id: 'gow2-plume',
+    game: 'God of War II',
+    console: 'ps2',
+    category: 'combo',
+    title: 'Plume of Prometheus',
+    subtitle: 'Combo clássico de finalização com as Lâminas de Atena',
+    subtitleEn: 'Classic heavy finisher combo with the Blades of Athena',
+    sequence: ['square', 'square', 'triangle'],
+  },
+  {
+    id: 'gow2-cyclone',
+    game: 'God of War II',
+    console: 'ps2',
+    category: 'combo',
+    title: 'Cyclone of Chaos',
+    subtitle: 'Ataque giratório em área (segure L1 + □)',
+    subtitleEn: 'Spinning area-of-effect whip attack (L1 + Square)',
+    sequence: ['l1', 'square'],
+  },
+  {
+    id: 'gow2-valor',
+    game: 'God of War II',
+    console: 'ps2',
+    category: 'combo',
+    title: 'Valor of Hercules',
+    subtitle: 'Sequência pesada de três golpes fortes com impacto',
+    subtitleEn: 'Heavy three-hit slam chain for breaking enemy guards',
+    sequence: ['triangle', 'triangle', 'triangle'],
+  },
+  {
+    id: 'gow2-spirit',
+    game: 'God of War II',
+    console: 'ps2',
+    category: 'combo',
+    title: 'Spirit of Hercules',
+    subtitle: 'Combo misto com lançamento aéreo e golpe no chão',
+    subtitleEn: 'Mixed launcher and ground-slam finishing sequence',
+    sequence: ['triangle', 'triangle', 'square'],
+  },
+  {
+    id: 'gow1-rage',
+    game: 'God of War',
+    console: 'ps2',
+    category: 'combo',
+    title: 'Rage of the Gods (Fúria dos Deuses)',
+    titleEn: 'Rage of the Gods Activation',
+    subtitle: 'Pressione L3 + R3 juntos com a barra cheia para invencibilidade',
+    subtitleEn: 'Press L3 + R3 together with full rage meter for godlike power',
+    sequence: ['l3', 'r3'],
+  },
+  {
+    id: 'gow1-ascension',
+    game: 'God of War',
+    console: 'ps2',
+    category: 'combo',
+    title: "Apollo's Ascension (Gancho Aéreo)",
+    titleEn: "Apollo's Ascension (Air Launch)",
+    subtitle: 'Lança inimigos para o alto acompanhando no combo aéreo',
+    subtitleEn: 'Launches enemies skyward so Kratos can follow up in mid-air',
+    sequence: ['l1', 'cross'],
+  },
+
+  // =========================================================
+  // Tony Hawk's Pro Skater 2 & 3 (PS1 / PS2)
+  // =========================================================
+  {
+    id: 'thps2-balance',
+    game: "Tony Hawk's Pro Skater 2",
+    console: 'ps1',
+    category: 'cheat',
+    title: 'Equilíbrio Perfeito (Manual & Grind)',
+    titleEn: 'Perfect Balance (Manual & Grind)',
+    subtitle: 'Digite no menu de Pausa segurando L1 para nunca cair da barra',
+    subtitleEn: 'Hold L1 in the Pause menu and enter sequence for infinite balance',
+    sequence: [
+      'right',
+      'up',
+      'left',
+      'square',
+      'right',
+      'up',
+      'square',
+      'triangle',
+    ],
+  },
+  {
+    id: 'thps2-moon',
+    game: "Tony Hawk's Pro Skater 2",
+    console: 'ps1',
+    category: 'cheat',
+    title: 'Gravidade Lunar (Moon Physics)',
+    titleEn: 'Moon Physics (Low Gravity)',
+    subtitle: 'Digite no menu de Pausa segurando L1 para saltos altíssimos',
+    subtitleEn: 'Hold L1 in the Pause menu for giant low-gravity airs',
+    sequence: [
+      'cross',
+      'square',
+      'left',
+      'up',
+      'down',
+      'up',
+      'square',
+      'triangle',
+    ],
+  },
+  {
+    id: 'thps3-900',
+    game: "Tony Hawk's Pro Skater 3",
+    console: 'ps2',
+    category: 'combo',
+    title: 'The 900 (Manobra Especial)',
+    titleEn: 'The 900 (Special Air Trick)',
+    subtitle: 'Com a barra Special cheia no ar, faça → ↓ O',
+    subtitleEn: 'With Special meter full in mid-air, press Right, Down, Circle',
+    sequence: ['right', 'down', 'circle'],
+  },
+  {
+    id: 'thps3-christair',
+    game: "Tony Hawk's Pro Skater 3",
+    console: 'ps2',
+    category: 'combo',
+    title: 'Christ Air (Especial)',
+    titleEn: 'Christ Air (Special Grab)',
+    subtitle: 'Com a barra Special cheia no ar, faça ← → O',
+    subtitleEn: 'With Special meter full in mid-air, press Left, Right, Circle',
+    sequence: ['left', 'right', 'circle'],
+  },
+
+  // =========================================================
+  // Resident Evil 3 (PS1) & Resident Evil 4 (PS2)
+  // =========================================================
+  {
+    id: 're3-quickturn',
+    game: 'Resident Evil 3: Nemesis',
+    console: 'ps1',
+    category: 'combo',
+    title: 'Giro Rápido 180° (Quick Turn)',
+    titleEn: '180° Quick Turn',
+    subtitle: 'Baixo + O para girar instantaneamente e fugir do Nemesis',
+    subtitleEn: 'Press Down + Circle to spin 180° and escape Nemesis',
+    sequence: ['down', 'circle'],
+  },
+  {
+    id: 're3-dodge',
+    game: 'Resident Evil 3: Nemesis',
+    console: 'ps1',
+    category: 'combo',
+    title: 'Esquiva Tática / Contra-ataque',
+    titleEn: 'Emergency Dodge / Counter',
+    subtitle: 'Mire com R1 no momento exato do ataque inimigo',
+    subtitleEn: 'Press R1 (or aim/fire) right as an enemy strikes to dodge',
+    sequence: ['r1', 'cross'],
+  },
   {
     id: 're4-quickturn',
     game: 'Resident Evil 4',
+    console: 'ps2',
+    category: 'combo',
     title: 'Giro Rápido 180°',
-    subtitle: 'Virada instantânea para escapar de cercos',
+    titleEn: '180° Quick Turn',
+    subtitle: 'Virada instantânea para escapar de cercos de Ganados',
+    subtitleEn: 'Instant 180-degree spin to escape surrounding enemies',
     sequence: ['down', 'square'],
   },
   {
     id: 're4-qte-dodge',
     game: 'Resident Evil 4',
-    title: 'Esquiva QTE Clássica',
-    subtitle: 'Acionamento rápido de esquiva em cutscenes',
+    console: 'ps2',
+    category: 'combo',
+    title: 'Esquiva QTE Clássica (Krauser / Pedra)',
+    titleEn: 'Classic QTE Dodge (L1 + R1)',
+    subtitle: 'Acionamento rápido de esquiva em cutscenes interativas',
+    subtitleEn: 'Fast reaction button combo for cutscene QTE dodges',
     sequence: ['l1', 'r1'],
   },
   {
     id: 're4-knife-slash',
     game: 'Resident Evil 4',
+    console: 'ps2',
+    category: 'combo',
     title: 'Ataque Rápido com Faca',
-    subtitle: 'Preparar faca e golpear em seguida',
+    titleEn: 'Quick Knife Slash',
+    subtitle: 'Segure L1 para sacar a faca e golpeie com X (economiza munição)',
+    subtitleEn: 'Hold L1 to ready knife and press Cross to slash and save ammo',
     sequence: ['l1', 'cross'],
   },
 
-  // Tekken 5
+  // =========================================================
+  // Guitar Hero III (PS2 / PS3)
+  // =========================================================
+  {
+    id: 'gh3-hyperspeed',
+    game: 'Guitar Hero III',
+    console: 'ps3',
+    category: 'cheat',
+    title: 'Modo HyperSpeed (Esteira Rápida)',
+    titleEn: 'HyperSpeed Mode',
+    subtitle: 'No menu Cheats (L2=Verde, L1=Verm., R1=Amar., R2=Azul, X=Lar.)',
+    subtitleEn: 'Enter in Cheats menu (L2=Green, L1=Red, R1=Yellow, R2=Blue, X=Orange)',
+    sequence: ['cross', 'r2', 'cross', 'r1', 'cross', 'r2', 'cross', 'r1'],
+  },
+  {
+    id: 'gh3-nofail',
+    game: 'Guitar Hero III',
+    console: 'ps2',
+    category: 'cheat',
+    title: 'Modo Sem Falha (No Fail)',
+    titleEn: 'No Fail Mode',
+    subtitle: 'Impede perder a música na platéia (Verde, Verm., Azul, Verde, Verm., Amar.)',
+    subtitleEn: 'Prevents failing a song (Green, Red, Blue, Green, Red, Yellow)',
+    sequence: ['l2', 'l1', 'r2', 'l2', 'l1', 'r1'],
+  },
+
+  // =========================================================
+  // Crash Bandicoot 3: Warped (PS1)
+  // =========================================================
+  {
+    id: 'crash3-spyro-demo',
+    game: 'Crash Bandicoot 3: Warped',
+    console: 'ps1',
+    category: 'cheat',
+    title: 'Demo Secreta de Spyro the Dragon',
+    titleEn: 'Hidden Spyro the Dragon Demo',
+    subtitle: 'Digite na tela inicial "Press Start" para abrir o jogo bônus',
+    subtitleEn: 'Enter on the Title Screen before pressing Start to launch Spyro',
+    sequence: [
+      'up',
+      'up',
+      'down',
+      'down',
+      'left',
+      'right',
+      'left',
+      'right',
+      'square',
+    ],
+  },
+
+  // =========================================================
+  // Winning Eleven / PES (PS1 / PS2)
+  // =========================================================
+  {
+    id: 'we-flipflap',
+    game: 'Winning Eleven / PES',
+    console: 'ps2',
+    category: 'combo',
+    title: 'Elástico (Drible Ronaldinho)',
+    titleEn: 'Flip-Flap / Elastico Dribble',
+    subtitle: 'Toque rápido 3x no R2 em movimento (jogadores habilidosos)',
+    subtitleEn: 'Tap R2 three times quickly while dribbling with skilled players',
+    sequence: ['r2', 'r2', 'r2'],
+  },
+  {
+    id: 'we-lobshot',
+    game: 'Winning Eleven / PES',
+    console: 'ps2',
+    category: 'combo',
+    title: 'Chute de Cavadinha (Cobertura)',
+    titleEn: 'Chip / Lob Shot',
+    subtitle: 'Segure L1 + Quadrado para encobrir o goleiro na saída do gol',
+    subtitleEn: 'Hold L1 + Square to chip the ball smoothly over the keeper',
+    sequence: ['l1', 'square'],
+  },
+  {
+    id: 'we-onetwo',
+    game: 'Winning Eleven / PES',
+    console: 'ps1',
+    category: 'combo',
+    title: 'Tabela Rápida (One-Two Pass)',
+    titleEn: 'One-Two Give-and-Go',
+    subtitle: 'Segure L1 + X para tocar e correr, e devolva no espaço com △',
+    subtitleEn: 'Hold L1 + Cross to pass & run, then press Triangle for the through ball',
+    sequence: ['l1', 'cross', 'triangle'],
+  },
+  {
+    id: 'we-supercancel',
+    game: 'Winning Eleven / PES',
+    console: 'ps2',
+    category: 'combo',
+    title: 'Super Cancel (Movimento Livre)',
+    titleEn: 'Super Cancel',
+    subtitle: 'Pressione R1 + R2 juntos para cancelar a corrida automática na bola',
+    subtitleEn: 'Hold R1 + R2 together to override locked ball-chasing animations',
+    sequence: ['r1', 'r2'],
+  },
+
+  // =========================================================
+  // Need for Speed Underground 2 (PS2)
+  // =========================================================
+  {
+    id: 'nfsu2-cash',
+    game: 'Need for Speed Underground 2',
+    console: 'ps2',
+    category: 'cheat',
+    title: 'Dinheiro Inicial na Carreira ($200)',
+    titleEn: 'Extra Career Cash ($200)',
+    subtitle: 'Digite na tela "Press Start" antes de carregar o perfil',
+    subtitleEn: 'Enter on the "Press Start" title screen before loading career',
+    sequence: ['up', 'up', 'up', 'left', 'r1', 'r1', 'r1', 'down'],
+  },
+  {
+    id: 'nfsu2-vinyl',
+    game: 'Need for Speed Underground 2',
+    console: 'ps2',
+    category: 'cheat',
+    title: 'Desbloquear Vinil Exclusivo Best Buy',
+    titleEn: 'Unlock Best Buy Exclusive Vinyl',
+    subtitle: 'Digite na tela "Press Start" antes de entrar no menu principal',
+    subtitleEn: 'Enter on the "Press Start" title screen before main menu',
+    sequence: ['up', 'down', 'up', 'down', 'down', 'up', 'right', 'left'],
+  },
+
+  // =========================================================
+  // Mortal Kombat: Shaolin Monks (PS2)
+  // =========================================================
+  {
+    id: 'mksm-scorpion',
+    game: 'Mortal Kombat: Shaolin Monks',
+    console: 'ps2',
+    category: 'cheat',
+    title: 'Desbloquear Scorpion (Modo História)',
+    titleEn: 'Unlock Scorpion (Story Mode)',
+    subtitle: 'No menu principal, segure L2 e faça a sequência (solte L2 ao fim)',
+    subtitleEn: 'Hold L2 at the Main Menu, enter sequence, then release L2',
+    sequence: ['square', 'up', 'l1', 'r1', 'left', 'right', 'square'],
+  },
+  {
+    id: 'mksm-subzero',
+    game: 'Mortal Kombat: Shaolin Monks',
+    console: 'ps2',
+    category: 'cheat',
+    title: 'Desbloquear Sub-Zero (Modo História)',
+    titleEn: 'Unlock Sub-Zero (Story Mode)',
+    subtitle: 'No menu principal, segure L2 e faça a sequência (solte L2 ao fim)',
+    subtitleEn: 'Hold L2 at the Main Menu, enter sequence, then release L2',
+    sequence: ['square', 'down', 'up', 'l1', 'l1', 'up', 'square'],
+  },
+  {
+    id: 'mksm-mk2',
+    game: 'Mortal Kombat: Shaolin Monks',
+    console: 'ps2',
+    category: 'cheat',
+    title: 'Desbloquear Mortal Kombat II (Arcade)',
+    titleEn: 'Unlock Classic Mortal Kombat II',
+    subtitle: 'No menu principal, segure L2 e digite a sequência clássica',
+    subtitleEn: 'Hold L2 at the Main Menu and input the sequence to unlock MK2',
+    sequence: ['square', 'up', 'down', 'right', 'left', 'r2', 'square'],
+  },
+
+  // =========================================================
+  // Tekken 5 (PS2) & PSP Classics
+  // =========================================================
   {
     id: 'tk5-ewgf',
     game: 'Tekken 5',
-    title: 'Wind God Fist (Mishima)',
-    subtitle: 'Entrada clássica → ↓ → △',
+    console: 'ps2',
+    category: 'combo',
+    title: 'Wind God Fist (Kazuya / Jin)',
+    titleEn: 'Electric Wind God Fist',
+    subtitle: 'Entrada clássica → ↓ → △ para launcher rápido',
+    subtitleEn: 'Classic Mishima crouch-dash input → ↓ → △ launcher',
     sequence: ['right', 'down', 'right', 'triangle'],
   },
   {
     id: 'tk5-jin-combo',
     game: 'Tekken 5',
-    title: 'Sequência Clássica (Jin)',
-    subtitle: 'Encadeamento rápido de socos e chutes',
+    console: 'ps2',
+    category: 'combo',
+    title: 'Sequência Clássica (Jin Kazama)',
+    titleEn: 'Classic Combo String (Jin)',
+    subtitle: 'Encadeamento rápido de socos e chutes médios/baixos',
+    subtitleEn: 'Fast mid/low punch and kick pressure string',
     sequence: ['triangle', 'square', 'triangle', 'triangle', 'circle', 'cross'],
+  },
+  {
+    id: 'gtalcs-health',
+    game: 'GTA: Liberty City Stories',
+    console: 'psp',
+    category: 'cheat',
+    title: 'Vida Máxima (PSP)',
+    titleEn: 'Full Health (PSP)',
+    subtitle: 'Restaura 100% da saúde durante o jogo no PSP',
+    subtitleEn: 'Restores 100% health in-game on PSP',
+    sequence: ['l1', 'r1', 'cross', 'l1', 'r1', 'square', 'l1', 'r1'],
+  },
+  {
+    id: 'gtalcs-cash',
+    game: 'GTA: Liberty City Stories',
+    console: 'psp',
+    category: 'cheat',
+    title: 'Dinheiro Extra $250.000 (PSP)',
+    titleEn: 'Extra Cash $250,000 (PSP)',
+    subtitle: 'Adiciona $250.000 imediatamente à conta de Toni Cipriani',
+    subtitleEn: 'Adds $250,000 cash immediately to Toni Cipriani',
+    sequence: ['l1', 'r1', 'triangle', 'l1', 'r1', 'circle', 'l1', 'r1'],
   },
 ];

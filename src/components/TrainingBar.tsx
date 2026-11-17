@@ -1,6 +1,6 @@
 import {CheckCircle2, RotateCcw, Target, X} from 'lucide-react';
 import type {ComboDefinition} from '../data/comboLibrary';
-import type {Translations} from '../data/i18n';
+import type {AppLanguage, Translations} from '../data/i18n';
 import type {ConsoleLayout} from '../data/ps2Mapping';
 import {Ps2Symbol} from './Ps2Symbol';
 
@@ -9,6 +9,7 @@ interface TrainingBarProps {
   currentStep: number;
   errorFlash: boolean;
   layout: ConsoleLayout;
+  lang?: AppLanguage;
   t: Translations;
   onRestart: () => void;
   onStop: () => void;
@@ -19,11 +20,13 @@ export function TrainingBar({
   currentStep,
   errorFlash,
   layout,
+  lang = 'pt',
   t,
   onRestart,
   onStop,
 }: TrainingBarProps) {
   const isCompleted = currentStep >= combo.sequence.length;
+  const displayTitle = lang === 'en' && combo.titleEn ? combo.titleEn : combo.title;
 
   return (
     <section
@@ -56,7 +59,7 @@ export function TrainingBar({
               ·
             </span>
             <span className="text-xs sm:text-sm font-semibold text-[#FAFAFA] truncate">
-              {combo.title}
+              {displayTitle}
             </span>
             <span className="font-mono text-[11px] text-[#A1A1AA] tabular-nums">
               {isCompleted

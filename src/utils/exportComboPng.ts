@@ -9,6 +9,17 @@ interface ExportCombosPngOptions {
   layout?: ConsoleLayout;
   lang?: AppLanguage;
   fileNameSuffix?: string;
+  transparentBackground?: boolean;
+}
+
+export interface ExportSingleSequencePngOptions {
+  title: string;
+  subtitle?: string;
+  sequence: Ps2ButtonId[];
+  layout?: ConsoleLayout;
+  lang?: AppLanguage;
+  transparentBackground?: boolean;
+  fileName?: string;
 }
 
 const CANVAS_WIDTH = 1080;
@@ -20,14 +31,14 @@ const ROW_GAP = 14;
 const COMBO_PADDING = 24;
 const COMBO_GAP = 20;
 
-function slugify(input: string): string {
+export function slugifyPngName(input: string): string {
   return (
     input
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '') || 'lista'
+      .replace(/^-+|-+$/g, '') || 'combo'
   );
 }
 
@@ -41,14 +52,21 @@ function getActiveNeonTheme(): {hex: string; rgb: string} {
   return {hex, rgb};
 }
 
-function getBadgeWidth(btnId: Ps2ButtonId): number {
+function getBadgeWidth(btnId: Ps2ButtonId, scale = 1): number {
   if (btnId === 'start' || btnId === 'select') {
-    return 86;
+    return Math.round(86 * scale);
   }
-  if (btnId === 'l1' || btnId === 'l2' || btnId === 'l3' || btnId === 'r1' || btnId === 'r2' || btnId === 'r3') {
-    return 54;
+  if (
+    btnId === 'l1' ||
+    btnId === 'l2' ||
+    btnId === 'l3' ||
+    btnId === 'r1' ||
+    btnId === 'r2' ||
+    btnId === 'r3'
+  ) {
+    return Math.round(54 * scale);
   }
-  return 48;
+  return Math.round(48 * scale);
 }
 
 function drawRoundedRect(
@@ -71,15 +89,17 @@ function drawRoundedRect(
 
 function layoutSequenceRows(
   sequence: Ps2ButtonId[],
-  maxRowWidth: number
+  maxRowWidth: number,
+  badgeScale = 1,
+  arrowW = ARROW_WIDTH
 ): Ps2ButtonId[][] {
   const rows: Ps2ButtonId[][] = [];
   let currentRow: Ps2ButtonId[] = [];
   let currentWidth = 0;
 
   for (const btnId of sequence) {
-    const bw = getBadgeWidth(btnId);
-    const needed = currentRow.length === 0 ? bw : ARROW_WIDTH + bw;
+    const bw = getBadgeWidth(btnId, badgeScale);
+    const needed = currentRow.length === 0 ? bw : arrowW + bw;
 
     if (currentRow.length > 0 && currentWidth + needed > maxRowWidth) {
       rows.push(currentRow);
@@ -103,9 +123,14 @@ function drawButtonGlyph(
   cx: number,
   cy: number,
   accentHex: string,
-  layout: ConsoleLayout
+  layout: ConsoleLayout,
+  scale = 1
 ) {
   ctx.save();
+  ctx.translate(cx, cy);
+  if (scale !== 1) {
+    ctx.scale(scale, scale);
+  }
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
 
@@ -114,9 +139,9 @@ function drawButtonGlyph(
       ctx.strokeStyle = '#34D399';
       ctx.lineWidth = 2.6;
       ctx.beginPath();
-      ctx.moveTo(cx, cy - 10);
-      ctx.lineTo(cx + 10.5, cy + 8.5);
-      ctx.lineTo(cx - 10.5, cy + 8.5);
+      ctx.moveTo(0, -10);
+      ctx.lineTo(10.5, 8.5);
+      ctx.lineTo(-10.5, 8.5);
       ctx.closePath();
       ctx.stroke();
       break;
@@ -125,7 +150,7 @@ function drawButtonGlyph(
       ctx.strokeStyle = '#FB7185';
       ctx.lineWidth = 2.6;
       ctx.beginPath();
-      ctx.arc(cx, cy, 9.5, 0, Math.PI * 2);
+      ctx.arc(0, 0, 9.5, 0, Math.PI * 2);
       ctx.stroke();
       break;
     }
@@ -133,17 +158,17 @@ function drawButtonGlyph(
       ctx.strokeStyle = '#60A5FA';
       ctx.lineWidth = 2.8;
       ctx.beginPath();
-      ctx.moveTo(cx - 8, cy - 8);
-      ctx.lineTo(cx + 8, cy + 8);
-      ctx.moveTo(cx + 8, cy - 8);
-      ctx.lineTo(cx - 8, cy + 8);
+      ctx.moveTo(-8, -8);
+      ctx.lineTo(8, 8);
+      ctx.moveTo(8, -8);
+      ctx.lineTo(-8, 8);
       ctx.stroke();
       break;
     }
     case 'square': {
       ctx.strokeStyle = '#F472B6';
       ctx.lineWidth = 2.6;
-      drawRoundedRect(ctx, cx - 8.5, cy - 8.5, 17, 17, 2);
+      drawRoundedRect(ctx, -8.5, -8.5, 17, 17, 2);
       ctx.stroke();
       break;
     }
@@ -152,9 +177,8 @@ function drawButtonGlyph(
     case 'left':
     case 'right': {
       ctx.strokeStyle = '#FAFAFA';
-      ctx.fillStyle = 'rgba(250, 250, 250, 0.12)';
+      ctx.fillStyle = 'rgba(250, 250, 250, 0.14)';
       ctx.lineWidth = 2.1;
-      ctx.translate(cx, cy);
       const angle =
         btnId === 'up'
           ? 0
@@ -185,7 +209,7 @@ function drawButtonGlyph(
       ctx.font = '700 16px "JetBrains Mono", monospace';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(label, cx, cy + 1);
+      ctx.fillText(label, 0, 1);
       break;
     }
     case 'l2':
@@ -197,7 +221,7 @@ function drawButtonGlyph(
       ctx.font = '700 16px "JetBrains Mono", monospace';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(btnId.toUpperCase(), cx, cy + 1);
+      ctx.fillText(btnId.toUpperCase(), 0, 1);
       break;
     }
     case 'start':
@@ -206,11 +230,32 @@ function drawButtonGlyph(
       ctx.font = '700 13px "JetBrains Mono", monospace';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(btnId.toUpperCase(), cx, cy + 1);
+      ctx.fillText(btnId.toUpperCase(), 0, 1);
       break;
     }
   }
 
+  ctx.restore();
+}
+
+function drawSeparatorChevron(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  cy: number,
+  arrowWidth: number,
+  accentRgb: string
+) {
+  ctx.save();
+  ctx.strokeStyle = `rgba(${accentRgb}, 0.85)`;
+  ctx.lineWidth = 2.2;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  const midX = x + arrowWidth / 2;
+  ctx.beginPath();
+  ctx.moveTo(midX - 4, cy - 6);
+  ctx.lineTo(midX + 4, cy);
+  ctx.lineTo(midX - 4, cy + 6);
+  ctx.stroke();
   ctx.restore();
 }
 
@@ -236,6 +281,205 @@ function drawSeparatorArrow(
   ctx.restore();
 }
 
+async function downloadCanvasPng(canvas: HTMLCanvasElement, fileName: string) {
+  await new Promise<void>((resolve) => {
+    canvas.toBlob((blob) => {
+      const url = blob ? URL.createObjectURL(blob) : canvas.toDataURL('image/png');
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      if (blob) {
+        URL.revokeObjectURL(url);
+      }
+      resolve();
+    }, 'image/png');
+  });
+}
+
+/**
+ * Clean 1200x400+ proportional PNG card for a single sequence (History Bar or individual Combo/Cheat)
+ * Supports optional transparent background, editable title, ">" sequence arrows, and bottom-right watermark.
+ */
+export async function exportSingleSequencePng({
+  title,
+  subtitle,
+  sequence,
+  layout = 'ps2',
+  lang = 'pt',
+  transparentBackground = false,
+  fileName = 'pad2ps-combo.png',
+}: ExportSingleSequencePngOptions): Promise<void> {
+  if (typeof document === 'undefined' || sequence.length === 0) {
+    return;
+  }
+
+  const t = getTranslations(lang);
+  if (document.fonts?.ready) {
+    await document.fonts.ready.catch(() => {});
+  }
+
+  const {hex: accentHex, rgb: accentRgb} = getActiveNeonTheme();
+  const width = 1200;
+  const padX = 56;
+  const padY = 42;
+  const badgeScale = 1.2;
+  const badgeH = Math.round(BADGE_HEIGHT * badgeScale);
+  const arrowW = 28;
+  const rowGap = 16;
+  const innerWidth = width - padX * 2;
+
+  const rows = layoutSequenceRows(sequence, innerWidth, badgeScale, arrowW);
+  const headerH = subtitle?.trim() ? 94 : 62;
+  const sequenceBlockH = rows.length * badgeH + Math.max(0, rows.length - 1) * rowGap;
+  const footerH = 44;
+
+  const naturalHeight = padY * 2 + headerH + 24 + sequenceBlockH + 24 + footerH;
+  const height = Math.max(400, naturalHeight);
+
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) {
+    return;
+  }
+
+  if (transparentBackground) {
+    ctx.clearRect(0, 0, width, height);
+  } else {
+    // Deep black neon card background
+    ctx.fillStyle = '#09090B';
+    ctx.fillRect(0, 0, width, height);
+
+    const radial = ctx.createRadialGradient(
+      width / 2,
+      height * 0.28,
+      20,
+      width / 2,
+      height * 0.4,
+      width * 0.65
+    );
+    radial.addColorStop(0, `rgba(${accentRgb}, 0.16)`);
+    radial.addColorStop(0.6, `rgba(${accentRgb}, 0.04)`);
+    radial.addColorStop(1, 'rgba(9, 9, 11, 0)');
+    ctx.fillStyle = radial;
+    ctx.fillRect(0, 0, width, height);
+
+    ctx.strokeStyle = `rgba(${accentRgb}, 0.055)`;
+    ctx.lineWidth = 1;
+    for (let gx = 0; gx <= width; gx += 40) {
+      ctx.beginPath();
+      ctx.moveTo(gx, 0);
+      ctx.lineTo(gx, height);
+      ctx.stroke();
+    }
+    for (let gy = 0; gy <= height; gy += 40) {
+      ctx.beginPath();
+      ctx.moveTo(0, gy);
+      ctx.lineTo(width, gy);
+      ctx.stroke();
+    }
+
+    // Framed inner card
+    ctx.save();
+    ctx.shadowColor = accentHex;
+    ctx.shadowBlur = 22;
+    ctx.fillStyle = '#121216';
+    ctx.strokeStyle = accentHex;
+    ctx.lineWidth = 2.2;
+    drawRoundedRect(ctx, 20, 20, width - 40, height - 40, 22);
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // Title & Optional Subtitle
+  const cleanTitle = title.trim() || 'Pad2PS Combo';
+  let cursorY = padY;
+
+  ctx.save();
+  if (transparentBackground) {
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.85)';
+    ctx.shadowBlur = 10;
+  }
+  ctx.fillStyle = '#FAFAFA';
+  ctx.font = '800 36px "Outfit", "Plus Jakarta Sans", sans-serif';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'top';
+  ctx.fillText(cleanTitle, padX, cursorY, innerWidth);
+
+  if (subtitle?.trim()) {
+    ctx.fillStyle = transparentBackground ? '#E4E4E7' : '#A1A1AA';
+    ctx.font = '500 18px "Plus Jakarta Sans", sans-serif';
+    ctx.fillText(subtitle.trim(), padX, cursorY + 46, innerWidth);
+  }
+  ctx.restore();
+
+  // Center sequence vertically inside remaining space between header and footer
+  const seqAreaTop = padY + headerH + 14;
+  const seqAreaBottom = height - padY - footerH;
+  const startSeqY =
+    seqAreaTop + Math.max(0, (seqAreaBottom - seqAreaTop - sequenceBlockH) / 2);
+
+  for (let rIdx = 0; rIdx < rows.length; rIdx++) {
+    const row = rows[rIdx];
+    let badgeX = padX;
+    const badgeY = startSeqY + rIdx * (badgeH + rowGap);
+
+    for (let bIdx = 0; bIdx < row.length; bIdx++) {
+      const btnId = row[bIdx];
+      const bw = getBadgeWidth(btnId, badgeScale);
+
+      ctx.save();
+      if (transparentBackground) {
+        ctx.shadowColor = `rgba(${accentRgb}, 0.45)`;
+        ctx.shadowBlur = 10;
+      }
+      ctx.fillStyle = transparentBackground ? 'rgba(18, 18, 22, 0.92)' : '#181820';
+      ctx.strokeStyle = `rgba(${accentRgb}, 0.72)`;
+      ctx.lineWidth = 2;
+      drawRoundedRect(ctx, badgeX, badgeY, bw, badgeH, 12);
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+
+      drawButtonGlyph(
+        ctx,
+        btnId,
+        badgeX + bw / 2,
+        badgeY + badgeH / 2,
+        accentHex,
+        layout,
+        badgeScale
+      );
+
+      badgeX += bw;
+      if (bIdx < row.length - 1) {
+        drawSeparatorChevron(ctx, badgeX, badgeY + badgeH / 2, arrowW, accentRgb);
+        badgeX += arrowW;
+      }
+    }
+  }
+
+  // Discrete bottom-right watermark
+  ctx.save();
+  if (transparentBackground) {
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.85)';
+    ctx.shadowBlur = 6;
+  }
+  ctx.fillStyle = transparentBackground ? 'rgba(250, 250, 250, 0.78)' : '#A1A1AA';
+  ctx.font = '600 14px "JetBrains Mono", monospace';
+  ctx.textAlign = 'right';
+  ctx.textBaseline = 'bottom';
+  ctx.fillText(t.pngFooter, width - padX, height - 28);
+  ctx.restore();
+
+  await downloadCanvasPng(canvas, fileName);
+}
+
 export async function exportCombosToPng({
   gameTitle,
   combos,
@@ -243,6 +487,7 @@ export async function exportCombosToPng({
   layout = 'ps2',
   lang = 'pt',
   fileNameSuffix,
+  transparentBackground = false,
 }: ExportCombosPngOptions): Promise<void> {
   if (typeof document === 'undefined' || combos.length === 0) {
     return;
@@ -258,16 +503,26 @@ export async function exportCombosToPng({
   const innerCardWidth = CANVAS_WIDTH - OUTER_PAD * 2;
   const comboInnerWidth = innerCardWidth - CARD_PAD_X * 2 - COMBO_PADDING * 2;
 
-  // Pre-calculate dynamic heights
   const headerHeight = controllerName ? 154 : 126;
   const footerHeight = 68;
 
   const measuredCombos = combos.map((combo) => {
+    const displayTitle = lang === 'en' && combo.titleEn ? combo.titleEn : combo.title;
+    const displaySubtitle =
+      lang === 'en' && combo.subtitleEn ? combo.subtitleEn : combo.subtitle;
     const rows = layoutSequenceRows(combo.sequence, comboInnerWidth);
-    const titleBlockHeight = combo.subtitle ? 58 : 34;
-    const sequenceHeight = rows.length * BADGE_HEIGHT + Math.max(0, rows.length - 1) * ROW_GAP;
+    const titleBlockHeight = displaySubtitle ? 58 : 34;
+    const sequenceHeight =
+      rows.length * BADGE_HEIGHT + Math.max(0, rows.length - 1) * ROW_GAP;
     const boxHeight = COMBO_PADDING * 2 + titleBlockHeight + 14 + sequenceHeight;
-    return {combo, rows, titleBlockHeight, boxHeight};
+    return {
+      combo,
+      displayTitle,
+      displaySubtitle,
+      rows,
+      titleBlockHeight,
+      boxHeight,
+    };
   });
 
   const bodyHeight =
@@ -285,50 +540,54 @@ export async function exportCombosToPng({
     return;
   }
 
-  // 1. Deep Black Background + Subtle Geometric Grid + Radial Glow
-  ctx.fillStyle = '#09090B';
-  ctx.fillRect(0, 0, CANVAS_WIDTH, canvasHeight);
+  if (transparentBackground) {
+    ctx.clearRect(0, 0, CANVAS_WIDTH, canvasHeight);
+  } else {
+    // 1. Deep Black Background + Subtle Geometric Grid + Radial Glow
+    ctx.fillStyle = '#09090B';
+    ctx.fillRect(0, 0, CANVAS_WIDTH, canvasHeight);
 
-  const radial = ctx.createRadialGradient(
-    CANVAS_WIDTH / 2,
-    canvasHeight * 0.25,
-    20,
-    CANVAS_WIDTH / 2,
-    canvasHeight * 0.35,
-    CANVAS_WIDTH * 0.72
-  );
-  radial.addColorStop(0, `rgba(${accentRgb}, 0.14)`);
-  radial.addColorStop(0.55, `rgba(${accentRgb}, 0.03)`);
-  radial.addColorStop(1, 'rgba(9, 9, 11, 0)');
-  ctx.fillStyle = radial;
-  ctx.fillRect(0, 0, CANVAS_WIDTH, canvasHeight);
+    const radial = ctx.createRadialGradient(
+      CANVAS_WIDTH / 2,
+      canvasHeight * 0.25,
+      20,
+      CANVAS_WIDTH / 2,
+      canvasHeight * 0.35,
+      CANVAS_WIDTH * 0.72
+    );
+    radial.addColorStop(0, `rgba(${accentRgb}, 0.14)`);
+    radial.addColorStop(0.55, `rgba(${accentRgb}, 0.03)`);
+    radial.addColorStop(1, 'rgba(9, 9, 11, 0)');
+    ctx.fillStyle = radial;
+    ctx.fillRect(0, 0, CANVAS_WIDTH, canvasHeight);
 
-  ctx.strokeStyle = `rgba(${accentRgb}, 0.065)`;
-  ctx.lineWidth = 1;
-  for (let gx = 0; gx <= CANVAS_WIDTH; gx += 36) {
-    ctx.beginPath();
-    ctx.moveTo(gx, 0);
-    ctx.lineTo(gx, canvasHeight);
+    ctx.strokeStyle = `rgba(${accentRgb}, 0.065)`;
+    ctx.lineWidth = 1;
+    for (let gx = 0; gx <= CANVAS_WIDTH; gx += 36) {
+      ctx.beginPath();
+      ctx.moveTo(gx, 0);
+      ctx.lineTo(gx, canvasHeight);
+      ctx.stroke();
+    }
+    for (let gy = 0; gy <= canvasHeight; gy += 36) {
+      ctx.beginPath();
+      ctx.moveTo(0, gy);
+      ctx.lineTo(CANVAS_WIDTH, gy);
+      ctx.stroke();
+    }
+
+    // 2. Inner Dark Card with Active Neon Glow Border
+    ctx.save();
+    ctx.shadowColor = accentHex;
+    ctx.shadowBlur = 24;
+    ctx.fillStyle = '#121216';
+    ctx.strokeStyle = accentHex;
+    ctx.lineWidth = 2.2;
+    drawRoundedRect(ctx, OUTER_PAD, OUTER_PAD, innerCardWidth, innerCardHeight, 22);
+    ctx.fill();
     ctx.stroke();
+    ctx.restore();
   }
-  for (let gy = 0; gy <= canvasHeight; gy += 36) {
-    ctx.beginPath();
-    ctx.moveTo(0, gy);
-    ctx.lineTo(CANVAS_WIDTH, gy);
-    ctx.stroke();
-  }
-
-  // 2. Inner Dark Card with Active Neon Glow Border
-  ctx.save();
-  ctx.shadowColor = accentHex;
-  ctx.shadowBlur = 24;
-  ctx.fillStyle = '#121216';
-  ctx.strokeStyle = accentHex;
-  ctx.lineWidth = 2.2;
-  drawRoundedRect(ctx, OUTER_PAD, OUTER_PAD, innerCardWidth, innerCardHeight, 22);
-  ctx.fill();
-  ctx.stroke();
-  ctx.restore();
 
   // 3. Header Section
   const contentX = OUTER_PAD + CARD_PAD_X;
@@ -347,7 +606,7 @@ export async function exportCombosToPng({
 
   if (controllerName) {
     cursorY += 52;
-    ctx.fillStyle = '#A1A1AA';
+    ctx.fillStyle = transparentBackground ? '#E4E4E7' : '#A1A1AA';
     ctx.font = '500 16px "JetBrains Mono", monospace';
     ctx.fillText(
       `${t.pngControllerPrefix}: ${controllerName}`,
@@ -370,10 +629,17 @@ export async function exportCombosToPng({
   const comboBoxWidth = innerCardWidth - CARD_PAD_X * 2;
 
   for (const item of measuredCombos) {
-    const {combo, rows, titleBlockHeight, boxHeight} = item;
+    const {
+      combo,
+      displayTitle,
+      displaySubtitle,
+      rows,
+      titleBlockHeight,
+      boxHeight,
+    } = item;
 
-    ctx.fillStyle = '#0B0B0F';
-    ctx.strokeStyle = `rgba(${accentRgb}, 0.28)`;
+    ctx.fillStyle = transparentBackground ? 'rgba(11, 11, 15, 0.85)' : '#0B0B0F';
+    ctx.strokeStyle = `rgba(${accentRgb}, 0.34)`;
     ctx.lineWidth = 1.4;
     drawRoundedRect(ctx, contentX, cursorY, comboBoxWidth, boxHeight, 16);
     ctx.fill();
@@ -386,12 +652,12 @@ export async function exportCombosToPng({
     ctx.font = '700 22px "Outfit", "Plus Jakarta Sans", sans-serif';
     ctx.textAlign = 'left';
     ctx.textBaseline = 'top';
-    ctx.fillText(combo.title, innerX, innerY, comboInnerWidth);
+    ctx.fillText(displayTitle, innerX, innerY, comboInnerWidth);
 
-    if (combo.subtitle) {
+    if (displaySubtitle) {
       ctx.fillStyle = '#A1A1AA';
       ctx.font = '400 14px "Plus Jakarta Sans", sans-serif';
-      ctx.fillText(combo.subtitle, innerX, innerY + 30, comboInnerWidth);
+      ctx.fillText(displaySubtitle, innerX, innerY + 30, comboInnerWidth);
     }
 
     innerY += titleBlockHeight + 14;
@@ -432,7 +698,7 @@ export async function exportCombosToPng({
     cursorY += boxHeight + COMBO_GAP;
   }
 
-  // 5. Footer Signature
+  // 5. Footer Signature (bottom-right discrete watermark)
   const footerLineY = OUTER_PAD + innerCardHeight - footerHeight;
   ctx.strokeStyle = `rgba(${accentRgb}, 0.18)`;
   ctx.lineWidth = 1;
@@ -441,33 +707,18 @@ export async function exportCombosToPng({
   ctx.lineTo(OUTER_PAD + innerCardWidth - CARD_PAD_X, footerLineY);
   ctx.stroke();
 
-  ctx.fillStyle = '#A1A1AA';
+  ctx.fillStyle = transparentBackground ? 'rgba(250, 250, 250, 0.8)' : '#A1A1AA';
   ctx.font = '500 15px "JetBrains Mono", monospace';
-  ctx.textAlign = 'center';
+  ctx.textAlign = 'right';
   ctx.textBaseline = 'middle';
   ctx.fillText(
     t.pngFooter,
-    CANVAS_WIDTH / 2,
+    OUTER_PAD + innerCardWidth - CARD_PAD_X,
     footerLineY + footerHeight / 2
   );
 
   // 6. Trigger PNG Download
-  const slug = slugify(fileNameSuffix || gameTitle);
+  const slug = slugifyPngName(fileNameSuffix || gameTitle);
   const fileName = `pad2ps-combo-${slug}.png`;
-
-  await new Promise<void>((resolve) => {
-    canvas.toBlob((blob) => {
-      const url = blob ? URL.createObjectURL(blob) : canvas.toDataURL('image/png');
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = fileName;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      if (blob) {
-        URL.revokeObjectURL(url);
-      }
-      resolve();
-    }, 'image/png');
-  });
+  await downloadCanvasPng(canvas, fileName);
 }

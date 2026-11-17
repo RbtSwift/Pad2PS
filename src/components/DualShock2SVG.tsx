@@ -91,7 +91,9 @@ export function DualShock2SVG({
 
   const l2Pct = Math.max(0, Math.min(1, l2Value || (isPressed(6) ? 1 : 0)));
   const r2Pct = Math.max(0, Math.min(1, r2Value || (isPressed(7) ? 1 : 0)));
-  const sizeClass = isCompact ? 'max-h-[74vh]' : 'max-h-[58vh] xl:max-h-[64vh]';
+  const svgFitClass = isCompact
+    ? 'w-full h-full max-w-full max-h-full'
+    : 'w-full h-full max-w-full max-h-full';
 
   // ==================== PSP HANDHELD LAYOUT ====================
   if (layout === 'psp') {
@@ -103,7 +105,7 @@ export function DualShock2SVG({
       <svg
         viewBox="0 0 740 340"
         preserveAspectRatio="xMidYMid meet"
-        className={`w-full h-auto ${sizeClass} object-contain mx-auto my-auto select-none drop-shadow-[0_18px_40px_rgba(0,0,0,0.75)]`}
+        className={`${svgFitClass} mx-auto my-auto select-none drop-shadow-[0_18px_40px_rgba(0,0,0,0.75)]`}
         role="img"
         aria-label="PlayStation Portable (PSP) interativo"
       >
@@ -479,7 +481,7 @@ export function DualShock2SVG({
     <svg
       viewBox="0 0 680 430"
       preserveAspectRatio="xMidYMid meet"
-      className={`w-full h-auto ${sizeClass} object-contain mx-auto my-auto select-none drop-shadow-[0_18px_40px_rgba(0,0,0,0.75)]`}
+      className={`${svgFitClass} mx-auto my-auto select-none drop-shadow-[0_18px_40px_rgba(0,0,0,0.75)]`}
       role="img"
       aria-label={`Controle ${layout.toUpperCase()} interativo`}
     >

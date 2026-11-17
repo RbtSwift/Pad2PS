@@ -6,71 +6,62 @@ import {exportLogoIconToPng, exportLogoToPng} from '../utils/exportLogoPng';
 interface Pad2PSIconProps {
   className?: string;
   accentColor?: string;
+  cropToController?: boolean;
 }
 
 export function Pad2PSIcon({
-  className = 'w-9 h-9',
+  className = 'w-12 h-8',
   accentColor = 'var(--accent-color)',
+  cropToController = false,
 }: Pad2PSIconProps) {
   return (
     <svg
-      viewBox="0 0 32 32"
+      viewBox={cropToController ? '1.5 8 29 18.5' : '0 0 32 32'}
       fill="none"
       className={className}
       aria-hidden="true"
     >
-      {/* Square 1:1 Dark Frame */}
-      <rect
-        x="1"
-        y="1"
-        width="30"
-        height="30"
-        rx="7"
-        fill="#09090B"
-        stroke={accentColor}
-        strokeOpacity="0.45"
-        strokeWidth="1.2"
-      />
+      {/* Minimalist DualShock Silhouette (no outer square frame) */}
+      <g transform="translate(-1.2 -1.2) scale(1.075)">
+        <path
+          d="M8.8 10.2C6.4 10.2 4.8 12.1 4.4 14.8L3.4 20.6C3.1 22.6 4.4 24.2 6.1 24.2C7.6 24.2 8.7 22.8 9.6 20.8C10.2 19.4 10.9 19 11.9 19.6C12.8 20.2 14.1 20.5 16 20.5C17.9 20.5 19.2 20.2 20.1 19.6C21.1 19 21.8 19.4 22.4 20.8C23.3 22.8 24.4 24.2 25.9 24.2C27.6 24.2 28.9 22.6 28.6 20.6L27.6 14.8C27.2 12.1 25.6 10.2 23.2 10.2C21.6 10.2 20.6 11 19.5 11.2H12.5C11.4 11 10.4 10.2 8.8 10.2Z"
+          fill="#121216"
+          stroke={accentColor}
+          strokeWidth="1.55"
+          strokeLinejoin="round"
+        />
 
-      {/* Minimalist DualShock Silhouette */}
-      <path
-        d="M8.8 10.2C6.4 10.2 4.8 12.1 4.4 14.8L3.4 20.6C3.1 22.6 4.4 24.2 6.1 24.2C7.6 24.2 8.7 22.8 9.6 20.8C10.2 19.4 10.9 19 11.9 19.6C12.8 20.2 14.1 20.5 16 20.5C17.9 20.5 19.2 20.2 20.1 19.6C21.1 19 21.8 19.4 22.4 20.8C23.3 22.8 24.4 24.2 25.9 24.2C27.6 24.2 28.9 22.6 28.6 20.6L27.6 14.8C27.2 12.1 25.6 10.2 23.2 10.2C21.6 10.2 20.6 11 19.5 11.2H12.5C11.4 11 10.4 10.2 8.8 10.2Z"
-        fill="#121216"
-        stroke={accentColor}
-        strokeWidth="1.45"
-        strokeLinejoin="round"
-      />
+        {/* Left Illuminated D-Pad Cross */}
+        <path
+          d="M8.1 15.1H10.9M9.5 13.7V16.5"
+          stroke="#FAFAFA"
+          strokeWidth="1.4"
+          strokeLinecap="round"
+        />
 
-      {/* Left Illuminated D-Pad Cross */}
-      <path
-        d="M8.1 15.1H10.9M9.5 13.7V16.5"
-        stroke="#FAFAFA"
-        strokeWidth="1.35"
-        strokeLinecap="round"
-      />
+        {/* Right Illuminated PS Action Dots */}
+        <circle cx="22.5" cy="13.2" r="0.95" fill="#34D399" />
+        <circle cx="24.2" cy="14.9" r="0.95" fill="#FB7185" />
+        <circle cx="22.5" cy="16.6" r="0.95" fill="#60A5FA" />
+        <circle cx="20.8" cy="14.9" r="0.95" fill="#F472B6" />
 
-      {/* Right Illuminated PS Action Dots */}
-      <circle cx="22.5" cy="13.2" r="0.95" fill="#34D399" />
-      <circle cx="24.2" cy="14.9" r="0.95" fill="#FB7185" />
-      <circle cx="22.5" cy="16.6" r="0.95" fill="#60A5FA" />
-      <circle cx="20.8" cy="14.9" r="0.95" fill="#F472B6" />
-
-      {/* Stylized Center "2" */}
-      <text
-        x="16"
-        y="17.8"
-        textAnchor="middle"
-        fill="#FAFAFA"
-        stroke={accentColor}
-        strokeWidth="0.35"
-        style={{
-          fontFamily: '"Orbitron", "Outfit", sans-serif',
-          fontWeight: 900,
-          fontSize: '8.5px',
-        }}
-      >
-        2
-      </text>
+        {/* Stylized Center "2" */}
+        <text
+          x="16"
+          y="17.8"
+          textAnchor="middle"
+          fill="#FAFAFA"
+          stroke={accentColor}
+          strokeWidth="0.35"
+          style={{
+            fontFamily: '"Orbitron", "Outfit", sans-serif',
+            fontWeight: 900,
+            fontSize: '8.5px',
+          }}
+        >
+          2
+        </text>
+      </g>
     </svg>
   );
 }
@@ -125,14 +116,17 @@ export function Pad2PSLogo({compact = false, t}: Pad2PSLogoProps) {
   };
 
   return (
-    <div ref={menuContainerRef} className="group relative inline-flex items-center gap-2.5 min-w-0 select-none">
+    <div ref={menuContainerRef} className="group relative inline-flex items-center gap-2.5 sm:gap-3 min-w-0 select-none">
       <div
         className="shrink-0 transition-all duration-200 group-hover:scale-105"
         style={{
           filter: 'drop-shadow(0 0 8px rgba(var(--accent-rgb), 0.35))',
         }}
       >
-        <Pad2PSIcon className={compact ? 'w-8 h-8' : 'w-9 h-9 sm:w-10 sm:h-10'} />
+        <Pad2PSIcon
+          cropToController
+          className={compact ? 'w-12 h-8' : 'w-14 h-9 sm:w-[68px] sm:h-[44px]'}
+        />
       </div>
 
       <div className="min-w-0">
@@ -179,7 +173,7 @@ export function Pad2PSLogo({compact = false, t}: Pad2PSLogoProps) {
         </div>
 
         {!compact && (
-          <p className="text-[11px] sm:text-xs text-[#A1A1AA] truncate mt-0.5">
+          <p className="text-[10px] sm:text-xs text-[#A1A1AA] truncate mt-0.5">
             {t?.appSubtitle ?? 'Tradutor Visual X-Input para PlayStation'}
           </p>
         )}
@@ -226,14 +220,15 @@ export function Pad2PSLogo({compact = false, t}: Pad2PSLogoProps) {
 
 export function buildPad2PSFaviconDataUri(accentHex = '#FF2E93'): string {
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
-  <rect x="1" y="1" width="30" height="30" rx="7" fill="#09090B" stroke="${accentHex}" stroke-width="1.5"/>
-  <path d="M8.8 10.2C6.4 10.2 4.8 12.1 4.4 14.8L3.4 20.6C3.1 22.6 4.4 24.2 6.1 24.2C7.6 24.2 8.7 22.8 9.6 20.8C10.2 19.4 10.9 19 11.9 19.6C12.8 20.2 14.1 20.5 16 20.5C17.9 20.5 19.2 20.2 20.1 19.6C21.1 19 21.8 19.4 22.4 20.8C23.3 22.8 24.4 24.2 25.9 24.2C27.6 24.2 28.9 22.6 28.6 20.6L27.6 14.8C27.2 12.1 25.6 10.2 23.2 10.2C21.6 10.2 20.6 11 19.5 11.2H12.5C11.4 11 10.4 10.2 8.8 10.2Z" fill="#121216" stroke="${accentHex}" stroke-width="1.6" stroke-linejoin="round"/>
-  <path d="M8.1 15.1H10.9M9.5 13.7V16.5" stroke="#FAFAFA" stroke-width="1.5" stroke-linecap="round"/>
-  <circle cx="22.5" cy="13.2" r="1.05" fill="#34D399"/>
-  <circle cx="24.2" cy="14.9" r="1.05" fill="#FB7185"/>
-  <circle cx="22.5" cy="16.6" r="1.05" fill="#60A5FA"/>
-  <circle cx="20.8" cy="14.9" r="1.05" fill="#F472B6"/>
-  <text x="16" y="18" text-anchor="middle" fill="#FAFAFA" font-family="Arial Black, sans-serif" font-weight="900" font-size="8.5">2</text>
+  <g transform="translate(-1.2 -1.2) scale(1.075)">
+    <path d="M8.8 10.2C6.4 10.2 4.8 12.1 4.4 14.8L3.4 20.6C3.1 22.6 4.4 24.2 6.1 24.2C7.6 24.2 8.7 22.8 9.6 20.8C10.2 19.4 10.9 19 11.9 19.6C12.8 20.2 14.1 20.5 16 20.5C17.9 20.5 19.2 20.2 20.1 19.6C21.1 19 21.8 19.4 22.4 20.8C23.3 22.8 24.4 24.2 25.9 24.2C27.6 24.2 28.9 22.6 28.6 20.6L27.6 14.8C27.2 12.1 25.6 10.2 23.2 10.2C21.6 10.2 20.6 11 19.5 11.2H12.5C11.4 11 10.4 10.2 8.8 10.2Z" fill="#121216" stroke="${accentHex}" stroke-width="1.65" stroke-linejoin="round"/>
+    <path d="M8.1 15.1H10.9M9.5 13.7V16.5" stroke="#FAFAFA" stroke-width="1.5" stroke-linecap="round"/>
+    <circle cx="22.5" cy="13.2" r="1.05" fill="#34D399"/>
+    <circle cx="24.2" cy="14.9" r="1.05" fill="#FB7185"/>
+    <circle cx="22.5" cy="16.6" r="1.05" fill="#60A5FA"/>
+    <circle cx="20.8" cy="14.9" r="1.05" fill="#F472B6"/>
+    <text x="16" y="18" text-anchor="middle" fill="#FAFAFA" font-family="Arial Black, sans-serif" font-weight="900" font-size="8.5">2</text>
+  </g>
 </svg>`;
   return `data:image/svg+xml,${encodeURIComponent(svg)}`;
 }
