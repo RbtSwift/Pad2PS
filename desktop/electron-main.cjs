@@ -189,8 +189,8 @@ ipcMain.handle('pad2ps:set-pip-mode', (_ev, enabled) => {
     normalBounds = mainWindow.getBounds();
     mainWindow.setAlwaysOnTop(true, 'screen-saver');
     mainWindow.setResizable(true);
-    mainWindow.setMinimumSize(320, 220);
-    mainWindow.setSize(450, 310);
+    mainWindow.setMinimumSize(320, 200);
+    mainWindow.setSize(460, 280);
   } else {
     mainWindow.setAlwaysOnTop(false);
     if (normalBounds && normalBounds.width >= 600) {
@@ -220,6 +220,23 @@ function createWindow() {
     },
   });
 
+  mainWindow.webContents.setWindowOpenHandler(({ frameName }) => {
+    if (frameName === 'pad2ps-pip') {
+      return {
+        action: 'allow',
+        overrideBrowserWindowOptions: {
+          title: 'Pad2PS PiP',
+          width: 440,
+          height: 290,
+          alwaysOnTop: true,
+          autoHideMenuBar: true,
+          backgroundColor: '#09090D',
+          icon: path.join(__dirname, 'icon.png'),
+        },
+      };
+    }
+    return { action: 'allow' };
+  });
   mainWindow.loadFile(path.join(__dirname, 'dist', 'index.html'));
   mainWindow.on('closed', () => {
     mainWindow = null;

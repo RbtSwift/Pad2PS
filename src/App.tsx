@@ -691,15 +691,7 @@ export default function App() {
   };
 
   const handleTogglePiP = async () => {
-    if (isElectronDesktop()) {
-      const next = !nativePiPActive;
-      const ok = await setNativePiPAlwaysOnTop(next);
-      if (ok) {
-        setNativePiPActive(next);
-        setIsCompact(next);
-      }
-      return;
-    }
+    // PiP Desktop usa janela destacada Always-on-Top
 
     if (pipWindow && !pipWindow.closed) {
       pipWindow.close();
@@ -796,13 +788,45 @@ export default function App() {
 
   return (
     <div className="cyber-grid-bg h-dvh max-h-dvh w-full overflow-hidden flex flex-col text-[#FAFAFA]">
-      <div className="w-full max-w-[2400px] mx-auto px-3 sm:px-5 lg:px-7 xl:px-10 py-2 sm:py-3 flex-1 flex flex-col gap-2 sm:gap-2.5 lg:gap-3 min-h-0 overflow-hidden">
-        {/* Header */}
-        <header
-          className={`w-full flex flex-wrap items-center justify-between gap-2 lg:gap-3 pb-2 border-b accent-border-subtle shrink-0 ${
-            isCompact ? 'bg-[#121216]/85 backdrop-blur-md px-3.5 py-2 rounded-xl border' : ''
-          }`}
+      {nativePiPActive && (
+        <div
+          className="w-full flex items-center justify-between px-3 py-1 bg-[#121216]/95 border-b border-[var(--accent-color)]/40 text-xs shrink-0 select-none z-50"
+          style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}
         >
+          <div className="flex items-center gap-2">
+            <span
+              className={`w-2 h-2 rounded-full shrink-0 ${
+                showActivatedStatus ? 'bg-emerald-400' : 'bg-amber-400 animate-pulse'
+              }`}
+            />
+            <span className="font-bold tracking-wider text-[11px] text-white">Pad2PS · PiP</span>
+            <span className="text-[10px] text-zinc-400 font-mono hidden sm:inline">(Always-on-Top)</span>
+          </div>
+          <div className="flex items-center gap-1.5" style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}>
+            <button
+              type="button"
+              onClick={handleTogglePiP}
+              title={lang === 'en' ? 'Restore normal window' : 'Restaurar janela normal'}
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-zinc-800 hover:bg-zinc-700 text-white text-[11px] font-medium border border-zinc-600 transition-colors cursor-pointer"
+            >
+              <Minimize2 className="w-3 h-3" />
+              <span>{lang === 'en' ? 'Restore' : 'Restaurar'}</span>
+            </button>
+          </div>
+        </div>
+      )}
+      <div
+        className={`w-full max-w-[2400px] mx-auto ${
+          nativePiPActive ? 'px-2 py-1' : 'px-3 sm:px-5 lg:px-7 xl:px-10 py-2 sm:py-3'
+        } flex-1 flex flex-col gap-1.5 sm:gap-2.5 lg:gap-3 min-h-0 overflow-hidden`}
+      >
+        {/* Header */}
+        {!nativePiPActive && (
+          <header
+            className={`w-full flex flex-wrap items-center justify-between gap-2 lg:gap-3 pb-2 border-b accent-border-subtle shrink-0 ${
+              isCompact ? 'bg-[#121216]/85 backdrop-blur-md px-3.5 py-2 rounded-xl border' : ''
+            }`}
+          >
           <Pad2PSLogo compact={isCompact} t={t} />
 
           <div className="flex flex-1 flex-wrap items-center justify-end gap-2 lg:gap-3 min-w-0 max-w-full">
@@ -1152,6 +1176,7 @@ export default function App() {
             </button>
           </div>
         </header>
+        )}
 
         {/* Discrete Notice (Rumble / PiP Fallback) */}
         {rumbleNotice && (
