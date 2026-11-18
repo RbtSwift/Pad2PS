@@ -1,7 +1,7 @@
-import {useIsInstalledApp} from "../hooks/useIsInstalledApp";
 import {Download, Gamepad2, ImageDown} from 'lucide-react';
 import {useEffect, useRef, useState} from 'react';
 import type {Translations} from '../data/i18n';
+import {useIsInstalledApp} from '../hooks/useIsInstalledApp';
 import {exportLogoIconToPng, exportLogoToPng} from '../utils/exportLogoPng';
 
 interface Pad2PSIconProps {
@@ -69,12 +69,14 @@ export function Pad2PSIcon({
 
 interface Pad2PSLogoProps {
   compact?: boolean;
+  isApp?: boolean;
   t?: Translations;
 }
 
-export function Pad2PSLogo({compact = false, t}: Pad2PSLogoProps) {
+export function Pad2PSLogo({compact = false, isApp, t}: Pad2PSLogoProps) {
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
-  const isInstalledApp = useIsInstalledApp();
+  const detectedIsApp = useIsInstalledApp();
+  const isInstalledApp = isApp ?? detectedIsApp;
   const [isDownloading, setIsDownloading] = useState<boolean>(false);
   const menuContainerRef = useRef<HTMLDivElement>(null);
 
@@ -118,7 +120,7 @@ export function Pad2PSLogo({compact = false, t}: Pad2PSLogoProps) {
   };
 
   return (
-    <div ref={menuContainerRef} className="group relative inline-flex items-center gap-2.5 sm:gap-3 min-w-0 select-none">
+    <div ref={menuContainerRef} className="group relative inline-flex items-center gap-2 sm:gap-3 min-w-0 select-none">
       <div
         className="shrink-0 transition-all duration-200 group-hover:scale-105"
         style={{
@@ -127,7 +129,7 @@ export function Pad2PSLogo({compact = false, t}: Pad2PSLogoProps) {
       >
         <Pad2PSIcon
           cropToController
-          className={compact ? 'w-12 h-8' : 'w-14 h-9 sm:w-[68px] sm:h-[44px]'}
+          className={compact ? 'w-10 h-6 sm:w-12 sm:h-8' : 'w-11 h-7 sm:w-[68px] sm:h-[44px]'}
         />
       </div>
 
@@ -135,7 +137,7 @@ export function Pad2PSLogo({compact = false, t}: Pad2PSLogoProps) {
         <div className="flex items-center gap-1.5">
           <h1
             className={`flex items-baseline tracking-tight leading-none transition-all duration-200 group-hover:drop-shadow-[0_0_14px_rgba(var(--accent-rgb),0.75)] ${
-              compact ? 'text-lg' : 'text-xl sm:text-[22px]'
+              compact ? 'text-base sm:text-lg' : 'text-lg sm:text-[22px]'
             }`}
             style={{
               fontFamily: '"Orbitron", "Outfit", ui-sans-serif, sans-serif',
@@ -176,14 +178,14 @@ export function Pad2PSLogo({compact = false, t}: Pad2PSLogoProps) {
         </div>
 
         {!compact && (
-          <p className="text-[10px] sm:text-xs text-[#A1A1AA] truncate mt-0.5">
+          <p className="text-[9px] sm:text-xs text-[#A1A1AA] truncate mt-0.5">
             {t?.appSubtitle ?? 'Tradutor Visual X-Input para PlayStation'}
           </p>
         )}
       </div>
 
       {/* Discrete 2-Option PNG Download Popover */}
-      {isMenuOpen && (
+      {!isInstalledApp && isMenuOpen && (
         <div
           role="menu"
           aria-label="PNG Logo"

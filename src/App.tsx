@@ -23,10 +23,11 @@ import {ControllerNameEditor} from './components/ControllerNameEditor';
 import {DiagnosticsModal} from './components/DiagnosticsModal';
 import {DualShock2SVG} from './components/DualShock2SVG';
 import {EmulatorsModal} from './components/EmulatorsModal';
+import {ErrorBoundary} from './components/ErrorBoundary';
 import {InstallAppModal} from './components/InstallAppModal';
 import {LastPressedCard} from './components/LastPressedCard';
 import {OfflineIndicator} from './components/OfflineIndicator';
-import {Pad2PSLogo} from './components/Pad2PSLogo';
+import {Pad2PSIcon, Pad2PSLogo} from './components/Pad2PSLogo';
 import {
   CHROMA_BG_MAP,
   type ChromaMode,
@@ -167,7 +168,14 @@ function loadConsoleLayout(): ConsoleLayout {
   }
   try {
     const saved = window.localStorage.getItem(LAYOUT_STORAGE_KEY);
-    if (saved === 'ps1' || saved === 'ps2' || saved === 'ps3' || saved === 'psp') {
+    if (
+      saved === 'ps1' ||
+      saved === 'ps2' ||
+      saved === 'ps3' ||
+      saved === 'psp' ||
+      saved === 'xbox' ||
+      saved === 'switch'
+    ) {
       return saved;
     }
     return 'ps2';
@@ -263,44 +271,204 @@ function loadRemapMap(): Record<number, number> {
   }
 }
 
+interface PiPSyncPayload {
+  type?: 'state' | 'ping' | 'chroma' | 'pip-closed';
+  layout?: ConsoleLayout;
+  pressedButtons?: boolean[];
+  l2Value?: number;
+  r2Value?: number;
+  leftStick?: {x: number; y: number};
+  rightStick?: {x: number; y: number};
+  chromaMode?: ChromaMode;
+  accentHex?: string;
+  accentRgb?: string;
+}
+
 function StandalonePiPView() {
-  const [st, setSt] = useState<any>(null);
+  const [lang] = useState<AppLanguage>(loadLanguage);
+  const [themeId] = useState<string>(loadThemeId);
+  const [layout, setLayout] = useState<ConsoleLayout>(loadConsoleLayout);
+  const [pressedButtons, setPressedButtons] = useState<boolean[]>(() => Array(17).fill(false));
+  const [l2Value, setL2Value] = useState<number>(0);
+  const [r2Value, setR2Value] = useState<number>(0);
+  const [leftStick, setLeftStick] = useState<{x: number; y: number}>({x: 0, y: 0});
+  const [rightStick, setRightStick] = useState<{x: number; y: number}>({x: 0, y: 0});
+  const [chromaMode, setChromaMode] = useState<ChromaMode>('dark');
+  const [hasSynced, setHasSynced] = useState<boolean>(false);
+  const channelRef = useRef<BroadcastChannel | null>(null);
+  const t = getTranslations(lang);
+
   useEffect(() => {
-    const ch = new BroadcastChannel("pad2ps-pip-sync");
-    ch.onmessage = (e) => {
-      if (e.data?.layout) {
-        setSt(e.data);
-        if (e.data.accentHex) document.documentElement.style.setProperty("--accent-color", e.data.accentHex);
-        if (e.data.accentRgb) document.documentElement.style.setProperty("--accent-rgb", e.data.accentRgb);
-      }
-    };
-    ch.postMessage({ type: "ping" });
-    return () => ch.close();
+    const theme = getThemeById(themeId);
+    applyNeonThemeToDocument(theme);
+  }, [themeId]);
+
+  useEffect(() => {
+    if (typeof BroadcastChannel === 'undefined') {
+      return;
+    }
+    try {
+      const ch = new BroadcastChannel('pad2ps-pip-sync');
+      channelRef.current = ch;
+      ch.onmessage = (event: MessageEvent<PiPSyncPayload>) => {
+        const data = event.data;
+        if (!data) return;
+        if (data.layout) {
+          setLayout(data.layout);
+          if (Array.isArray(data.pressedButtons)) setPressedButtons(data.pressedButtons);
+          if (typeof data.l2Value === 'number') setL2Value(data.l2Value);
+          if (typeof data.r2Value === 'number') setR2Value(data.r2Value);
+          if (data.leftStick) setLeftStick(data.leftStick);
+          if (data.rightStick) setRightStick(data.rightStick);
+          if (data.chromaMode) setChromaMode(data.chromaMode);
+          setHasSynced(true);
+        }
+        if (data.accentHex) {
+          document.documentElement.style.setProperty('--accent-color', data.accentHex);
+        }
+        if (data.accentRgb) {
+          document.documentElement.style.setProperty('--accent-rgb', data.accentRgb);
+        }
+      };
+      ch.postMessage({type: 'ping'});
+      return () => {
+        channelRef.current = null;
+        ch.close();
+      };
+    } catch {
+      return undefined;
+    }
   }, []);
-  const bg = st?.chromaMode === "green" ? "#00FF00" : st?.chromaMode === "magenta" ? "#FF00FF" : "#09090B";
+
+  const handleChromaSelect = (mode: ChromaMode) => {
+    setChromaMode(mode);
+    try {
+      if (channelRef.current) {
+        channelRef.current.postMessage({type: 'chroma', chromaMode: mode});
+      } else if (typeof BroadcastChannel !== 'undefined') {
+        const c = new BroadcastChannel('pad2ps-pip-sync');
+        c.postMessage({type: 'chroma', chromaMode: mode});
+        c.close();
+      }
+    } catch {
+      // Ignore BroadcastChannel errors
+    }
+  };
+
+  const handleClosePiP = async () => {
+    try {
+      if (channelRef.current) {
+        channelRef.current.postMessage({type: 'pip-closed'});
+      } else if (typeof BroadcastChannel !== 'undefined') {
+        const c = new BroadcastChannel('pad2ps-pip-sync');
+        c.postMessage({type: 'pip-closed'});
+        c.close();
+      }
+    } catch {
+      // Ignore BroadcastChannel errors
+    }
+    if (isElectronDesktop()) {
+      await setNativePiPAlwaysOnTop(false);
+    }
+    window.close();
+  };
+
+  const bg = CHROMA_BG_MAP[chromaMode];
+
   return (
-    <div className="w-screen h-screen flex flex-col overflow-hidden select-none" style={{ backgroundColor: bg }}>
-      <div className="px-2.5 py-1.5 flex items-center justify-between gap-2 bg-black/80 border-b border-white/10 shrink-0">
-        <span className="font-mono text-[11px] font-bold text-white">Pad<span style={{ color: "var(--accent-color)" }}>2</span>PS</span>
-        <div className="flex items-center gap-1">
-          {(["dark", "green", "magenta"] as const).map((m) => (
-            <button key={m} type="button" onClick={() => { const c = new BroadcastChannel("pad2ps-pip-sync"); c.postMessage({ type: "chroma", chromaMode: m }); c.close(); }}
-              className="px-1.5 py-0.5 rounded text-[10px] font-mono border border-white/25 text-white bg-black/60 cursor-pointer">
-              {m === "dark" ? "Escuro" : m === "green" ? "Verde" : "Magenta"}
-            </button>
-          ))}
+    <div
+      className="w-screen h-screen flex flex-col overflow-hidden select-none text-[#FAFAFA]"
+      style={{backgroundColor: bg}}
+    >
+      {/* Minimal Discrete Floating Bar */}
+      <div
+        className="px-2.5 py-1.5 flex items-center justify-between gap-2 bg-black/80 backdrop-blur-xs border-b border-white/10 shrink-0"
+        style={{WebkitAppRegion: 'drag'} as React.CSSProperties}
+      >
+        <div className="flex items-center gap-1.5 font-mono text-[11px] font-bold text-[#FAFAFA] shrink-0">
+          <Pad2PSIcon cropToController className="w-6 h-4" />
+          <span>
+            Pad<span style={{color: 'var(--accent-color)'}}>2</span>PS
+          </span>
         </div>
-        <button type="button" onClick={() => window.close()} className="text-zinc-300 hover:text-white text-xs px-1 cursor-pointer">✕</button>
+
+        {/* OBS Chroma Key Selector */}
+        <div
+          className="flex items-center gap-1"
+          role="group"
+          aria-label={t.chromaLabel}
+          style={{WebkitAppRegion: 'no-drag'} as React.CSSProperties}
+        >
+          <button
+            type="button"
+            onClick={() => handleChromaSelect('dark')}
+            title={t.chromaDark}
+            className={`px-1.5 py-0.5 rounded text-[10px] font-mono border transition-colors cursor-pointer ${
+              chromaMode === 'dark'
+                ? 'border-white text-white bg-zinc-800'
+                : 'border-zinc-700 text-zinc-300 bg-zinc-900/80'
+            }`}
+          >
+            {t.chromaDark}
+          </button>
+          <button
+            type="button"
+            onClick={() => handleChromaSelect('green')}
+            title={t.chromaGreen}
+            aria-label={t.chromaGreen}
+            className={`w-5 h-5 rounded border cursor-pointer ${
+              chromaMode === 'green' ? 'ring-2 ring-white' : 'border-white/30'
+            }`}
+            style={{backgroundColor: '#00FF00'}}
+          />
+          <button
+            type="button"
+            onClick={() => handleChromaSelect('magenta')}
+            title={t.chromaMagenta}
+            aria-label={t.chromaMagenta}
+            className={`w-5 h-5 rounded border cursor-pointer ${
+              chromaMode === 'magenta' ? 'ring-2 ring-white' : 'border-white/30'
+            }`}
+            style={{backgroundColor: '#FF00FF'}}
+          />
+        </div>
+
+        <button
+          type="button"
+          onClick={() => void handleClosePiP()}
+          title={t.close}
+          aria-label={t.close}
+          style={{WebkitAppRegion: 'no-drag'} as React.CSSProperties}
+          className="w-5 h-5 rounded flex items-center justify-center text-zinc-300 hover:text-white hover:bg-white/10 text-xs cursor-pointer shrink-0"
+        >
+          ✕
+        </button>
       </div>
-      <div className="flex-1 min-h-0 flex items-center justify-center p-2">
-        {st ? <DualShock2SVG layout={st.layout} pressedButtons={st.pressedButtons} l2Value={st.l2Value} r2Value={st.r2Value} leftStick={st.leftStick} rightStick={st.rightStick} isCompact={true} onButtonDown={() => {}} onButtonUp={() => {}} /> : <p className="text-xs text-zinc-400 font-mono">Aguardando controle...</p>}
+
+      {/* Live Controller SVG */}
+      <div className="flex-1 min-h-0 flex flex-col items-center justify-center p-2 relative">
+        <DualShock2SVG
+          layout={layout}
+          pressedButtons={pressedButtons}
+          l2Value={l2Value}
+          r2Value={r2Value}
+          leftStick={leftStick}
+          rightStick={rightStick}
+          isCompact={true}
+          onButtonDown={() => {}}
+          onButtonUp={() => {}}
+        />
+        {!hasSynced && (
+          <p className="mt-1 text-[10px] text-zinc-400 font-mono">
+            {t.waitingControl}...
+          </p>
+        )}
       </div>
     </div>
   );
 }
 
-export default function App() {
-  if (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("pip") === "1") return <StandalonePiPView />;
+function MainApp() {
   const [lang, setLang] = useState<AppLanguage>(loadLanguage);
   const [soundEnabled, setSoundEnabled] = useState<boolean>(loadSoundPreference);
   const [customNames, setCustomNames] = useState<Record<string, string>>(loadCustomNames);
@@ -340,14 +508,6 @@ export default function App() {
   const t = getTranslations(lang);
   const isApp = useIsInstalledApp();
   const isPipActive = Boolean((pipWindow && !pipWindow.closed) || nativePiPActive);
-  useEffect(() => {
-    if (!nativePiPActive) return;
-    const theme = getThemeById(themeId);
-    const ch = new BroadcastChannel("pad2ps-pip-sync");
-    ch.postMessage({ layout, pressedButtons, l2Value, r2Value, leftStick, rightStick, chromaMode, accentHex: theme.hex, accentRgb: theme.rgb });
-    ch.onmessage = (e) => { if (e.data?.type === "chroma") setChromaMode(e.data.chromaMode); };
-    return () => ch.close();
-  }, [nativePiPActive, layout, pressedButtons, l2Value, r2Value, leftStick, rightStick, chromaMode, themeId]);
   const isTermsPage = isTermsRoute(currentPath);
 
   useEffect(() => {
@@ -499,6 +659,77 @@ export default function App() {
     resetStats,
     triggerRumble,
   } = useGamepad(soundEnabled, deadzone, remapMap);
+
+  // Sync live controller state to Electron / ?pip=1 floating window via BroadcastChannel
+  const pipChannelRef = useRef<BroadcastChannel | null>(null);
+  const latestPiPStateRef = useRef<PiPSyncPayload | null>(null);
+
+  {
+    const theme = getThemeById(themeId);
+    latestPiPStateRef.current = {
+      type: 'state',
+      layout: consoleLayout,
+      pressedButtons,
+      l2Value,
+      r2Value,
+      leftStick,
+      rightStick,
+      chromaMode,
+      accentHex: theme.hex,
+      accentRgb: theme.rgb,
+    };
+  }
+
+  useEffect(() => {
+    if (typeof BroadcastChannel === 'undefined') {
+      return;
+    }
+    try {
+      const ch = new BroadcastChannel('pad2ps-pip-sync');
+      pipChannelRef.current = ch;
+      ch.onmessage = (event: MessageEvent<PiPSyncPayload>) => {
+        const data = event.data;
+        if (!data) return;
+        if (data.type === 'ping') {
+          setNativePiPActive(true);
+          if (latestPiPStateRef.current) {
+            ch.postMessage(latestPiPStateRef.current);
+          }
+        } else if (data.type === 'chroma' && data.chromaMode) {
+          setChromaMode(data.chromaMode);
+        } else if (data.type === 'pip-closed') {
+          setNativePiPActive(false);
+        }
+      };
+      return () => {
+        pipChannelRef.current = null;
+        ch.close();
+      };
+    } catch {
+      return undefined;
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!nativePiPActive || !pipChannelRef.current || !latestPiPStateRef.current) {
+      return;
+    }
+    try {
+      pipChannelRef.current.postMessage(latestPiPStateRef.current);
+    } catch {
+      // Ignore BroadcastChannel errors
+    }
+  }, [
+    nativePiPActive,
+    consoleLayout,
+    pressedButtons,
+    l2Value,
+    r2Value,
+    leftStick,
+    rightStick,
+    chromaMode,
+    themeId,
+  ]);
 
   // Capture physical button press when waiting for remap binding
   useEffect(() => {
@@ -739,7 +970,14 @@ export default function App() {
     if (isElectronDesktop()) {
       const next = !nativePiPActive;
       const ok = await setNativePiPAlwaysOnTop(next);
-      if (ok) setNativePiPActive(next);
+      setNativePiPActive(next ? ok !== false : false);
+      if (next && pipChannelRef.current && latestPiPStateRef.current) {
+        try {
+          pipChannelRef.current.postMessage(latestPiPStateRef.current);
+        } catch {
+          // Ignore BroadcastChannel errors
+        }
+      }
       return;
     }
 
@@ -826,7 +1064,7 @@ export default function App() {
           onOpenInstall={() => setIsInstallModalOpen(true)}
         />
         <InstallAppModal
-          isOpen={isInstallModalOpen}
+          isOpen={!isApp && isInstallModalOpen}
           onClose={() => setIsInstallModalOpen(false)}
           isApp={isApp}
           t={t}
@@ -838,50 +1076,18 @@ export default function App() {
 
   return (
     <div className="cyber-grid-bg h-dvh max-h-dvh w-full overflow-hidden flex flex-col text-[#FAFAFA]">
-      {nativePiPActive && (
-        <div
-          className="w-full flex items-center justify-between px-3 py-1 bg-[#121216]/95 border-b border-[var(--accent-color)]/40 text-xs shrink-0 select-none z-50"
-          style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}
-        >
-          <div className="flex items-center gap-2">
-            <span
-              className={`w-2 h-2 rounded-full shrink-0 ${
-                showActivatedStatus ? 'bg-emerald-400' : 'bg-amber-400 animate-pulse'
-              }`}
-            />
-            <span className="font-bold tracking-wider text-[11px] text-white">Pad2PS · PiP</span>
-            <span className="text-[10px] text-zinc-400 font-mono hidden sm:inline">(Always-on-Top)</span>
-          </div>
-          <div className="flex items-center gap-1.5" style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}>
-            <button
-              type="button"
-              onClick={handleTogglePiP}
-              title={lang === 'en' ? 'Restore normal window' : 'Restaurar janela normal'}
-              className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-zinc-800 hover:bg-zinc-700 text-white text-[11px] font-medium border border-zinc-600 transition-colors cursor-pointer"
-            >
-              <Minimize2 className="w-3 h-3" />
-              <span>{lang === 'en' ? 'Restore' : 'Restaurar'}</span>
-            </button>
-          </div>
-        </div>
-      )}
-      <div
-        className={`w-full max-w-[2400px] mx-auto ${
-          nativePiPActive ? 'px-2 py-1' : 'px-3 sm:px-5 lg:px-7 xl:px-10 py-2 sm:py-3'
-        } flex-1 flex flex-col gap-1.5 sm:gap-2.5 lg:gap-3 min-h-0 overflow-hidden`}
-      >
+      <div className="w-full max-w-[2400px] mx-auto px-2.5 sm:px-5 lg:px-7 xl:px-10 py-1.5 sm:py-3 flex-1 flex flex-col gap-1.5 sm:gap-2.5 lg:gap-3 min-h-0 overflow-hidden">
         {/* Header */}
-        {!nativePiPActive && (
-          <header
-            className={`w-full flex flex-wrap items-center justify-between gap-2 lg:gap-3 pb-2 border-b accent-border-subtle shrink-0 ${
-              isCompact ? 'bg-[#121216]/85 backdrop-blur-md px-3.5 py-2 rounded-xl border' : ''
-            }`}
-          >
-          <Pad2PSLogo compact={isCompact} t={t} />
+        <header
+          className={`w-full flex flex-wrap items-center justify-between gap-1.5 sm:gap-2 lg:gap-3 pb-1.5 sm:pb-2 border-b accent-border-subtle shrink-0 ${
+            isCompact ? 'bg-[#121216]/85 backdrop-blur-md px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-xl border' : ''
+          }`}
+        >
+          <Pad2PSLogo compact={isCompact} isApp={isApp} t={t} />
 
-          <div className="flex flex-1 flex-wrap items-center justify-end gap-2 lg:gap-3 min-w-0 max-w-full">
+          <div className="flex flex-1 flex-wrap items-center justify-end gap-1 sm:gap-2 lg:gap-3 min-w-0 max-w-full">
             {/* Live Connection Status + Inline Custom Name Editor */}
-            <div className="flex items-center gap-2 text-xs min-w-0">
+            <div className="flex items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs min-w-0">
               <span
                 className={`w-2 h-2 rounded-full shrink-0 ${
                   showActivatedStatus ? 'bg-emerald-400' : 'animate-pulse'
@@ -937,14 +1143,14 @@ export default function App() {
               return (
                 <div
                   title={`${bat.name}: ${bat.percentage}%${bat.charging ? ' (Carregando)' : ''}`}
-                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-mono font-semibold shrink-0 ${
+                  className={`flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2.5 py-1 sm:py-1.5 rounded-lg border text-[11px] sm:text-xs font-mono font-semibold shrink-0 ${
                     isLow
                       ? 'bg-red-500/15 border-red-500/50 text-red-300 animate-pulse'
                       : 'bg-[#121216] accent-border-subtle text-[#FAFAFA]'
                   }`}
                 >
                   <BatIcon
-                    className={`w-3.5 h-3.5 ${
+                    className={`w-3 h-3 sm:w-3.5 sm:h-3.5 ${
                       bat.charging
                         ? 'text-emerald-400'
                         : isLow
@@ -959,7 +1165,7 @@ export default function App() {
 
             {/* Neon Theme Swatches */}
             <div
-              className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-[#121216] border accent-border-subtle"
+              className="flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2 py-1 sm:py-1.5 rounded-lg bg-[#121216] border accent-border-subtle"
               role="group"
               aria-label="Neon theme"
             >
@@ -973,7 +1179,7 @@ export default function App() {
                     title={theme.name}
                     aria-label={theme.name}
                     aria-pressed={selected}
-                    className={`w-3.5 h-3.5 rounded-full transition-transform cursor-pointer ${
+                    className={`w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 rounded-full transition-transform cursor-pointer ${
                       selected
                         ? 'scale-125 ring-2 ring-white/90 ring-offset-1 ring-offset-[#121216]'
                         : 'opacity-70 hover:opacity-100 hover:scale-110'
@@ -991,7 +1197,7 @@ export default function App() {
             <div
               role="group"
               aria-label="Language"
-              className="inline-flex items-center p-0.5 rounded-lg bg-[#121216] border accent-border-subtle text-[11px] font-mono"
+              className="inline-flex items-center p-0.5 rounded-lg bg-[#121216] border accent-border-subtle text-[10px] sm:text-[11px] font-mono"
             >
               {(['pt', 'en'] as const).map((code) => {
                 const active = lang === code;
@@ -1001,7 +1207,7 @@ export default function App() {
                     type="button"
                     onClick={() => setLang(code)}
                     aria-pressed={active}
-                    className={`px-2 py-1 rounded-md font-semibold uppercase transition-colors cursor-pointer ${
+                    className={`px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md font-semibold uppercase transition-colors cursor-pointer ${
                       active ? 'text-white' : 'text-[#A1A1AA] hover:text-white'
                     }`}
                     style={
@@ -1023,22 +1229,20 @@ export default function App() {
             <button
               type="button"
               onClick={handleTogglePiP}
-              aria-pressed={Boolean(pipWindow && !pipWindow.closed)}
+              aria-pressed={isPipActive}
               title={t.pipButton}
-              className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-medium transition-all cursor-pointer whitespace-nowrap shrink-0 ${
-                pipWindow && !pipWindow.closed
+              className={`inline-flex items-center gap-1.5 px-1.5 py-1 sm:px-2.5 sm:py-1.5 rounded-lg border text-xs font-medium transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+                isPipActive
                   ? 'text-white neon-glow-accent'
                   : 'bg-[#121216] text-[#FAFAFA] hover:bg-white/5'
               }`}
               style={{
-                borderColor:
-                  pipWindow && !pipWindow.closed
-                    ? 'var(--accent-color)'
-                    : 'rgba(var(--accent-rgb), 0.28)',
-                backgroundColor:
-                  pipWindow && !pipWindow.closed
-                    ? 'rgba(var(--accent-rgb), 0.24)'
-                    : undefined,
+                borderColor: isPipActive
+                  ? 'var(--accent-color)'
+                  : 'rgba(var(--accent-rgb), 0.28)',
+                backgroundColor: isPipActive
+                  ? 'rgba(var(--accent-rgb), 0.24)'
+                  : undefined,
               }}
             >
               <PictureInPicture2
@@ -1046,7 +1250,7 @@ export default function App() {
                 style={{color: 'var(--accent-color)'}}
               />
               <span className="hidden 2xl:inline">
-                {pipWindow && !pipWindow.closed ? t.pipActive : t.pipButton}
+                {isPipActive ? t.pipActive : t.pipButton}
               </span>
             </button>
 
@@ -1056,7 +1260,7 @@ export default function App() {
                 type="button"
                 onClick={() => setIsDiagnosticsOpen(true)}
                 title={t.diagnosticsButton}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border bg-[#121216] text-xs font-medium text-[#FAFAFA] hover:bg-white/5 transition-colors cursor-pointer whitespace-nowrap shrink-0"
+                className="inline-flex items-center gap-1.5 px-1.5 py-1 sm:px-2.5 sm:py-1.5 rounded-lg border bg-[#121216] text-xs font-medium text-[#FAFAFA] hover:bg-white/5 transition-colors cursor-pointer whitespace-nowrap shrink-0"
                 style={{borderColor: 'rgba(var(--accent-rgb), 0.28)'}}
               >
                 <Activity className="w-3.5 h-3.5" style={{color: 'var(--accent-color)'}} />
@@ -1071,7 +1275,7 @@ export default function App() {
                 onClick={handleToggleRemapMode}
                 aria-pressed={isRemapMode}
                 title={t.remapButton}
-                className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-medium transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+                className={`inline-flex items-center gap-1.5 px-1.5 py-1 sm:px-2.5 sm:py-1.5 rounded-lg border text-xs font-medium transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                   isRemapMode || hasActiveRemap
                     ? 'text-white neon-glow-accent'
                     : 'bg-[#121216] text-[#FAFAFA] hover:bg-white/5'
@@ -1105,7 +1309,7 @@ export default function App() {
                 onClick={handleRumbleTest}
                 disabled={isVibrating}
                 title={t.rumbleButton}
-                className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-medium transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+                className={`inline-flex items-center gap-1.5 px-1.5 py-1 sm:px-2.5 sm:py-1.5 rounded-lg border text-xs font-medium transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                   isVibrating
                     ? 'animate-pulse text-white neon-glow-accent'
                     : 'bg-[#121216] text-[#FAFAFA] hover:bg-white/5'
@@ -1130,7 +1334,7 @@ export default function App() {
                 type="button"
                 onClick={() => setIsEmulatorsOpen(true)}
                 title={t.emulatorsButton}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border bg-[#121216] text-xs font-medium text-[#FAFAFA] hover:bg-white/5 transition-colors cursor-pointer whitespace-nowrap shrink-0"
+                className="inline-flex items-center gap-1.5 px-1.5 py-1 sm:px-2.5 sm:py-1.5 rounded-lg border bg-[#121216] text-xs font-medium text-[#FAFAFA] hover:bg-white/5 transition-colors cursor-pointer whitespace-nowrap shrink-0"
                 style={{borderColor: 'rgba(var(--accent-rgb), 0.28)'}}
               >
                 <Cpu className="w-3.5 h-3.5" style={{color: 'var(--accent-color)'}} />
@@ -1144,7 +1348,7 @@ export default function App() {
                 type="button"
                 onClick={() => setIsComboDrawerOpen(true)}
                 title={t.combosButton}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border bg-[#121216] text-xs font-medium text-[#FAFAFA] hover:bg-white/5 transition-colors cursor-pointer whitespace-nowrap shrink-0"
+                className="inline-flex items-center gap-1.5 px-1.5 py-1 sm:px-2.5 sm:py-1.5 rounded-lg border bg-[#121216] text-xs font-medium text-[#FAFAFA] hover:bg-white/5 transition-colors cursor-pointer whitespace-nowrap shrink-0"
                 style={{borderColor: 'rgba(var(--accent-rgb), 0.28)'}}
               >
                 <BookOpen className="w-3.5 h-3.5" style={{color: 'var(--accent-color)'}} />
@@ -1158,7 +1362,7 @@ export default function App() {
               onClick={() => setIsCompact((prev) => !prev)}
               aria-pressed={isCompact}
               title={isCompact ? t.expandButton : t.compactButton}
-              className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-medium transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+              className={`inline-flex items-center gap-1.5 px-1.5 py-1 sm:px-2.5 sm:py-1.5 rounded-lg border text-xs font-medium transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                 isCompact
                   ? 'text-white neon-glow-accent'
                   : 'bg-[#121216] text-[#A1A1AA] hover:text-[#FAFAFA]'
@@ -1187,7 +1391,7 @@ export default function App() {
                 onClick={() => setIsSettingsOpen(true)}
                 aria-label={t.settingsButton}
                 title={t.settingsButton}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border bg-[#121216] text-xs font-medium text-[#A1A1AA] hover:text-[#FAFAFA] transition-colors cursor-pointer whitespace-nowrap shrink-0"
+                className="inline-flex items-center gap-1.5 px-1.5 py-1 sm:px-2.5 sm:py-1.5 rounded-lg border bg-[#121216] text-xs font-medium text-[#A1A1AA] hover:text-[#FAFAFA] transition-colors cursor-pointer whitespace-nowrap shrink-0"
                 style={{borderColor: 'rgba(var(--accent-rgb), 0.22)'}}
               >
                 <SlidersHorizontal
@@ -1205,7 +1409,7 @@ export default function App() {
               aria-pressed={soundEnabled}
               aria-label={soundEnabled ? t.soundOn : t.soundOff}
               title={soundEnabled ? t.soundOn : t.soundOff}
-              className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-medium transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+              className={`inline-flex items-center gap-1.5 px-1.5 py-1 sm:px-2.5 sm:py-1.5 rounded-lg border text-xs font-medium transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                 soundEnabled
                   ? 'text-white neon-glow-accent'
                   : 'bg-[#121216] text-[#A1A1AA] hover:text-[#FAFAFA]'
@@ -1226,7 +1430,6 @@ export default function App() {
             </button>
           </div>
         </header>
-        )}
 
         {/* Discrete Notice (Rumble / PiP Fallback) */}
         {rumbleNotice && (
@@ -1250,12 +1453,12 @@ export default function App() {
         {!isCompact && !showActivatedStatus && !isRemapMode && (
           <div
             role="status"
-            className="w-full shrink-0 bg-[#121216] rounded-xl px-3 sm:px-4 py-1.5 sm:py-2 flex flex-wrap items-center justify-between gap-2 sm:gap-3 neon-glow-accent animate-pulse"
+            className="w-full shrink-0 bg-[#121216] rounded-xl px-2.5 sm:px-4 py-1 sm:py-2 flex flex-wrap items-center justify-between gap-2 sm:gap-3 neon-glow-accent animate-pulse"
             style={{border: '1px solid rgba(var(--accent-rgb), 0.4)'}}
           >
-            <div className="flex items-center gap-3 min-w-0">
-              <Gamepad2 className="w-4 h-4 shrink-0" style={{color: 'var(--accent-color)'}} />
-              <p className="text-xs sm:text-sm text-[#FAFAFA] leading-snug">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+              <Gamepad2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" style={{color: 'var(--accent-color)'}} />
+              <p className="text-[11px] sm:text-sm text-[#FAFAFA] leading-snug">
                 {t.waitingBannerPrefix}{' '}
                 <span className="font-semibold" style={{color: 'var(--accent-color)'}}>
                   {t.waitingBannerHighlight}
@@ -1663,12 +1866,24 @@ export default function App() {
         }}
       />
       <InstallAppModal
-        isOpen={isInstallModalOpen}
+        isOpen={!isApp && isInstallModalOpen}
         onClose={() => setIsInstallModalOpen(false)}
         isApp={isApp}
         t={t}
       />
       <OfflineIndicator t={t} />
     </div>
+  );
+}
+
+export default function App() {
+  const isPiPWindow =
+    typeof window !== 'undefined' &&
+    new URLSearchParams(window.location.search).get('pip') === '1';
+
+  return (
+    <ErrorBoundary>
+      {isPiPWindow ? <StandalonePiPView /> : <MainApp />}
+    </ErrorBoundary>
   );
 }

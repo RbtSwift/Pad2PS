@@ -106,69 +106,71 @@ export function ComboHistoryBar({
   return (
     <section
       aria-label={t.comboHistoryTitle}
-      className="w-full shrink-0 accent-panel rounded-xl px-3 sm:px-4 py-1.5 sm:py-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3"
+      className="w-full shrink-0 accent-panel rounded-xl px-2.5 sm:px-4 py-1.5 sm:py-2 flex flex-wrap sm:flex-nowrap items-center justify-between gap-x-2 gap-y-1.5 sm:gap-3"
     >
-      <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1 w-full sm:w-auto">
-        <div className="shrink-0">
-          <h2 className="text-[11px] sm:text-xs font-semibold text-[#FAFAFA] whitespace-nowrap">
-            {t.comboHistoryTitle}
-          </h2>
-          <p className="text-[10px] sm:text-[11px] text-[#A1A1AA] whitespace-nowrap hidden sm:block">
-            {t.last10Buttons}
-          </p>
-        </div>
-
-        <div
-          className="h-6 w-px shrink-0 hidden sm:block"
-          style={{backgroundColor: 'rgba(var(--accent-rgb), 0.18)'}}
-          aria-hidden="true"
-        />
-
-        <div className="flex-1 min-w-0">
-          {history.length === 0 ? (
-            <p className="text-[11px] sm:text-xs text-zinc-500 truncate">{t.comboHistoryEmpty}</p>
-          ) : (
-            <ol className="flex items-center gap-1.5 overflow-x-auto py-0.5">
-              {history.map((entry, idx) => {
-                const isLatest = idx === history.length - 1;
-                return (
-                  <li
-                    key={entry.uid}
-                    title={`${getConsoleButtonDisplayName(entry.button, layout, lang)} (${entry.button.xinputShort})`}
-                    className={`shrink-0 h-7 sm:h-8 min-w-[30px] sm:min-w-[34px] px-1.5 sm:px-2 rounded-lg border flex items-center justify-center transition-all ${
-                      isLatest ? 'text-white neon-glow-accent' : 'bg-[#09090B]/80'
-                    }`}
-                    style={
-                      isLatest
-                        ? {
-                            backgroundColor: 'rgba(var(--accent-rgb), 0.24)',
-                            borderColor: 'var(--accent-color)',
-                          }
-                        : {
-                            borderColor: 'rgba(var(--accent-rgb), 0.22)',
-                            color: 'var(--accent-color)',
-                          }
-                    }
-                  >
-                    <Ps2Symbol id={entry.button.id} className="w-3.5 h-3.5 sm:w-4 sm:h-4" layout={layout} />
-                  </li>
-                );
-              })}
-            </ol>
-          )}
-        </div>
+      {/* Row 1 Left (mobile) / Col 1 (desktop): Title */}
+      <div className="order-1 min-w-0 shrink">
+        <h2 className="text-[11px] sm:text-xs font-semibold text-[#FAFAFA] truncate">
+          {t.comboHistoryTitle}
+        </h2>
+        <p className="text-[10px] sm:text-[11px] text-[#A1A1AA] whitespace-nowrap hidden sm:block">
+          {t.last10Buttons}
+        </p>
       </div>
 
-      <div className="flex items-center flex-wrap gap-1.5 sm:gap-2 shrink-0 sm:ml-auto w-full sm:w-auto justify-end">
+      {/* Desktop Divider */}
+      <div
+        className="hidden sm:block sm:order-2 h-6 w-px shrink-0"
+        style={{backgroundColor: 'rgba(var(--accent-rgb), 0.18)'}}
+        aria-hidden="true"
+      />
+
+      {/* Row 2 (mobile) / Middle (desktop): Horizontal Sequence List */}
+      <div className="order-3 w-full sm:w-auto sm:flex-1 min-w-0">
+        {history.length === 0 ? (
+          <p className="text-[11px] sm:text-xs text-zinc-500 truncate">{t.comboHistoryEmpty}</p>
+        ) : (
+          <ol className="flex items-center gap-1.5 overflow-x-auto py-0.5">
+            {history.map((entry, idx) => {
+              const isLatest = idx === history.length - 1;
+              return (
+                <li
+                  key={entry.uid}
+                  title={`${getConsoleButtonDisplayName(entry.button, layout, lang)} (${entry.button.xinputShort})`}
+                  className={`shrink-0 h-7 sm:h-8 min-w-[28px] sm:min-w-[34px] px-1.5 sm:px-2 rounded-lg border flex items-center justify-center transition-all ${
+                    isLatest ? 'text-white neon-glow-accent' : 'bg-[#09090B]/80'
+                  }`}
+                  style={
+                    isLatest
+                      ? {
+                          backgroundColor: 'rgba(var(--accent-rgb), 0.24)',
+                          borderColor: 'var(--accent-color)',
+                        }
+                      : {
+                          borderColor: 'rgba(var(--accent-rgb), 0.22)',
+                          color: 'var(--accent-color)',
+                        }
+                  }
+                >
+                  <Ps2Symbol id={entry.button.id} className="w-3.5 h-3.5 sm:w-4 sm:h-4" layout={layout} />
+                </li>
+              );
+            })}
+          </ol>
+        )}
+      </div>
+
+      {/* Row 1 Right (mobile) / Col 4 (desktop): Action Buttons */}
+      <div className="order-2 sm:order-4 flex items-center gap-1 sm:gap-2 shrink-0 ml-auto sm:ml-0">
         <button
           type="button"
           onClick={() => setIsPngModalOpen(true)}
           disabled={history.length === 0}
           title={t.exportPngBtn}
-          className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-medium bg-[#09090B]/80 border text-[#FAFAFA] hover:text-white disabled:opacity-40 disabled:pointer-events-none transition-colors cursor-pointer whitespace-nowrap"
+          className="inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-medium bg-[#09090B]/80 border text-[#FAFAFA] hover:text-white disabled:opacity-40 disabled:pointer-events-none transition-colors cursor-pointer whitespace-nowrap"
           style={{borderColor: 'rgba(var(--accent-rgb), 0.38)'}}
         >
-          <ImageDown className="w-3.5 h-3.5" style={{color: 'var(--accent-color)'}} />
+          <ImageDown className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" style={{color: 'var(--accent-color)'}} />
           <span>{t.exportPngBtn}</span>
         </button>
 
@@ -177,22 +179,26 @@ export function ComboHistoryBar({
           onClick={handleDownloadTxt}
           disabled={history.length === 0}
           title={t.downloadTxt}
-          className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-medium bg-[#09090B]/80 border text-[#FAFAFA] hover:text-white disabled:opacity-40 disabled:pointer-events-none transition-colors cursor-pointer whitespace-nowrap"
+          aria-label={t.downloadTxt}
+          className="inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-medium bg-[#09090B]/80 border text-[#FAFAFA] hover:text-white disabled:opacity-40 disabled:pointer-events-none transition-colors cursor-pointer whitespace-nowrap"
           style={{borderColor: 'rgba(var(--accent-rgb), 0.38)'}}
         >
-          <Download className="w-3.5 h-3.5" style={{color: 'var(--accent-color)'}} />
-          <span>{t.downloadTxt}</span>
+          <Download className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" style={{color: 'var(--accent-color)'}} />
+          <span className="sm:hidden">.txt</span>
+          <span className="hidden sm:inline">{t.downloadTxt}</span>
         </button>
 
         <button
           type="button"
           onClick={onClear}
           disabled={history.length === 0}
-          className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-medium border text-[#FAFAFA] hover:bg-white/5 disabled:opacity-40 disabled:pointer-events-none transition-colors cursor-pointer whitespace-nowrap"
+          title={t.clear}
+          aria-label={t.clear}
+          className="inline-flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-medium border text-[#FAFAFA] hover:bg-white/5 disabled:opacity-40 disabled:pointer-events-none transition-colors cursor-pointer whitespace-nowrap"
           style={{borderColor: 'rgba(var(--accent-rgb), 0.25)'}}
         >
-          <Trash2 className="w-3.5 h-3.5" style={{color: 'var(--accent-color)'}} />
-          <span>{t.clear}</span>
+          <Trash2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" style={{color: 'var(--accent-color)'}} />
+          <span className="hidden sm:inline">{t.clear}</span>
         </button>
       </div>
 

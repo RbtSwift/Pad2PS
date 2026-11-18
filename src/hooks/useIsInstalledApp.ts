@@ -39,10 +39,19 @@ export function detectIsInstalledApp(): boolean {
     return true;
   }
 
+  // 3. Desktop wrappers (Electron, Tauri / Pake) & Mobile wrappers (Capacitor Android)
   const w = window as unknown as Record<string, unknown>;
-  if ("pad2psDesktop" in w || "Capacitor" in w || navigator.userAgent.includes("Electron") || window.location.protocol === "file:" || window.location.protocol === "capacitor:") return true;
-  // 3. Desktop wrappers
-  if ('__TAURI__' in window || '__TAURI_INTERNALS__' in window) {
+  const userAgent = window.navigator?.userAgent || '';
+  const protocol = window.location?.protocol || '';
+  if (
+    'pad2psDesktop' in w ||
+    'Capacitor' in w ||
+    '__TAURI__' in w ||
+    '__TAURI_INTERNALS__' in w ||
+    userAgent.includes('Electron') ||
+    protocol === 'file:' ||
+    protocol === 'capacitor:'
+  ) {
     return true;
   }
 

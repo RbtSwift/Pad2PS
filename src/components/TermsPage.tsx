@@ -110,7 +110,7 @@ export function TermsPage({
       <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 flex-1 flex flex-col gap-5 sm:gap-6">
         {/* Top Bar */}
         <header className="w-full flex flex-wrap items-center justify-between gap-3 pb-3 border-b accent-border-subtle shrink-0">
-          <Pad2PSLogo t={t} />
+          <Pad2PSLogo isApp={isApp} t={t} />
 
           <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3">
             {/* Neon Theme Swatches */}

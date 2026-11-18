@@ -635,7 +635,7 @@ export function DiagnosticsModal({
           style={{ borderColor: 'rgba(var(--accent-rgb), 0.14)' }}
         >
           <div className="text-[#A1A1AA] flex items-center gap-2">
-            <span>{t.diagDeadzoneLabel}:</span>
+            <span>{t.deadzoneLabel}:</span>
             <span className="font-mono font-bold text-[#FAFAFA]">
               {Math.round(deadzone * 100)}%
             </span>
@@ -655,7 +655,7 @@ export function DiagnosticsModal({
             }}
           >
             <SlidersHorizontal className="w-3.5 h-3.5" />
-            {t.diagAdjustDeadzone}
+            {t.diagOpenSettings}
           </button>
         </div>
       </div>
