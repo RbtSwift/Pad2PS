@@ -39,7 +39,9 @@ export function detectIsInstalledApp(): boolean {
     return true;
   }
 
-  // 3. Desktop wrappers (Tauri / Pake on Linux or Windows)
+  const w = window as unknown as Record<string, unknown>;
+  if ("pad2psDesktop" in w || "Capacitor" in w || navigator.userAgent.includes("Electron") || window.location.protocol === "file:" || window.location.protocol === "capacitor:") return true;
+  // 3. Desktop wrappers
   if ('__TAURI__' in window || '__TAURI_INTERNALS__' in window) {
     return true;
   }

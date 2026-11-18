@@ -1,10 +1,10 @@
-const CACHE_VERSION = 'v1-1795016750812';
+const CACHE_VERSION = 'v1-1795022400051';
 const CACHE_NAME = `pad2ps-cache-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `pad2ps-runtime-${CACHE_VERSION}`;
 
 const PRECACHE_URLS = [
-  '/assets/index-B4g7hFOM.css',
-  '/assets/index-Vbrbn5aY.js',
+  '/assets/index-BkSppR2r.css',
+  '/assets/index-DAXNTUXV.js',
   '/',
   '/index.html',
   '/manifest.json',

@@ -263,7 +263,44 @@ function loadRemapMap(): Record<number, number> {
   }
 }
 
+function StandalonePiPView() {
+  const [st, setSt] = useState<any>(null);
+  useEffect(() => {
+    const ch = new BroadcastChannel("pad2ps-pip-sync");
+    ch.onmessage = (e) => {
+      if (e.data?.layout) {
+        setSt(e.data);
+        if (e.data.accentHex) document.documentElement.style.setProperty("--accent-color", e.data.accentHex);
+        if (e.data.accentRgb) document.documentElement.style.setProperty("--accent-rgb", e.data.accentRgb);
+      }
+    };
+    ch.postMessage({ type: "ping" });
+    return () => ch.close();
+  }, []);
+  const bg = st?.chromaMode === "green" ? "#00FF00" : st?.chromaMode === "magenta" ? "#FF00FF" : "#09090B";
+  return (
+    <div className="w-screen h-screen flex flex-col overflow-hidden select-none" style={{ backgroundColor: bg }}>
+      <div className="px-2.5 py-1.5 flex items-center justify-between gap-2 bg-black/80 border-b border-white/10 shrink-0">
+        <span className="font-mono text-[11px] font-bold text-white">Pad<span style={{ color: "var(--accent-color)" }}>2</span>PS</span>
+        <div className="flex items-center gap-1">
+          {(["dark", "green", "magenta"] as const).map((m) => (
+            <button key={m} type="button" onClick={() => { const c = new BroadcastChannel("pad2ps-pip-sync"); c.postMessage({ type: "chroma", chromaMode: m }); c.close(); }}
+              className="px-1.5 py-0.5 rounded text-[10px] font-mono border border-white/25 text-white bg-black/60 cursor-pointer">
+              {m === "dark" ? "Escuro" : m === "green" ? "Verde" : "Magenta"}
+            </button>
+          ))}
+        </div>
+        <button type="button" onClick={() => window.close()} className="text-zinc-300 hover:text-white text-xs px-1 cursor-pointer">✕</button>
+      </div>
+      <div className="flex-1 min-h-0 flex items-center justify-center p-2">
+        {st ? <DualShock2SVG layout={st.layout} pressedButtons={st.pressedButtons} l2Value={st.l2Value} r2Value={st.r2Value} leftStick={st.leftStick} rightStick={st.rightStick} isCompact={true} onButtonDown={() => {}} onButtonUp={() => {}} /> : <p className="text-xs text-zinc-400 font-mono">Aguardando controle...</p>}
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
+  if (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("pip") === "1") return <StandalonePiPView />;
   const [lang, setLang] = useState<AppLanguage>(loadLanguage);
   const [soundEnabled, setSoundEnabled] = useState<boolean>(loadSoundPreference);
   const [customNames, setCustomNames] = useState<Record<string, string>>(loadCustomNames);
@@ -302,7 +339,15 @@ export default function App() {
 
   const t = getTranslations(lang);
   const isApp = useIsInstalledApp();
-  const isPipActive = Boolean(pipWindow && !pipWindow.closed);
+  const isPipActive = Boolean((pipWindow && !pipWindow.closed) || nativePiPActive);
+  useEffect(() => {
+    if (!nativePiPActive) return;
+    const theme = getThemeById(themeId);
+    const ch = new BroadcastChannel("pad2ps-pip-sync");
+    ch.postMessage({ layout, pressedButtons, l2Value, r2Value, leftStick, rightStick, chromaMode, accentHex: theme.hex, accentRgb: theme.rgb });
+    ch.onmessage = (e) => { if (e.data?.type === "chroma") setChromaMode(e.data.chromaMode); };
+    return () => ch.close();
+  }, [nativePiPActive, layout, pressedButtons, l2Value, r2Value, leftStick, rightStick, chromaMode, themeId]);
   const isTermsPage = isTermsRoute(currentPath);
 
   useEffect(() => {
@@ -691,7 +736,12 @@ export default function App() {
   };
 
   const handleTogglePiP = async () => {
-    // PiP Desktop usa janela destacada Always-on-Top
+    if (isElectronDesktop()) {
+      const next = !nativePiPActive;
+      const ok = await setNativePiPAlwaysOnTop(next);
+      if (ok) setNativePiPActive(next);
+      return;
+    }
 
     if (pipWindow && !pipWindow.closed) {
       pipWindow.close();

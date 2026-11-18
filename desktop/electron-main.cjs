@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 
 let mainWindow = null;
+let pipWin = null;
 let normalBounds = { width: 1240, height: 840 };
 
 function execCmd(cmd, args, timeout = 2500) {
@@ -183,22 +184,26 @@ ipcMain.handle('pad2ps:set-always-on-top', (_ev, enabled) => {
 });
 
 ipcMain.handle('pad2ps:set-pip-mode', (_ev, enabled) => {
-  if (!mainWindow) return false;
-  const isPiP = Boolean(enabled);
-  if (isPiP) {
-    normalBounds = mainWindow.getBounds();
-    mainWindow.setAlwaysOnTop(true, 'screen-saver');
-    mainWindow.setResizable(true);
-    mainWindow.setMinimumSize(320, 200);
-    mainWindow.setSize(460, 280);
-  } else {
-    mainWindow.setAlwaysOnTop(false);
-    if (normalBounds && normalBounds.width >= 600) {
-      mainWindow.setBounds(normalBounds);
-    } else {
-      mainWindow.setSize(1240, 840);
-      mainWindow.center();
-    }
+  if (Boolean(enabled)) {
+    if (pipWin && !pipWin.isDestroyed()) { pipWin.focus(); return true; }
+    pipWin = new BrowserWindow({
+      title: 'Pad2PS — PiP',
+      width: 430,
+      height: 280,
+      minWidth: 280,
+      minHeight: 190,
+      alwaysOnTop: true,
+      autoHideMenuBar: true,
+      backgroundColor: '#09090B',
+      icon: path.join(__dirname, 'icon.png'),
+      webPreferences: { preload: path.join(__dirname, 'electron-preload.cjs'), contextIsolation: true, nodeIntegration: false }
+    });
+    pipWin.setAlwaysOnTop(true, 'screen-saver');
+    pipWin.loadFile(path.join(__dirname, 'dist', 'index.html'), { query: { pip: '1' } });
+    pipWin.on('closed', () => { pipWin = null; });
+  } else if (pipWin && !pipWin.isDestroyed()) {
+    pipWin.close();
+    pipWin = null;
   }
   return true;
 });

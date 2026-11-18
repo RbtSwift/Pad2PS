@@ -1,3 +1,4 @@
+import {useIsInstalledApp} from "../hooks/useIsInstalledApp";
 import {Download, Gamepad2, ImageDown} from 'lucide-react';
 import {useEffect, useRef, useState} from 'react';
 import type {Translations} from '../data/i18n';
@@ -73,6 +74,7 @@ interface Pad2PSLogoProps {
 
 export function Pad2PSLogo({compact = false, t}: Pad2PSLogoProps) {
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
+  const isInstalledApp = useIsInstalledApp();
   const [isDownloading, setIsDownloading] = useState<boolean>(false);
   const menuContainerRef = useRef<HTMLDivElement>(null);
 
@@ -153,7 +155,7 @@ export function Pad2PSLogo({compact = false, t}: Pad2PSLogoProps) {
             <span className="text-[#FAFAFA]">PS</span>
           </h1>
 
-          {/* Discrete PNG Logo Download Menu Trigger */}
+          {!isInstalledApp && (
           <button
             type="button"
             onClick={() => setIsMenuOpen((prev) => !prev)}
@@ -170,6 +172,7 @@ export function Pad2PSLogo({compact = false, t}: Pad2PSLogoProps) {
           >
             <Download className="w-3 h-3" style={{color: 'var(--accent-color)'}} />
           </button>
+          )}
         </div>
 
         {!compact && (

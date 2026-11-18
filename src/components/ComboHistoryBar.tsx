@@ -106,7 +106,7 @@ export function ComboHistoryBar({
   return (
     <section
       aria-label={t.comboHistoryTitle}
-      className="w-full shrink-0 accent-panel rounded-xl px-3 sm:px-4 py-1.5 sm:py-2 flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 sm:gap-3"
+      className="w-full shrink-0 accent-panel rounded-xl px-3 sm:px-4 py-1.5 sm:py-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3"
     >
       <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1 w-full sm:w-auto">
         <div className="shrink-0">
@@ -159,7 +159,7 @@ export function ComboHistoryBar({
         </div>
       </div>
 
-      <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 ml-auto">
+      <div className="flex items-center flex-wrap gap-1.5 sm:gap-2 shrink-0 sm:ml-auto w-full sm:w-auto justify-end">
         <button
           type="button"
           onClick={() => setIsPngModalOpen(true)}
