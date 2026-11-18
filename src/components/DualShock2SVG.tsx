@@ -1,5 +1,7 @@
 import type {ConsoleLayout} from '../data/ps2Mapping';
 import type {StickState} from '../hooks/useGamepad';
+import {SwitchControllerSVG} from './SwitchControllerSVG';
+import {XboxControllerSVG} from './XboxControllerSVG';
 
 interface DualShock2SVGProps {
   layout: ConsoleLayout;
@@ -36,6 +38,41 @@ export function DualShock2SVG({
   onButtonDown,
   onButtonUp,
 }: DualShock2SVGProps) {
+  if (layout === 'xbox') {
+    return (
+      <XboxControllerSVG
+        pressedButtons={pressedButtons}
+        l2Value={l2Value}
+        r2Value={r2Value}
+        leftStick={leftStick}
+        rightStick={rightStick}
+        isCompact={isCompact}
+        isRemapMode={isRemapMode}
+        remapTargetIndex={remapTargetIndex}
+        onSelectRemapTarget={onSelectRemapTarget}
+        onButtonDown={onButtonDown}
+        onButtonUp={onButtonUp}
+      />
+    );
+  }
+  if (layout === 'switch') {
+    return (
+      <SwitchControllerSVG
+        pressedButtons={pressedButtons}
+        l2Value={l2Value}
+        r2Value={r2Value}
+        leftStick={leftStick}
+        rightStick={rightStick}
+        isCompact={isCompact}
+        isRemapMode={isRemapMode}
+        remapTargetIndex={remapTargetIndex}
+        onSelectRemapTarget={onSelectRemapTarget}
+        onButtonDown={onButtonDown}
+        onButtonUp={onButtonUp}
+      />
+    );
+  }
+
   const isPressed = (idx: number) => Boolean(pressedButtons[idx]) || (isRemapMode && remapTargetIndex === idx);
 
   const bindBtn = (index: number, label: string) => ({

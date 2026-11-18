@@ -1,4 +1,4 @@
-export type ConsoleLayout = 'ps1' | 'ps2' | 'ps3' | 'psp';
+export type ConsoleLayout = 'ps1' | 'ps2' | 'ps3' | 'psp' | 'xbox' | 'switch';
 
 export type Ps2ButtonId =
   | 'cross'
@@ -244,6 +244,16 @@ export const CONSOLE_META: Record<
     shortLabel: 'PSP',
     hardwareName: 'PlayStation Portable (PSP)',
   },
+  xbox: {
+    label: 'Xbox Series / PC',
+    shortLabel: 'Xbox',
+    hardwareName: 'Xbox Wireless Controller (X-Input)',
+  },
+  switch: {
+    label: 'Switch Pro',
+    shortLabel: 'Switch',
+    hardwareName: 'Nintendo Switch Pro Controller',
+  },
 };
 
 export function getQuickReferenceIndices(layout: ConsoleLayout): number[] {
@@ -256,6 +266,10 @@ export function getQuickReferenceIndices(layout: ConsoleLayout): number[] {
       return [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 16];
     case 'psp':
       return [0, 1, 2, 3, 4, 5, 8, 9];
+    case 'xbox':
+      return [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 16];
+    case 'switch':
+      return [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 16];
   }
 }
 
@@ -264,6 +278,82 @@ export function getConsoleButtonDisplayName(
   layout: ConsoleLayout,
   lang: 'pt' | 'en' = 'pt'
 ): string {
+  if (layout === 'xbox') {
+    if (lang === 'en') {
+      const enMap: Partial<Record<Ps2ButtonId, string>> = {
+        cross: 'A Button (South)',
+        circle: 'B Button (East)',
+        square: 'X Button (West)',
+        triangle: 'Y Button (North)',
+        l1: 'LB (Left Bumper)',
+        r1: 'RB (Right Bumper)',
+        l2: 'LT (Left Trigger)',
+        r2: 'RT (Right Trigger)',
+        select: 'View Button',
+        start: 'Menu Button',
+        l3: 'LS (Left Stick Click)',
+        r3: 'RS (Right Stick Click)',
+        ps: 'Xbox Guide Button',
+      };
+      if (enMap[mapping.id]) return enMap[mapping.id]!;
+    } else {
+      const ptMap: Partial<Record<Ps2ButtonId, string>> = {
+        cross: 'Botão A (Verde)',
+        circle: 'Botão B (Vermelho)',
+        square: 'Botão X (Azul)',
+        triangle: 'Botão Y (Amarelo)',
+        l1: 'LB (Ombro Esquerdo)',
+        r1: 'RB (Ombro Direito)',
+        l2: 'LT (Gatilho Esquerdo)',
+        r2: 'RT (Gatilho Direito)',
+        select: 'Botão View (Back)',
+        start: 'Botão Menu (Start)',
+        l3: 'LS (Clique Analógico Esq.)',
+        r3: 'RS (Clique Analógico Dir.)',
+        ps: 'Botão Xbox (Home)',
+      };
+      if (ptMap[mapping.id]) return ptMap[mapping.id]!;
+    }
+  }
+
+  if (layout === 'switch') {
+    if (lang === 'en') {
+      const enMap: Partial<Record<Ps2ButtonId, string>> = {
+        cross: 'B Button (South)',
+        circle: 'A Button (East)',
+        square: 'Y Button (West)',
+        triangle: 'X Button (North)',
+        l1: 'L (Left Shoulder)',
+        r1: 'R (Right Shoulder)',
+        l2: 'ZL (Left Trigger)',
+        r2: 'ZR (Right Trigger)',
+        select: 'Minus (-) Button',
+        start: 'Plus (+) Button',
+        l3: 'LS (Left Stick Click)',
+        r3: 'RS (Right Stick Click)',
+        ps: 'HOME Button',
+      };
+      if (enMap[mapping.id]) return enMap[mapping.id]!;
+    } else {
+      const ptMap: Partial<Record<Ps2ButtonId, string>> = {
+        cross: 'Botão B (Sul)',
+        circle: 'Botão A (Leste)',
+        square: 'Botão Y (Oeste)',
+        triangle: 'Botão X (Norte)',
+        l1: 'Botão L (Ombro Esq.)',
+        r1: 'Botão R (Ombro Dir.)',
+        l2: 'Gatilho ZL (Esquerdo)',
+        r2: 'Gatilho ZR (Direito)',
+        select: 'Botão Menos (-)',
+        start: 'Botão Mais (+)',
+        l3: 'LS (Clique Analógico Esq.)',
+        r3: 'RS (Clique Analógico Dir.)',
+        ps: 'Botão HOME',
+      };
+      if (ptMap[mapping.id]) return ptMap[mapping.id]!;
+    }
+  }
+
   if (lang === 'en') {
     if (layout === 'psp') {
       if (mapping.id === 'l1') {
@@ -370,12 +460,44 @@ export function getConsoleButtonShort(
   layout: ConsoleLayout
 ): string {
   if (layout === 'psp') {
-    if (mapping.id === 'l1') {
-      return 'L';
-    }
-    if (mapping.id === 'r1') {
-      return 'R';
-    }
+    if (mapping.id === 'l1') return 'L';
+    if (mapping.id === 'r1') return 'R';
+  }
+  if (layout === 'xbox') {
+    const map: Partial<Record<Ps2ButtonId, string>> = {
+      cross: 'A',
+      circle: 'B',
+      square: 'X',
+      triangle: 'Y',
+      l1: 'LB',
+      r1: 'RB',
+      l2: 'LT',
+      r2: 'RT',
+      select: 'View',
+      start: 'Menu',
+      l3: 'LS',
+      r3: 'RS',
+      ps: 'Xbox',
+    };
+    return map[mapping.id] ?? mapping.ps2Short;
+  }
+  if (layout === 'switch') {
+    const map: Partial<Record<Ps2ButtonId, string>> = {
+      cross: 'B',
+      circle: 'A',
+      square: 'Y',
+      triangle: 'X',
+      l1: 'L',
+      r1: 'R',
+      l2: 'ZL',
+      r2: 'ZR',
+      select: '-',
+      start: '+',
+      l3: 'LS',
+      r3: 'RS',
+      ps: 'Home',
+    };
+    return map[mapping.id] ?? mapping.ps2Short;
   }
   return mapping.ps2Short;
 }

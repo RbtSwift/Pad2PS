@@ -27,6 +27,22 @@ export interface RawPhysicalPressEvent {
   physicalIndex: number;
 }
 
+export interface RumbleOptions {
+  strongMagnitude?: number;
+  weakMagnitude?: number;
+  duration?: number;
+}
+
+export interface HardwareInspectorInfo {
+  id: string | null;
+  index: number | null;
+  vidPid: string | null;
+  buttonsCount: number;
+  axesCount: number;
+  rawButtons: boolean[];
+  rawAxes: number[];
+}
+
 export interface GamepadHookState {
   isConnected: boolean;
   hasActivatedInput: boolean;
@@ -44,12 +60,29 @@ export interface GamepadHookState {
   lastRawPhysicalPress: RawPhysicalPressEvent | null;
   comboHistory: ComboEntry[];
   sessionStats: SessionStats;
+  hardwareInfo: HardwareInspectorInfo;
+  bouncingCount: number;
+  lastBouncingButton: number | null;
+  resetBouncing: () => void;
   pressSimulated: (index: number, triggerValue?: number) => void;
   releaseSimulated: (index: number) => void;
   setSimulatedStick: (side: 'left' | 'right', x: number, y: number) => void;
   clearHistory: () => void;
   resetStats: () => void;
-  triggerRumble: () => Promise<'ok' | 'unsupported' | 'disconnected'>;
+  triggerRumble: (options?: RumbleOptions) => Promise<'ok' | 'unsupported' | 'disconnected'>;
+}
+
+function extractVidPid(id: string | null): string | null {
+  if (!id) return null;
+  const vendorMatch = id.match(/Vendor:\s*([0-9a-fA-F]{4}).*Product:\s*([0-9a-fA-F]{4})/i);
+  if (vendorMatch) {
+    return `${vendorMatch[1].toUpperCase()}:${vendorMatch[2].toUpperCase()}`;
+  }
+  const dashMatch = id.match(/\b([0-9a-fA-F]{4})-([0-9a-fA-F]{4})-/);
+  if (dashMatch) {
+    return `${dashMatch[1].toUpperCase()}:${dashMatch[2].toUpperCase()}`;
+  }
+  return null;
 }
 
 const BUTTON_COUNT = 17;
@@ -86,6 +119,19 @@ export function useGamepad(
     peakApm: 0,
     pollingRateHz: 0,
   });
+  const [hardwareInfo, setHardwareInfo] = useState<HardwareInspectorInfo>({
+    id: null,
+    index: null,
+    vidPid: null,
+    buttonsCount: 0,
+    axesCount: 0,
+    rawButtons: Array(18).fill(false),
+    rawAxes: [0, 0, 0, 0],
+  });
+  const [bouncingCount, setBouncingCount] = useState<number>(0);
+  const [lastBouncingButton, setLastBouncingButton] = useState<number | null>(null);
+  const lastReleaseTimesRef = useRef<number[]>(Array(18).fill(0));
+  const lastHwSnapshotRef = useRef<string>('');
 
   const soundEnabledRef = useRef<boolean>(soundEnabled);
   soundEnabledRef.current = soundEnabled;
@@ -211,6 +257,11 @@ export function useGamepad(
 
   const clearHistory = useCallback(() => {
     setComboHistory([]);
+  }, []);
+
+  const resetBouncing = useCallback(() => {
+    setBouncingCount(0);
+    setLastBouncingButton(null);
   }, []);
 
   const resetStats = useCallback(() => {
@@ -374,10 +425,18 @@ export function useGamepad(
           }
 
           if (physicalDown && !prevRawPhysicalRef.current[i]) {
+            const nowMs = performance.now();
+            const lastRel = lastReleaseTimesRef.current[i] || 0;
+            if (lastRel > 0 && nowMs - lastRel < 65) {
+              setBouncingCount((prev) => prev + 1);
+              setLastBouncingButton(i);
+            }
             setLastRawPhysicalPress({
               uid: rawUidCounterRef.current++,
               physicalIndex: i,
             });
+          } else if (!physicalDown && prevRawPhysicalRef.current[i]) {
+            lastReleaseTimesRef.current[i] = performance.now();
           }
           prevRawPhysicalRef.current[i] = physicalDown;
 
@@ -462,6 +521,39 @@ export function useGamepad(
         setRawRightStick({x: rawAxisRx, y: rawAxisRy});
       }
 
+      if (pad) {
+        const rawBtns: boolean[] = [];
+        for (let bi = 0; bi < Math.min(18, pad.buttons.length); bi++) {
+          const b = pad.buttons[bi];
+          rawBtns.push(Boolean(b && (b.pressed || b.value > 0.12)));
+        }
+        const rawAxs = Array.from(pad.axes || []).slice(0, 6).map((v) => Number(v.toFixed(2)));
+        const hwSnap = `${pad.id}|${pad.index}|${rawBtns.map((x) => (x ? '1' : '0')).join('')}|${rawAxs.join(',')}`;
+        if (hwSnap !== lastHwSnapshotRef.current) {
+          lastHwSnapshotRef.current = hwSnap;
+          setHardwareInfo({
+            id: pad.id || null,
+            index: pad.index,
+            vidPid: extractVidPid(pad.id),
+            buttonsCount: pad.buttons.length,
+            axesCount: pad.axes.length,
+            rawButtons: rawBtns,
+            rawAxes: rawAxs,
+          });
+        }
+      } else if (lastHwSnapshotRef.current !== 'disconnected') {
+        lastHwSnapshotRef.current = 'disconnected';
+        setHardwareInfo({
+          id: null,
+          index: null,
+          vidPid: null,
+          buttonsCount: 0,
+          axesCount: 0,
+          rawButtons: Array(18).fill(false),
+          rawAxes: [0, 0, 0, 0],
+        });
+      }
+
       rafId = window.requestAnimationFrame(pollLoop);
     };
 
@@ -477,54 +569,57 @@ export function useGamepad(
     };
   }, [recordButtonPress]);
 
-  const triggerRumble = useCallback(async (): Promise<'ok' | 'unsupported' | 'disconnected'> => {
-    if (typeof window === 'undefined' || !navigator.getGamepads) {
-      return 'unsupported';
-    }
-    const pads = navigator.getGamepads();
-    let activePad: Gamepad | null = null;
-    if (pads) {
-      for (let i = 0; i < pads.length; i++) {
-        const p = pads[i];
-        if (p && p.connected) {
-          activePad = p;
-          break;
+  const triggerRumble = useCallback(
+    async (options?: RumbleOptions): Promise<'ok' | 'unsupported' | 'disconnected'> => {
+      if (typeof window === 'undefined' || !navigator.getGamepads) {
+        return 'unsupported';
+      }
+      const pads = navigator.getGamepads();
+      let activePad: Gamepad | null = null;
+      if (pads) {
+        for (let i = 0; i < pads.length; i++) {
+          const p = pads[i];
+          if (p && p.connected) {
+            activePad = p;
+            break;
+          }
         }
       }
-    }
-    if (!activePad) {
-      return 'disconnected';
-    }
-    const actuator = activePad.vibrationActuator as
-      | {
-          playEffect?: (
-            type: string,
-            params: {
-              startDelay?: number;
-              duration?: number;
-              weakMagnitude?: number;
-              strongMagnitude?: number;
-            }
-          ) => Promise<string>;
-        }
-      | undefined;
+      if (!activePad) {
+        return 'disconnected';
+      }
+      const actuator = activePad.vibrationActuator as
+        | {
+            playEffect?: (
+              type: string,
+              params: {
+                startDelay?: number;
+                duration?: number;
+                weakMagnitude?: number;
+                strongMagnitude?: number;
+              }
+            ) => Promise<string>;
+          }
+        | undefined;
 
-    if (!actuator || typeof actuator.playEffect !== 'function') {
-      return 'unsupported';
-    }
+      if (!actuator || typeof actuator.playEffect !== 'function') {
+        return 'unsupported';
+      }
 
-    try {
-      await actuator.playEffect('dual-rumble', {
-        startDelay: 0,
-        duration: 400,
-        weakMagnitude: 0.75,
-        strongMagnitude: 1.0,
-      });
-      return 'ok';
-    } catch {
-      return 'unsupported';
-    }
-  }, []);
+      try {
+        await actuator.playEffect('dual-rumble', {
+          startDelay: 0,
+          duration: options?.duration ?? 400,
+          weakMagnitude: options?.weakMagnitude ?? 0.75,
+          strongMagnitude: options?.strongMagnitude ?? 1.0,
+        });
+        return 'ok';
+      } catch {
+        return 'unsupported';
+      }
+    },
+    []
+  );
 
   const activeButtons: Ps2ButtonMapping[] = [];
   for (let i = 0; i < BUTTON_COUNT; i++) {
@@ -550,6 +645,10 @@ export function useGamepad(
     lastRawPhysicalPress,
     comboHistory,
     sessionStats,
+    hardwareInfo,
+    bouncingCount,
+    lastBouncingButton,
+    resetBouncing,
     pressSimulated,
     releaseSimulated,
     setSimulatedStick,

@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Pad2PS
+Comment=Tradutor visual e diagnosticador de controles para PC
+Exec=pad2ps %U
+Icon=io.github.rbtswift.Pad2PS
+Terminal=false
+Type=Application
+Categories=Utility;Game;
+StartupWMClass=pad2ps

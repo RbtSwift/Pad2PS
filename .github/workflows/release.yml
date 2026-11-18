@@ -1,0 +1,108 @@
+name: Release Multiplataforma Pad2PS (Desktop & Android)
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-linux:
+    name: Desktop Linux (.AppImage, .deb, .rpm, .tar.gz)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Instalar rpm
+        run: sudo apt-get update && sudo apt-get install -y rpm
+      - name: Compilar Web + AppImage
+        run: |
+          npm ci
+          npm run build
+          cd desktop
+          npm ci
+          npm run prepare-web
+          npx electron-builder --linux AppImage --publish never
+      - name: Empacotar .deb, .rpm e .tar.gz
+        working-directory: desktop
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          mkdir -p artifacts
+          cp release/*.AppImage "artifacts/Pad2PS-${VERSION}-x86_64.AppImage"
+          chmod +x "artifacts/Pad2PS-${VERSION}-x86_64.AppImage"
+          tar -czf "artifacts/Pad2PS-${VERSION}-x86_64.tar.gz" -C release linux-unpacked
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-artifacts
+          path: desktop/artifacts/*
+
+  build-windows:
+    name: Desktop Windows (.exe Setup & Portable)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Compilar Web + Windows
+        run: |
+          npm ci
+          npm run build
+          cd desktop
+          npm ci
+          npm run prepare-web
+          npx electron-builder --win nsis portable --publish never
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-artifacts
+          path: |
+            desktop/release/*Setup*.exe
+            desktop/release/*Portable*.exe
+
+  build-android:
+    name: Android (.apk & .aab)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      - name: Compilar Web + Android
+        run: |
+          npm ci
+          npm run build
+          cd android
+          npm ci
+          npx cap sync android
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleRelease bundleRelease
+          mkdir -p ../artifacts
+          cp app/build/outputs/apk/release/*.apk "../artifacts/Pad2PS-Android.apk"
+          cp app/build/outputs/bundle/release/*.aab "../artifacts/Pad2PS-Android.aab"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android-artifacts
+          path: android/artifacts/*
+
+  publish-release:
+    name: Publicar GitHub Release
+    needs: [build-linux, build-windows, build-android]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: all-artifacts
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: all-artifacts/*
+          generate_release_notes: true

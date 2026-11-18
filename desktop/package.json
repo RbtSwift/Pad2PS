@@ -1,0 +1,71 @@
+{
+  "name": "pad2ps",
+  "private": true,
+  "version": "1.0.0",
+  "main": "electron-main.cjs",
+  "description": "Tradutor visual e diagnosticador avançado de controles (PS1, PS2, PS3, PSP, Xbox e Switch)",
+  "author": {
+    "name": "Pad2PS (Ravi Rosa)",
+    "email": "pad2ps@eusolravi.com.br"
+  },
+  "homepage": "https://github.com/RbtSwift/Pad2PS",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/RbtSwift/Pad2PS.git"
+  },
+  "scripts": {
+    "prepare-web": "node -e \"const fs=require('fs');fs.rmSync('dist',{recursive:true,force:true});fs.cpSync('../dist','dist',{recursive:true});\"",
+    "pack:linux": "npm run prepare-web && electron-builder --linux AppImage --publish never",
+    "pack:win": "npm run prepare-web && electron-builder --win nsis portable --publish never"
+  },
+  "devDependencies": {
+    "electron": "^45.3.4",
+    "electron-builder": "^26.18.0"
+  },
+  "build": {
+    "appId": "io.github.rbtswift.Pad2PS",
+    "productName": "Pad2PS",
+    "copyright": "Copyright © 2026 Pad2PS (Ravi Rosa)",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "electron-main.cjs",
+      "electron-preload.cjs",
+      "package.json"
+    ],
+    "linux": {
+      "executableName": "pad2ps",
+      "category": "Utility;Game",
+      "vendor": "Pad2PS",
+      "maintainer": "Pad2PS (Ravi Rosa) <pad2ps@eusolravi.com.br>",
+      "synopsis": "Tradutor visual e diagnosticador de controles para PC",
+      "description": "Tradutor visual em tempo real e suíte de diagnóstico de controles (DualSense, DualShock, Xbox, Switch, GameSir) com leitura de bateria e janela flutuante Always-on-Top.",
+      "icon": "icon.png",
+      "target": [
+        "AppImage"
+      ]
+    },
+    "appImage": {
+      "artifactName": "Pad2PS-${version}-x86_64.${ext}"
+    },
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "legalTrademarks": "Pad2PS",
+      "signtoolOptions": {
+        "publisherName": "Pad2PS"
+      },
+      "icon": "icon.ico"
+    },
+    "nsis": {
+      "artifactName": "Pad2PS-${version}-Setup.${ext}"
+    },
+    "portable": {
+      "artifactName": "Pad2PS-${version}-Portable.${ext}"
+    }
+  }
+}

@@ -1,6 +1,9 @@
 import {
   Activity,
   ArrowLeftRight,
+  BatteryCharging,
+  BatteryLow,
+  BatteryMedium,
   BookOpen,
   Cpu,
   Gamepad2,
@@ -60,6 +63,12 @@ import {
 } from './data/themes';
 import {useGamepad} from './hooks/useGamepad';
 import {useIsInstalledApp} from './hooks/useIsInstalledApp';
+import {
+  type BatteryDeviceInfo,
+  fetchControllerBatteries,
+  isElectronDesktop,
+  setNativePiPAlwaysOnTop,
+} from './utils/nativeBridge';
 
 const SOUND_STORAGE_KEY = 'ps2-pad-guide:sound-enabled';
 const CUSTOM_NAMES_STORAGE_KEY = 'ps2-pad-guide:custom-names';
@@ -91,7 +100,7 @@ function buildRouteHref(targetPath: string): string {
   return `${targetPath}${search}`;
 }
 
-const LAYOUT_OPTIONS: ConsoleLayout[] = ['ps1', 'ps2', 'ps3', 'psp'];
+const LAYOUT_OPTIONS: ConsoleLayout[] = ['ps1', 'ps2', 'ps3', 'psp', 'xbox', 'switch'];
 
 interface DocumentPiPApi {
   requestWindow: (options?: {width?: number; height?: number}) => Promise<Window>;
@@ -267,6 +276,8 @@ export default function App() {
   const [isCompact, setIsCompact] = useState<boolean>(false);
   const [chromaMode, setChromaMode] = useState<ChromaMode>('dark');
   const [pipWindow, setPipWindow] = useState<Window | null>(null);
+  const [nativePiPActive, setNativePiPActive] = useState<boolean>(false);
+  const [batteryDevices, setBatteryDevices] = useState<BatteryDeviceInfo[]>([]);
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
   const [isDiagnosticsOpen, setIsDiagnosticsOpen] = useState<boolean>(false);
   const [isComboDrawerOpen, setIsComboDrawerOpen] = useState<boolean>(false);
@@ -433,6 +444,10 @@ export default function App() {
     lastRawPhysicalPress,
     comboHistory,
     sessionStats,
+    hardwareInfo,
+    bouncingCount,
+    lastBouncingButton,
+    resetBouncing,
     pressSimulated,
     releaseSimulated,
     clearHistory,
@@ -532,6 +547,23 @@ export default function App() {
     const timer = window.setTimeout(() => setRumbleNotice(null), 3500);
     return () => window.clearTimeout(timer);
   }, [rumbleNotice]);
+
+  useEffect(() => {
+    let active = true;
+    const pollBattery = () => {
+      fetchControllerBatteries()
+        .then((list) => {
+          if (active) setBatteryDevices(list);
+        })
+        .catch(() => {});
+    };
+    pollBattery();
+    const id = window.setInterval(pollBattery, 12000);
+    return () => {
+      active = false;
+      window.clearInterval(id);
+    };
+  }, [isConnected]);
 
   const showActivatedStatus = isConnected && hasActivatedInput;
   const activeCustomName = deviceName ? customNames[deviceName] ?? null : null;
@@ -659,6 +691,16 @@ export default function App() {
   };
 
   const handleTogglePiP = async () => {
+    if (isElectronDesktop()) {
+      const next = !nativePiPActive;
+      const ok = await setNativePiPAlwaysOnTop(next);
+      if (ok) {
+        setNativePiPActive(next);
+        setIsCompact(next);
+      }
+      return;
+    }
+
     if (pipWindow && !pipWindow.closed) {
       pipWindow.close();
       setPipWindow(null);
@@ -808,6 +850,38 @@ export default function App() {
                 </span>
               )}
             </div>
+
+            {/* Monitor de Bateria Integrado (Desktop / Android / Web) */}
+            {batteryDevices.length > 0 && (() => {
+              const bat = batteryDevices[0];
+              const isLow = !bat.charging && bat.percentage < 15;
+              const BatIcon = bat.charging
+                ? BatteryCharging
+                : isLow
+                  ? BatteryLow
+                  : BatteryMedium;
+              return (
+                <div
+                  title={`${bat.name}: ${bat.percentage}%${bat.charging ? ' (Carregando)' : ''}`}
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-mono font-semibold shrink-0 ${
+                    isLow
+                      ? 'bg-red-500/15 border-red-500/50 text-red-300 animate-pulse'
+                      : 'bg-[#121216] accent-border-subtle text-[#FAFAFA]'
+                  }`}
+                >
+                  <BatIcon
+                    className={`w-3.5 h-3.5 ${
+                      bat.charging
+                        ? 'text-emerald-400'
+                        : isLow
+                          ? 'text-red-400'
+                          : 'text-[var(--accent-color)]'
+                    }`}
+                  />
+                  <span>{bat.percentage}%</span>
+                </div>
+              );
+            })()}
 
             {/* Neon Theme Swatches */}
             <div
@@ -1483,6 +1557,14 @@ export default function App() {
         rightStick={rightStick}
         rawLeftStick={rawLeftStick}
         rawRightStick={rawRightStick}
+        l2Value={l2Value}
+        r2Value={r2Value}
+        pollingRateHz={sessionStats.pollingRateHz}
+        bouncingCount={bouncingCount}
+        lastBouncingButton={lastBouncingButton}
+        onResetBouncing={resetBouncing}
+        hardwareInfo={hardwareInfo}
+        onTriggerRumble={triggerRumble}
         t={t}
       />
 

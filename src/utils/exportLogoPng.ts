@@ -1,237 +1,195 @@
-function getActiveNeonTheme(): {hex: string; rgb: string} {
+function getActiveNeonTheme(): { hex: string; rgb: string } {
   if (typeof window === 'undefined') {
-    return {hex: '#FF2E93', rgb: '255, 46, 147'};
+    return { hex: '#FF1E8E', rgb: '255, 30, 142' };
   }
   const styles = window.getComputedStyle(document.documentElement);
-  const hex = styles.getPropertyValue('--accent-color').trim() || '#FF2E93';
-  const rgb = styles.getPropertyValue('--accent-rgb').trim() || '255, 46, 147';
-  return {hex, rgb};
+  const hex = styles.getPropertyValue('--accent-color').trim() || '#FF1E8E';
+  const rgb = styles.getPropertyValue('--accent-rgb').trim() || '255, 30, 142';
+  return { hex, rgb };
 }
 
-function drawRoundedRect(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  w: number,
-  h: number,
-  r: number
-) {
-  const radius = Math.min(r, w / 2, h / 2);
-  ctx.beginPath();
-  ctx.moveTo(x + radius, y);
-  ctx.arcTo(x + w, y, x + w, y + h, radius);
-  ctx.arcTo(x + w, y + h, x, y + h, radius);
-  ctx.arcTo(x, y + h, x, y, radius);
-  ctx.arcTo(x, y, x + w, y, radius);
-  ctx.closePath();
+export function buildPad2PSIconSvg(accentHex = '#FF1E8E', size = 1024): string {
+  return `
+<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 1024 1024" fill="none">
+  <defs>
+    <filter id="p2pGlowSoft" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="14" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+    <filter id="p2pGlowStrong" x="-60%" y="-60%" width="220%" height="220%" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="22" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+    <linearGradient id="p2pSquircle" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0E0E15" />
+      <stop offset="100%" stop-color="#09090D" />
+    </linearGradient>
+  </defs>
+
+  <rect x="64" y="64" width="896" height="896" rx="220" fill="url(#p2pSquircle)" stroke="${accentHex}" stroke-width="14" filter="url(#p2pGlowStrong)" />
+  <rect x="96" y="96" width="832" height="832" rx="190" fill="none" stroke="${accentHex}" stroke-width="3.5" stroke-opacity="0.65" />
+
+  <!-- Controle DualShock Neon Central -->
+  <g transform="translate(82, 102) scale(26.875)" filter="url(#p2pGlowSoft)">
+    <path
+      d="M8.8 10.2C6.4 10.2 4.8 12.1 4.4 14.8L3.4 20.6C3.1 22.6 4.4 24.2 6.1 24.2C7.6 24.2 8.7 22.8 9.6 20.8C10.2 19.4 10.9 19 11.9 19.6C12.8 20.2 14.1 20.5 16 20.5C17.9 20.5 19.2 20.2 20.1 19.6C21.1 19 21.8 19.4 22.4 20.8C23.3 22.8 24.4 24.2 25.9 24.2C27.6 24.2 28.9 22.6 28.6 20.6L27.6 14.8C27.2 12.1 25.6 10.2 23.2 10.2C21.6 10.2 20.6 11 19.5 11.2H12.5C11.4 11 10.4 10.2 8.8 10.2Z"
+      fill="#121218"
+      stroke="${accentHex}"
+      stroke-width="1.3"
+      stroke-linejoin="round"
+    />
+    <path d="M8.1 15.1H10.9M9.5 13.7V16.5" stroke="#FFFFFF" stroke-width="1.35" stroke-linecap="round" />
+    <circle cx="22.5" cy="13.2" r="0.95" fill="#22C55E" />
+    <circle cx="24.2" cy="14.9" r="0.95" fill="#FB7185" />
+    <circle cx="22.5" cy="16.6" r="0.95" fill="#3B82F6" />
+    <circle cx="20.8" cy="14.9" r="0.95" fill="#F97316" />
+    <text
+      x="16"
+      y="17.8"
+      text-anchor="middle"
+      fill="#FFFFFF"
+      stroke="${accentHex}"
+      stroke-width="0.25"
+      font-family="Orbitron, Outfit, DejaVu Sans, Arial, sans-serif"
+      font-weight="900"
+      font-size="8.2"
+    >2</text>
+  </g>
+</svg>
+`.trim();
 }
 
-function drawControllerEmblem(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  size: number,
-  accentHex: string,
-  accentRgb: string,
-  withOuterSquare = true
-) {
-  const scale = size / 32;
+export function buildPad2PSFullLogoSvg(
+  accentHex = '#FF1E8E',
+  mode: 'dark' | 'light' = 'dark',
+  size = 1024
+): string {
+  const textColor = mode === 'light' ? '#0F172A' : '#FFFFFF';
+  const subColor = mode === 'light' ? '#475569' : '#A1A1AA';
+  const height = Math.round((size * 340) / 1024);
 
-  ctx.save();
-  ctx.translate(x, y);
-  ctx.scale(scale, scale);
+  return `
+<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${height}" viewBox="0 0 1024 340" fill="none">
+  <defs>
+    <filter id="p2pFullGlowSoft" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="14" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+    <filter id="p2pFullGlowStrong" x="-60%" y="-60%" width="220%" height="220%" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="22" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+    <linearGradient id="p2pFullSquircle" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0E0E15" />
+      <stop offset="100%" stop-color="#09090D" />
+    </linearGradient>
+  </defs>
 
-  if (withOuterSquare) {
-    ctx.fillStyle = '#101015';
-    ctx.strokeStyle = `rgba(${accentRgb}, 0.55)`;
-    ctx.lineWidth = 1.2;
-    drawRoundedRect(ctx, 1, 1, 30, 30, 7);
-    ctx.fill();
-    ctx.stroke();
+  <!-- Ícone Squircle à esquerda -->
+  <g transform="translate(34, 34) scale(0.265625)">
+    <rect x="64" y="64" width="896" height="896" rx="220" fill="url(#p2pFullSquircle)" stroke="${accentHex}" stroke-width="18" filter="url(#p2pFullGlowStrong)" />
+    <rect x="96" y="96" width="832" height="832" rx="190" fill="none" stroke="${accentHex}" stroke-width="5" stroke-opacity="0.65" />
+    <g transform="translate(82, 102) scale(26.875)" filter="url(#p2pFullGlowSoft)">
+      <path d="M8.8 10.2C6.4 10.2 4.8 12.1 4.4 14.8L3.4 20.6C3.1 22.6 4.4 24.2 6.1 24.2C7.6 24.2 8.7 22.8 9.6 20.8C10.2 19.4 10.9 19 11.9 19.6C12.8 20.2 14.1 20.5 16 20.5C17.9 20.5 19.2 20.2 20.1 19.6C21.1 19 21.8 19.4 22.4 20.8C23.3 22.8 24.4 24.2 25.9 24.2C27.6 24.2 28.9 22.6 28.6 20.6L27.6 14.8C27.2 12.1 25.6 10.2 23.2 10.2C21.6 10.2 20.6 11 19.5 11.2H12.5C11.4 11 10.4 10.2 8.8 10.2Z" fill="#121218" stroke="${accentHex}" stroke-width="1.3" stroke-linejoin="round" />
+      <path d="M8.1 15.1H10.9M9.5 13.7V16.5" stroke="#FFFFFF" stroke-width="1.35" stroke-linecap="round" />
+      <circle cx="22.5" cy="13.2" r="0.95" fill="#22C55E" />
+      <circle cx="24.2" cy="14.9" r="0.95" fill="#FB7185" />
+      <circle cx="22.5" cy="16.6" r="0.95" fill="#3B82F6" />
+      <circle cx="20.8" cy="14.9" r="0.95" fill="#F97316" />
+      <text x="16" y="17.8" text-anchor="middle" fill="#FFFFFF" stroke="${accentHex}" stroke-width="0.25" font-family="Orbitron, Outfit, DejaVu Sans, Arial, sans-serif" font-weight="900" font-size="8.2">2</text>
+    </g>
+  </g>
+
+  <!-- Assinatura Pad2PS -->
+  <text
+    x="356"
+    y="188"
+    font-family="Orbitron, Outfit, DejaVu Sans, Arial, sans-serif"
+    font-weight="800"
+    font-size="146"
+    letter-spacing="-2"
+    fill="${textColor}"
+  >Pad<tspan fill="${accentHex}" filter="url(#p2pFullGlowSoft)">2</tspan>PS</text>
+
+  <text
+    x="362"
+    y="258"
+    font-family="Outfit, Plus Jakarta Sans, DejaVu Sans, Arial, sans-serif"
+    font-weight="600"
+    font-size="28"
+    letter-spacing="2"
+    fill="${subColor}"
+  >TRADUTOR VISUAL &amp; DIAGNÓSTICO DE CONTROLES</text>
+</svg>
+`.trim();
+}
+
+async function renderSvgToPngDownload(
+  svgMarkup: string,
+  filename: string,
+  width: number,
+  height: number
+): Promise<void> {
+  const blob = new Blob([svgMarkup], { type: 'image/svg+xml;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+
+  try {
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const image = new Image();
+      image.onload = () => resolve(image);
+      image.onerror = reject;
+      image.src = url;
+    });
+
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    ctx.clearRect(0, 0, width, height);
+    ctx.drawImage(img, 0, 0, width, height);
+
+    const pngBlob = await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob((b) => resolve(b), 'image/png')
+    );
+    if (!pngBlob) return;
+
+    const dlUrl = URL.createObjectURL(pngBlob);
+    const link = document.createElement('a');
+    link.href = dlUrl;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(dlUrl);
+  } finally {
+    URL.revokeObjectURL(url);
   }
-
-  // DualShock silhouette path
-  ctx.save();
-  ctx.shadowColor = accentHex;
-  ctx.shadowBlur = 10;
-  const padPath = new Path2D(
-    'M8.8 10.2C6.4 10.2 4.8 12.1 4.4 14.8L3.4 20.6C3.1 22.6 4.4 24.2 6.1 24.2C7.6 24.2 8.7 22.8 9.6 20.8C10.2 19.4 10.9 19 11.9 19.6C12.8 20.2 14.1 20.5 16 20.5C17.9 20.5 19.2 20.2 20.1 19.6C21.1 19 21.8 19.4 22.4 20.8C23.3 22.8 24.4 24.2 25.9 24.2C27.6 24.2 28.9 22.6 28.6 20.6L27.6 14.8C27.2 12.1 25.6 10.2 23.2 10.2C21.6 10.2 20.6 11 19.5 11.2H12.5C11.4 11 10.4 10.2 8.8 10.2Z'
-  );
-  ctx.fillStyle = '#15151C';
-  ctx.fill(padPath);
-  ctx.strokeStyle = accentHex;
-  ctx.lineWidth = 1.45;
-  ctx.lineJoin = 'round';
-  ctx.stroke(padPath);
-  ctx.restore();
-
-  // D-Pad cross
-  ctx.strokeStyle = '#FAFAFA';
-  ctx.lineWidth = 1.4;
-  ctx.lineCap = 'round';
-  ctx.beginPath();
-  ctx.moveTo(8.1, 15.1);
-  ctx.lineTo(10.9, 15.1);
-  ctx.moveTo(9.5, 13.7);
-  ctx.lineTo(9.5, 16.5);
-  ctx.stroke();
-
-  // PlayStation 4 action dots
-  const dots: [number, number, string][] = [
-    [22.5, 13.2, '#34D399'],
-    [24.2, 14.9, '#FB7185'],
-    [22.5, 16.6, '#60A5FA'],
-    [20.8, 14.9, '#F472B6'],
-  ];
-  for (const [dx, dy, color] of dots) {
-    ctx.fillStyle = color;
-    ctx.beginPath();
-    ctx.arc(dx, dy, 1.0, 0, Math.PI * 2);
-    ctx.fill();
-  }
-
-  // Stylized center "2"
-  ctx.fillStyle = '#FAFAFA';
-  ctx.font = '900 8.5px "Orbitron", "Outfit", sans-serif';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText('2', 16, 15.5);
-
-  ctx.restore();
-}
-
-async function triggerCanvasDownload(canvas: HTMLCanvasElement, filename: string): Promise<void> {
-  await new Promise<void>((resolve) => {
-    canvas.toBlob((blob) => {
-      const url = blob ? URL.createObjectURL(blob) : canvas.toDataURL('image/png');
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      if (blob) {
-        URL.revokeObjectURL(url);
-      }
-      resolve();
-    }, 'image/png');
-  });
 }
 
 export async function exportLogoToPng(): Promise<void> {
-  if (typeof document === 'undefined') {
-    return;
-  }
-
-  if (document.fonts?.ready) {
-    await document.fonts.ready.catch(() => {});
-  }
-
-  const {hex: accentHex, rgb: accentRgb} = getActiveNeonTheme();
-  const width = 1200;
-  const height = 400;
-
-  const canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext('2d');
-  if (!ctx) {
-    return;
-  }
-
-  // Deep matte dark background + subtle grid
-  ctx.fillStyle = '#09090B';
-  drawRoundedRect(ctx, 0, 0, width, height, 36);
-  ctx.fill();
-
-  const radial = ctx.createRadialGradient(310, 200, 10, 310, 200, 460);
-  radial.addColorStop(0, `rgba(${accentRgb}, 0.18)`);
-  radial.addColorStop(0.6, `rgba(${accentRgb}, 0.04)`);
-  radial.addColorStop(1, 'rgba(9, 9, 11, 0)');
-  ctx.fillStyle = radial;
-  drawRoundedRect(ctx, 0, 0, width, height, 36);
-  ctx.fill();
-
-  ctx.save();
-  drawRoundedRect(ctx, 0, 0, width, height, 36);
-  ctx.clip();
-  ctx.strokeStyle = `rgba(${accentRgb}, 0.065)`;
-  ctx.lineWidth = 1;
-  for (let gx = 0; gx <= width; gx += 40) {
-    ctx.beginPath();
-    ctx.moveTo(gx, 0);
-    ctx.lineTo(gx, height);
-    ctx.stroke();
-  }
-  for (let gy = 0; gy <= height; gy += 40) {
-    ctx.beginPath();
-    ctx.moveTo(0, gy);
-    ctx.lineTo(width, gy);
-    ctx.stroke();
-  }
-  ctx.restore();
-
-  // Glowing outer neon border
-  ctx.save();
-  ctx.shadowColor = accentHex;
-  ctx.shadowBlur = 20;
-  ctx.strokeStyle = accentHex;
-  ctx.lineWidth = 3;
-  drawRoundedRect(ctx, 14, 14, width - 28, height - 28, 28);
-  ctx.stroke();
-  ctx.restore();
-
-  drawControllerEmblem(ctx, 72, 62, 260, accentHex, accentRgb, false);
-
-  // Draw Wordmark "Pad2PS"
-  const textX = 362;
-  const textY = 204;
-  ctx.font = '800 132px "Orbitron", "Outfit", sans-serif';
-  ctx.textAlign = 'left';
-  ctx.textBaseline = 'middle';
-
-  const padWidth = ctx.measureText('Pad').width;
-  const twoWidth = ctx.measureText('2').width;
-
-  ctx.fillStyle = '#FAFAFA';
-  ctx.fillText('Pad', textX, textY);
-
-  ctx.save();
-  ctx.shadowColor = accentHex;
-  ctx.shadowBlur = 28;
-  ctx.fillStyle = accentHex;
-  ctx.fillText('2', textX + padWidth + 4, textY);
-  ctx.restore();
-
-  ctx.fillStyle = '#FAFAFA';
-  ctx.fillText('PS', textX + padWidth + twoWidth + 8, textY);
-
-  await triggerCanvasDownload(canvas, 'pad2ps-logo.png');
+  if (typeof document === 'undefined') return;
+  const { hex } = getActiveNeonTheme();
+  const svg = buildPad2PSFullLogoSvg(hex, 'dark', 1024);
+  await renderSvgToPngDownload(svg, 'pad2ps-logo-1024.png', 1024, 340);
 }
 
 export async function exportLogoIconToPng(): Promise<void> {
-  if (typeof document === 'undefined') {
-    return;
-  }
-
-  if (document.fonts?.ready) {
-    await document.fonts.ready.catch(() => {});
-  }
-
-  const {hex: accentHex, rgb: accentRgb} = getActiveNeonTheme();
-  const size = 512;
-
-  const canvas = document.createElement('canvas');
-  canvas.width = size;
-  canvas.height = size;
-  const ctx = canvas.getContext('2d');
-  if (!ctx) {
-    return;
-  }
-
-  // Transparent canvas containing only the glowing controller emblem (no outer square)
-  ctx.clearRect(0, 0, size, size);
-  drawControllerEmblem(ctx, 18, 18, size - 36, accentHex, accentRgb, false);
-
-  await triggerCanvasDownload(canvas, 'pad2ps-controle-icone.png');
+  if (typeof document === 'undefined') return;
+  const { hex } = getActiveNeonTheme();
+  const svg = buildPad2PSIconSvg(hex, 1024);
+  await renderSvgToPngDownload(svg, 'pad2ps-icone-1024.png', 1024, 1024);
 }
