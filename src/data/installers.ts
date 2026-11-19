@@ -1,8 +1,47 @@
-export type InstallerId = "windows" | "linux-deb" | "linux-appimage" | "android";
-export interface InstallerPackage { id: InstallerId; osGroup: "windows" | "linux" | "android"; url: string; filename: string; extension: string; }
-export const INSTALLER_PACKAGES: InstallerPackage[] = [
-  { id: "windows", osGroup: "windows", url: "https://github.com/RbtSwift/Pad2PS/releases/latest/download/Pad2PS-1.0.4-Setup.exe", filename: "Pad2PS-1.0.4-Setup.exe", extension: ".exe" },
-  { id: "linux-deb", osGroup: "linux", url: "https://github.com/RbtSwift/Pad2PS/releases/latest/download/Pad2PS-1.0.4-amd64.deb", filename: "Pad2PS-1.0.4-amd64.deb", extension: ".deb" },
-  { id: "linux-appimage", osGroup: "linux", url: "https://github.com/RbtSwift/Pad2PS/releases/latest/download/Pad2PS-1.0.4-x86_64.AppImage", filename: "Pad2PS-1.0.4-x86_64.AppImage", extension: ".AppImage" },
-  { id: "android", osGroup: "android", url: "https://github.com/RbtSwift/Pad2PS/releases/latest/download/Pad2PS-1.0.4-Android.apk", filename: "Pad2PS-1.0.4-Android.apk", extension: ".apk" }
-];
+export const RELEASE_PROJECTS = [
+  {
+    repo: 'RbtSwift/Pad2PS',
+    name: 'Pad2PS Oficial',
+    description: 'Tradutor visual, overlay em tempo real e suíte de diagnóstico.',
+    fallback: 'https://github.com/RbtSwift/Pad2PS/releases/latest',
+  },
+  {
+    repo: 'RbtSwift/Pad2PS-Launcher',
+    name: 'Pad2PS-Launcher',
+    description: 'Central de jogos estilo console controlada 100% pelo gamepad.',
+    fallback: 'https://github.com/RbtSwift/Pad2PS-Launcher/releases/latest',
+  },
+] as const;
+
+export interface ReleaseAsset {
+  name: string;
+  browser_download_url: string;
+}
+
+export interface LatestRelease {
+  tag_name: string;
+  html_url: string;
+  assets: ReleaseAsset[];
+}
+
+export async function fetchLatestRelease(repo: string): Promise<LatestRelease> {
+  const response = await fetch(`https://api.github.com/repos/${repo}/releases/latest`, {
+    headers: {Accept: 'application/vnd.github+json'},
+    cache: 'no-store',
+  });
+  if (!response.ok) throw new Error(`GitHub release API returned ${response.status}`);
+  return response.json() as Promise<LatestRelease>;
+}
+
+export function installerType(filename: string): string | null {
+  const name = filename.toLowerCase();
+  if (name.endsWith('.deb')) return '.deb';
+  if (name.endsWith('.rpm')) return '.rpm';
+  if (name.endsWith('.appimage')) return '.AppImage';
+  if (name.endsWith('.flatpak')) return '.flatpak';
+  if (name.endsWith('.tar.gz')) return '.tar.gz';
+  if (name.endsWith('setup.exe')) return 'Setup.exe';
+  if (name.endsWith('portable.exe')) return 'Portable.exe';
+  if (name.endsWith('.apk')) return '.apk';
+  return null;
+}
