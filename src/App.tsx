@@ -43,6 +43,8 @@ import {
   SettingsPanel,
 } from './components/SettingsPanel';
 import {TermsPage} from './components/TermsPage';
+import {UpdateModal} from './components/UpdateModal';
+import {checkForAppUpdate, type UpdateCheckResult} from './utils/updateChecker';
 import {TrainingBar} from './components/TrainingBar';
 import type {ComboDefinition} from './data/comboLibrary';
 import {
@@ -488,7 +490,24 @@ function MainApp() {
   const [isComboDrawerOpen, setIsComboDrawerOpen] = useState<boolean>(false);
   const [isEmulatorsOpen, setIsEmulatorsOpen] = useState<boolean>(false);
   const [isInstallModalOpen, setIsInstallModalOpen] = useState<boolean>(false);
+  const [updateInfo, setUpdateInfo] = useState<UpdateCheckResult | null>(null);
+  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState<boolean>(false);
   const [currentPath, setCurrentPath] = useState<string>(getCurrentPathname);
+
+  useEffect(() => {
+    let isMounted = true;
+    checkForAppUpdate('RbtSwift/Pad2PS', '1.0.4')
+      .then((res) => {
+        if (isMounted && res.hasUpdate) {
+          setUpdateInfo(res);
+          setIsUpdateModalOpen(true);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Remap Mode state
   const [isRemapMode, setIsRemapMode] = useState<boolean>(false);
@@ -1864,12 +1883,22 @@ function MainApp() {
           setIsRemapMode(true);
           setRemapTargetPsIndex(null);
         }}
+        onOpenUpdateModal={(info) => {
+          setUpdateInfo(info);
+          setIsUpdateModalOpen(true);
+        }}
       />
       <InstallAppModal
         isOpen={!isApp && isInstallModalOpen}
         onClose={() => setIsInstallModalOpen(false)}
         isApp={isApp}
         t={t}
+      />
+      <UpdateModal
+        isOpen={isUpdateModalOpen}
+        onClose={() => setIsUpdateModalOpen(false)}
+        updateInfo={updateInfo}
+        appName="Pad2PS"
       />
       <OfflineIndicator t={t} />
     </div>

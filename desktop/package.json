@@ -1,7 +1,7 @@
 {
   "name": "pad2ps",
   "private": true,
-  "version": "1.0.3",
+  "version": "1.0.4",
   "main": "electron-main.cjs",
   "description": "Tradutor visual e diagnosticador avançado de controles (PS1, PS2, PS3, PSP, Xbox e Switch)",
   "author": {
@@ -66,6 +66,18 @@
     },
     "portable": {
       "artifactName": "Pad2PS-${version}-Portable.${ext}"
+    },
+    "deb": {
+      "fpm": [
+        "io.github.rbtswift.Pad2PS.metainfo.xml=/usr/share/metainfo/io.github.rbtswift.Pad2PS.metainfo.xml",
+        "pad2ps.list=/etc/apt/sources.list.d/pad2ps.list"
+      ]
+    },
+    "rpm": {
+      "fpm": [
+        "io.github.rbtswift.Pad2PS.metainfo.xml=/usr/share/metainfo/io.github.rbtswift.Pad2PS.metainfo.xml"
+      ]
     }
-  }
+  },
+  "license": "MIT"
 }

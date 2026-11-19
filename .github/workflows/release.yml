@@ -64,6 +64,7 @@ jobs:
             desktop/release/*Portable*.exe
 
   build-android:
+    if: ${{ vars.ANDROID_SIGNING_ENABLED == 'true' }}
     name: Android (.apk & .aab)
     runs-on: ubuntu-latest
     steps:
@@ -94,6 +95,7 @@ jobs:
           path: android/artifacts/*
 
   publish-release:
+    if: ${{ always() && needs.build-linux.result == 'success' && needs.build-windows.result == 'success' && (needs.build-android.result == 'success' || needs.build-android.result == 'skipped') }}
     name: Publicar GitHub Release
     needs: [build-linux, build-windows, build-android]
     runs-on: ubuntu-latest

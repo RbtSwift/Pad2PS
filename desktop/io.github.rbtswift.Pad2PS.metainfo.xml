@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.rbtswift.Pad2PS</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+  <icon type="stock">io.github.rbtswift.Pad2PS</icon>
+  <categories><category>Utility</category><category>Game</category></categories>
+  <name>Pad2PS</name>
+  <summary>Tradutor visual e diagnosticador de controles</summary>
+  <description>
+    <p>
+      Traduz entradas de controles em tempo real e oferece ferramentas de diagnóstico
+      para controles PlayStation, Xbox e Switch, incluindo leitura de bateria.
+    </p>
+  </description>
+  <launchable type="desktop-id">io.github.rbtswift.Pad2PS.desktop</launchable>
+  <url type="homepage">https://github.com/RbtSwift/Pad2PS</url>
+  <url type="bugtracker">https://github.com/RbtSwift/Pad2PS/issues</url>
+  <developer id="io.github.rbtswift">
+    <name>Pad2PS (Ravi Rosa)</name>
+  </developer>
+  <content_rating type="oars-1.1" />
+  <releases>
+    <release version="1.0.4" date="2026-11-19">
+      <description>
+        <p>Release v1.0.4: Verificador de atualizações, metadados AppStream e melhorias de compatibilidade.</p>
+      </description>
+    </release>
+  </releases>
+</component>

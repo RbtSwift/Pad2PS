@@ -1,7 +1,8 @@
-import {ArrowLeftRight, Download, RotateCcw, SlidersHorizontal, Upload, X} from 'lucide-react';
+import {ArrowLeftRight, Download, RefreshCw, RotateCcw, SlidersHorizontal, Upload, X} from 'lucide-react';
 import {useEffect, useRef, useState} from 'react';
 import type {AppLanguage, Translations} from '../data/i18n';
 import type {StickState} from '../hooks/useGamepad';
+import {checkForAppUpdate, type UpdateCheckResult} from '../utils/updateChecker';
 
 export const MIN_DEADZONE = 0.05;
 export const MAX_DEADZONE = 0.25;
@@ -21,6 +22,7 @@ interface SettingsPanelProps {
   lang: AppLanguage;
   t: Translations;
   onOpenRemap?: () => void;
+  onOpenUpdateModal?: (info: UpdateCheckResult) => void;
 }
 
 export function clampDeadzone(value: number): number {
@@ -42,9 +44,12 @@ export function SettingsPanel({
   lang,
   t,
   onOpenRemap,
+  onOpenUpdateModal,
 }: SettingsPanelProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [importMessage, setImportMessage] = useState<string | null>(null);
+  const [isCheckingUpdate, setIsCheckingUpdate] = useState(false);
+  const [updateMessage, setUpdateMessage] = useState<string | null>(null);
 
   const presets =
     lang === 'en'
@@ -454,6 +459,63 @@ export function SettingsPanel({
           {importMessage && (
             <p className="text-[11px] text-center" style={{color: 'var(--accent-color)'}}>
               {importMessage}
+            </p>
+          )}
+        </div>
+
+        {/* Verificação de Atualizações */}
+        <div
+          className="pt-2 border-t flex flex-col gap-2"
+          style={{borderColor: 'rgba(var(--accent-rgb), 0.16)'}}
+        >
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-[#A1A1AA]">
+              {lang === 'en' ? 'App Version:' : 'Versão do App:'} <strong className="text-white">v1.0.4</strong>
+            </span>
+            <button
+              type="button"
+              disabled={isCheckingUpdate}
+              onClick={async () => {
+                setIsCheckingUpdate(true);
+                setUpdateMessage(null);
+                try {
+                  const res = await checkForAppUpdate('RbtSwift/Pad2PS', '1.0.4');
+                  if (res.hasUpdate && onOpenUpdateModal) {
+                    onOpenUpdateModal(res);
+                  } else if (res.error) {
+                    setUpdateMessage(
+                      lang === 'en'
+                        ? 'Could not check updates. Check your connection.'
+                        : 'Não foi possível verificar atualizações. Sem conexão.'
+                    );
+                  } else {
+                    setUpdateMessage(
+                      lang === 'en'
+                        ? 'Pad2PS is up to date (v1.0.4)!'
+                        : 'Você já está usando a versão mais recente (v1.0.4)!'
+                    );
+                  }
+                } catch {
+                  setUpdateMessage(
+                    lang === 'en'
+                      ? 'Error checking updates.'
+                      : 'Erro ao verificar atualizações.'
+                  );
+                } finally {
+                  setIsCheckingUpdate(false);
+                }
+              }}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border bg-[#09090B]/90 text-[#FAFAFA] hover:text-white hover:bg-white/5 transition-colors cursor-pointer disabled:opacity-50"
+              style={{borderColor: 'rgba(var(--accent-rgb), 0.35)'}}
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isCheckingUpdate ? 'animate-spin' : ''}`} style={{color: 'var(--accent-color)'}} />
+              <span>{isCheckingUpdate ? (lang === 'en' ? 'Checking...' : 'Verificando...') : (lang === 'en' ? 'Check for Updates' : 'Verificar Atualizações')}</span>
+            </button>
+          </div>
+
+          {updateMessage && (
+            <p className="text-[11px] text-center text-emerald-400">
+              {updateMessage}
             </p>
           )}
         </div>
