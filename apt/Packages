@@ -1,0 +1,20 @@
+Package: pad2ps
+Version: 1.0.4
+Architecture: amd64
+Maintainer: Pad2PS (Ravi Rosa) <pad2ps@eusolravi.com.br>
+Installed-Size: 280860
+Depends: libgtk-3-0, libnotify4, libnss3, libxss1, libxtst6, xdg-utils, libatspi2.0-0, libuuid1, libsecret-1-0
+Recommends: libappindicator3-1
+Filename: Pad2PS-1.0.4-amd64.deb
+Size: 101351600
+MD5sum: 082b21dc20a2da3f5a95f407bb70510c
+SHA1: c861cc7d02dbdcb4d57d89fcb1f08da97d307bd8
+SHA256: 0c20ce74fead8b6aa39943a29161f0d0229bed7e385206155f7f8e2982048ea4
+Section: default
+Priority: optional
+Homepage: https://github.com/RbtSwift/Pad2PS
+Description: Tradutor visual e diagnosticador de controles para PC
+  Tradutor visual em tempo real e suíte de diagnóstico de controles (DualSense, DualShock, Xbox, Switch, GameSir) com leitura de bateria e janela flutuante Always-on-Top.
+License: MIT
+Vendor: Pad2PS
+
