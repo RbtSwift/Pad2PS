@@ -15,16 +15,21 @@ export function InstallAppModal({isOpen, onClose, isApp, t}: InstallAppModalProp
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!isOpen) return;
     setLoading(true);
+    let active = true;
     Promise.all(RELEASE_PROJECTS.map(async (project) => {
       try {
         return [project.repo, await fetchLatestRelease(project.repo)] as const;
       } catch {
         return [project.repo, null] as const;
       }
-    })).then((entries) => setReleases(Object.fromEntries(entries)))
-      .finally(() => setLoading(false));
+    })).then((entries) => { if (active) setReleases(Object.fromEntries(entries)); })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen) return;
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') onClose();
     };
