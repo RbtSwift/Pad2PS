@@ -1,21 +1,24 @@
 export const RELEASE_PROJECTS = [
   {
+    id: 'launcher',
+    repo: 'RbtSwift/Pad2PS-Launcher',
+    name: 'Pad2PS-Launcher',
+    description: 'Uma central de jogos estilo console para jogar da cama ou do sofá, controlada 100% pelo gamepad.',
+    fallback: 'https://github.com/RbtSwift/Pad2PS-Launcher/releases/latest',
+  },
+  {
+    id: 'pad2ps',
     repo: 'RbtSwift/Pad2PS',
     name: 'Pad2PS Oficial',
     description: 'Tradutor visual, overlay em tempo real e suíte de diagnóstico.',
     fallback: 'https://github.com/RbtSwift/Pad2PS/releases/latest',
-  },
-  {
-    repo: 'RbtSwift/Pad2PS-Launcher',
-    name: 'Pad2PS-Launcher',
-    description: 'Central de jogos estilo console controlada 100% pelo gamepad.',
-    fallback: 'https://github.com/RbtSwift/Pad2PS-Launcher/releases/latest',
   },
 ] as const;
 
 export interface ReleaseAsset {
   name: string;
   browser_download_url: string;
+  size: number;
 }
 
 export interface LatestRelease {

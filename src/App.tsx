@@ -6,6 +6,7 @@ import {
   BatteryMedium,
   BookOpen,
   Cpu,
+  Download,
   Gamepad2,
   Maximize2,
   Minimize2,
@@ -1086,6 +1087,7 @@ function MainApp() {
           isOpen={!isApp && isInstallModalOpen}
           onClose={() => setIsInstallModalOpen(false)}
           isApp={isApp}
+          lang={lang}
           t={t}
         />
         <OfflineIndicator t={t} />
@@ -1103,6 +1105,8 @@ function MainApp() {
           }`}
         >
           <Pad2PSLogo compact={isCompact} isApp={isApp} t={t} />
+
+          {!isApp && <button type="button" onClick={() => setIsInstallModalOpen(true)} title={t.installAppTitle} className="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-pink-300/60 bg-gradient-to-r from-fuchsia-500/25 to-pink-500/15 px-2.5 py-1.5 text-[11px] font-extrabold text-pink-50 shadow-[0_0_18px_rgba(236,72,153,.16)] transition hover:border-pink-200 hover:from-fuchsia-500/40 hover:to-pink-500/30 sm:gap-2 sm:px-3.5 sm:py-2 sm:text-xs"><Download className="h-3.5 w-3.5 text-pink-200 sm:h-4 sm:w-4"/><span>{t.installApp}</span></button>}
 
           <div className="flex flex-1 flex-wrap items-center justify-end gap-1 sm:gap-2 lg:gap-3 min-w-0 max-w-full">
             {/* Live Connection Status + Inline Custom Name Editor */}
@@ -1892,6 +1896,7 @@ function MainApp() {
         isOpen={!isApp && isInstallModalOpen}
         onClose={() => setIsInstallModalOpen(false)}
         isApp={isApp}
+        lang={lang}
         t={t}
       />
       <UpdateModal
