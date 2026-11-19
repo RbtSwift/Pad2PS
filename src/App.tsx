@@ -548,8 +548,8 @@ function MainApp() {
     if (isTermsPage) {
       document.title =
         lang === 'en'
-          ? 'Terms of Use, Privacy & Disclaimer — Pad2PS'
-          : 'Termos de Uso, Privacidade e Isenção de Responsabilidade — Pad2PS';
+          ? 'Terms of Use and Privacy Policy — Pad2PS Ecosystem'
+          : 'Termos de Uso e Política de Privacidade — Ecossistema Pad2PS';
     } else {
       document.title =
         lang === 'en'
