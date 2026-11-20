@@ -1,0 +1,4 @@
+Added an About & Legal section with privacy, terms, support and community information.
+Reworked the Android interface for phones and tablets, with an adaptive layout and updated bottom navigation.
+Removed Picture-in-Picture from Android; the feature remains available on Desktop.
+Bundled the SDL GameControllerDB for offline controller identification.

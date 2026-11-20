@@ -1,0 +1,15 @@
+Pad2PS é um guia visual multiplataforma para consultar, testar e entender controles de videogame em computadores e dispositivos móveis.
+
+Explore layouts interativos de controles PlayStation, Xbox, Nintendo Switch e outros. Identifique entradas em tempo real, visualize vibração e gatilhos, confira a taxa de polling e a latência, diagnostique drift e circularidade dos analógicos e inspecione dados brutos do hardware.
+
+Use diagnósticos em tempo real para analógicos, gatilhos, taxa de polling e bouncing. Consulte o monitoramento de bateria, crie sequências de comandos e treine combos. Exporte diagramas e sequências e identifique controles offline com o banco SDL GameControllerDB integrado.
+
+A interface se adapta a celulares, tablets e computadores. No Desktop, uma janela Picture-in-Picture pode permanecer sobre outras janelas.
+
+Pad2PS é gratuito e não contém anúncios. O app não usa telemetria; os dados de controle e calibração das funções principais permanecem no dispositivo. Este aplicativo não é o Pad2PS Launcher: é um guia e ferramenta de diagnóstico de controles, não um organizador ou iniciador de jogos.
+
+O formulário opcional de contato pode enviar nome, e-mail, assunto e mensagem pelo Web3Forms quando o usuário escolhe utilizá-lo. O envio não é necessário para usar o aplicativo.
+
+Suporte: contato@pad2ps.com.br
+Site: https://www.pad2ps.com.br
+Termos de Uso e Privacidade: https://www.pad2ps.com.br/termos-de-uso

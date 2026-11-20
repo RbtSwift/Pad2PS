@@ -1,0 +1,15 @@
+Pad2PS is a cross-platform visual guide for consulting, testing and understanding game controllers on computers and mobile devices.
+
+Explore interactive layouts for PlayStation, Xbox, Nintendo Switch and other controllers. Identify inputs in real time, view vibration and triggers, check polling rate and latency, diagnose stick drift and circularity, and inspect raw hardware data.
+
+Use real-time diagnostics for sticks, triggers, polling rate and bouncing. Check battery monitoring, create command sequences and practice combos. Export diagrams and sequences, and identify controllers offline with the bundled SDL GameControllerDB.
+
+The interface adapts to phones, tablets and computers. On Desktop, a Picture-in-Picture window can stay on top of other windows.
+
+Pad2PS is free and contains no ads. The app does not use telemetry; controller and calibration data for core features stays on the device. This is not Pad2PS Launcher: Pad2PS is a controller guide and diagnostic tool, not a game library organizer or launcher.
+
+The optional contact form may send a name, email address, subject and message through Web3Forms when the user chooses to use it. Submission is not required to use the app.
+
+Support: contato@pad2ps.com.br
+Website: https://www.pad2ps.com.br
+Terms and Privacy: https://www.pad2ps.com.br/termos-de-uso

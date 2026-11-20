@@ -1,0 +1,4 @@
+Nova seção Sobre e Legal com privacidade, termos, suporte e comunidade.
+Interface Android reorganizada para smartphones e tablets, com layout adaptável e navegação inferior atualizada.
+Picture-in-Picture removido do Android; o recurso continua disponível no Desktop.
+Banco SDL GameControllerDB integrado para identificação offline de controles.
