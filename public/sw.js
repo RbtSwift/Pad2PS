@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v1';
+const CACHE_VERSION = 'v2';
 const CACHE_NAME = `pad2ps-cache-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `pad2ps-runtime-${CACHE_VERSION}`;
 
@@ -14,6 +14,7 @@ const PRECACHE_URLS = [
   '/icon-maskable-192.png',
   '/icon-maskable-512.png',
   '/apple-touch-icon.png',
+  '/gamecontrollerdb.txt',
 ];
 
 self.addEventListener('install', (event) => {

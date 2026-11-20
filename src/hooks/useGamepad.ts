@@ -1,6 +1,7 @@
 import {useCallback, useEffect, useRef, useState} from 'react';
 import {applyDeadzone, PS2_BUTTON_MAP, type Ps2ButtonMapping} from '../data/ps2Mapping';
 import {playButtonClickSound} from '../utils/sound';
+import {identifyController, type ControllerIdentity} from '../utils/controllerDb';
 
 export interface StickState {
   x: number;
@@ -47,6 +48,7 @@ export interface GamepadHookState {
   isConnected: boolean;
   hasActivatedInput: boolean;
   deviceName: string | null;
+  controllerIdentity: ControllerIdentity | null;
   pressedButtons: boolean[];
   l2Value: number;
   r2Value: number;
@@ -97,6 +99,7 @@ export function useGamepad(
   const [isConnected, setIsConnected] = useState<boolean>(false);
   const [hasActivatedInput, setHasActivatedInput] = useState<boolean>(false);
   const [deviceName, setDeviceName] = useState<string | null>(null);
+  const [controllerIdentity, setControllerIdentity] = useState<ControllerIdentity | null>(null);
   const [pressedButtons, setPressedButtons] = useState<boolean[]>(() =>
     Array(BUTTON_COUNT).fill(false)
   );
@@ -132,6 +135,17 @@ export function useGamepad(
   const [lastBouncingButton, setLastBouncingButton] = useState<number | null>(null);
   const lastReleaseTimesRef = useRef<number[]>(Array(18).fill(0));
   const lastHwSnapshotRef = useRef<string>('');
+
+  useEffect(() => {
+    let current = true;
+    setControllerIdentity(null);
+    if (deviceName) {
+      void identifyController(deviceName).then((result) => {
+        if (current) setControllerIdentity(result);
+      });
+    }
+    return () => { current = false; };
+  }, [deviceName]);
 
   const soundEnabledRef = useRef<boolean>(soundEnabled);
   soundEnabledRef.current = soundEnabled;
@@ -632,6 +646,7 @@ export function useGamepad(
     isConnected,
     hasActivatedInput,
     deviceName,
+    controllerIdentity,
     pressedButtons,
     l2Value,
     r2Value,

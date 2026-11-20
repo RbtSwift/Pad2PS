@@ -478,6 +478,9 @@ function MainApp() {
   const [deadzone, setDeadzone] = useState<number>(loadDeadzonePreference);
   const [themeId, setThemeId] = useState<string>(loadThemeId);
   const [consoleLayout, setConsoleLayout] = useState<ConsoleLayout>(loadConsoleLayout);
+  const [autoControllerLayout, setAutoControllerLayout] = useState<boolean>(() => {
+    try { return window.localStorage.getItem('pad2ps:auto-controller-layout') !== 'false'; } catch { return true; }
+  });
   const [customCombos, setCustomCombos] = useState<ComboDefinition[]>(loadCustomCombos);
   const [remapMap, setRemapMap] = useState<Record<number, number>>(loadRemapMap);
 
@@ -656,6 +659,7 @@ function MainApp() {
     isConnected,
     hasActivatedInput,
     deviceName,
+    controllerIdentity,
     pressedButtons,
     l2Value,
     r2Value,
@@ -679,6 +683,11 @@ function MainApp() {
     resetStats,
     triggerRumble,
   } = useGamepad(soundEnabled, deadzone, remapMap);
+
+  useEffect(() => {
+    try { window.localStorage.setItem('pad2ps:auto-controller-layout', String(autoControllerLayout)); } catch { /* storage is optional */ }
+    if (autoControllerLayout && controllerIdentity) setConsoleLayout(controllerIdentity.suggestedLayout);
+  }, [autoControllerLayout, controllerIdentity]);
 
   // Sync live controller state to Electron / ?pip=1 floating window via BroadcastChannel
   const pipChannelRef = useRef<BroadcastChannel | null>(null);
@@ -863,7 +872,7 @@ function MainApp() {
 
   const showActivatedStatus = isConnected && hasActivatedInput;
   const activeCustomName = deviceName ? customNames[deviceName] ?? null : null;
-  const effectiveControllerName = deviceName ? activeCustomName || deviceName : null;
+  const effectiveControllerName = deviceName ? activeCustomName || controllerIdentity?.name || deviceName : null;
   const hasActiveRemap = Object.keys(remapMap).length > 0;
 
   const handleSaveCustomName = (newName: string) => {
@@ -1141,6 +1150,11 @@ function MainApp() {
                         onSaveCustomName={handleSaveCustomName}
                         onResetCustomName={handleResetCustomName}
                       />
+                      {controllerIdentity && (
+                        <span className="truncate text-xs text-zinc-400" title={`Identificado como ${controllerIdentity.name} · ${controllerIdentity.family}`}>
+                          {controllerIdentity.name}
+                        </span>
+                      )}
                     </div>
                   )}
                 </div>
@@ -1571,6 +1585,7 @@ function MainApp() {
         {/* Connected Device Editor on Narrow Viewports */}
         {!isCompact && showActivatedStatus && deviceName && (
           <div className="md:hidden shrink-0 px-1 flex items-center justify-between gap-2 text-[11px] text-[#A1A1AA]">
+            {controllerIdentity && <span className="truncate">{controllerIdentity.name}</span>}
             <ControllerNameEditor
               rawDeviceName={deviceName}
               customName={activeCustomName}
@@ -1625,15 +1640,25 @@ function MainApp() {
                 aria-label="PlayStation Layout"
                 className="inline-flex items-center gap-1 p-1 rounded-lg bg-[#09090B]/85 border accent-border-subtle"
               >
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={autoControllerLayout}
+                  onClick={() => setAutoControllerLayout(true)}
+                  className={`px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-md text-[11px] sm:text-xs font-mono font-semibold transition-all cursor-pointer whitespace-nowrap ${autoControllerLayout ? 'text-white neon-glow-accent' : 'text-[#A1A1AA] hover:text-[#FAFAFA]'}`}
+                  style={autoControllerLayout ? {backgroundColor: 'rgba(var(--accent-rgb), 0.25)', border: '1px solid var(--accent-color)'} : {border: '1px solid transparent'}}
+                >
+                  Auto
+                </button>
                 {LAYOUT_OPTIONS.map((option) => {
-                  const active = consoleLayout === option;
+                  const active = !autoControllerLayout && consoleLayout === option;
                   return (
                     <button
                       key={option}
                       type="button"
                       role="tab"
                       aria-selected={active}
-                      onClick={() => setConsoleLayout(option)}
+                      onClick={() => { setAutoControllerLayout(false); setConsoleLayout(option); }}
                       className={`px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-md text-[11px] sm:text-xs font-mono font-semibold transition-all cursor-pointer whitespace-nowrap ${
                         active ? 'text-white neon-glow-accent' : 'text-[#A1A1AA] hover:text-[#FAFAFA]'
                       }`}
