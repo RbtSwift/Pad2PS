@@ -64,6 +64,61 @@ export function SiteFooter({
   };
 
   return (
+    <>
+      {!isApp && (
+        <section
+          aria-labelledby="site-download-title"
+          className="w-full rounded-xl border border-fuchsia-300/20 bg-[#121216]/80 p-3 sm:p-4"
+        >
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="min-w-0">
+              <h2
+                id="site-download-title"
+                className="text-sm font-extrabold text-white sm:text-base"
+              >
+                Download
+              </h2>
+              <p className="mt-1 text-[11px] leading-relaxed text-zinc-400 sm:text-xs">
+                {lang === 'en'
+                  ? 'Pad2PS and Pad2PS Launcher are under review for publication in the IzzyOnDroid repository.'
+                  : 'Pad2PS e Pad2PS Launcher estão em revisão para publicação no repositório IzzyOnDroid.'}
+              </p>
+            </div>
+            <div className="flex shrink-0 flex-wrap items-center gap-2">
+              <a
+                href="https://apps.obtainium.imranr.dev/redirect.html?r=obtainium://add/https://github.com/RbtSwift/Pad2PS"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(event) =>
+                  handleExternalLinkClick(
+                    event,
+                    'https://apps.obtainium.imranr.dev/redirect.html?r=obtainium://add/https://github.com/RbtSwift/Pad2PS'
+                  )
+                }
+                className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-fuchsia-500 to-pink-500 px-3 py-2 text-[11px] font-bold text-white transition hover:brightness-110 sm:text-xs"
+              >
+                <Download className="h-3.5 w-3.5" />
+                {lang === 'en' ? 'Install with Obtainium' : 'Instalar com Obtainium'}
+              </a>
+              <a
+                href="https://github.com/RbtSwift/Pad2PS/releases"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(event) =>
+                  handleExternalLinkClick(
+                    event,
+                    'https://github.com/RbtSwift/Pad2PS/releases'
+                  )
+                }
+                className="rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-[11px] font-semibold text-zinc-200 transition hover:border-fuchsia-300/40 hover:text-white sm:text-xs"
+              >
+                {lang === 'en' ? 'GitHub Releases' : 'Releases no GitHub'}
+              </a>
+            </div>
+          </div>
+        </section>
+      )}
+
     <div
       className="w-full pt-1.5 sm:pt-2 border-t flex justify-between items-center flex-wrap gap-x-3 gap-y-1.5 text-[10px] sm:text-[11px] text-[#A1A1AA]"
       style={{borderColor: 'rgba(var(--accent-rgb), 0.14)'}}
@@ -259,5 +314,6 @@ export function SiteFooter({
         </a>
       </div>
     </div>
+    </>
   );
 }

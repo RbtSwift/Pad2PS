@@ -16,6 +16,13 @@ Tradutor visual em tempo real e suíte avançada de diagnóstico de controles pa
 - **Janela Flutuante (PiP) *Always-on-Top*:** No aplicativo Desktop, fixe o diagrama compacto sempre no topo sobre qualquer jogo ou emulador.
 - **Sequência de Comandos, Treinador de Combos & Exportação PNG:** Grave sequências, exporte em PNG/TXT e baixe as logos oficiais do Pad2PS em alta resolução (`1024px`).
 
+## Download
+
+- [Adicionar Pad2PS ao Obtainium](https://apps.obtainium.imranr.dev/redirect.html?r=obtainium://add/https://github.com/RbtSwift/Pad2PS)
+- [Ver releases do Pad2PS no GitHub](https://github.com/RbtSwift/Pad2PS/releases)
+
+O Pad2PS e o Pad2PS Launcher estão em revisão para publicação no repositório IzzyOnDroid.
+
 ---
 
 ## 📁 Estrutura do Repositório
