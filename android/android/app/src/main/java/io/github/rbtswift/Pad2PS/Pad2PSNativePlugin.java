@@ -1,6 +1,8 @@
 package io.github.rbtswift.Pad2PS;
 
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.hardware.BatteryState;
 import android.os.BatteryManager;
 import android.os.Build;
@@ -59,7 +61,22 @@ public class Pad2PSNativePlugin extends Plugin {
                         JSObject obj = new JSObject();
                         obj.put("name", Build.MODEL != null ? Build.MODEL : "Android");
                         obj.put("percentage", pct);
-                        obj.put("charging", bm.isCharging());
+                        boolean charging;
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                            charging = bm.isCharging();
+                        } else {
+                            Intent batteryStatus = ctx.registerReceiver(
+                                null,
+                                new IntentFilter(Intent.ACTION_BATTERY_CHANGED)
+                            );
+                            int status = batteryStatus != null
+                                ? batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1)
+                                : -1;
+                            charging =
+                                status == BatteryManager.BATTERY_STATUS_CHARGING ||
+                                status == BatteryManager.BATTERY_STATUS_FULL;
+                        }
+                        obj.put("charging", charging);
                         devices.put(obj);
                     }
                 }

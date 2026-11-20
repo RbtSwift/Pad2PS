@@ -27,6 +27,9 @@ jobs:
           npm ci
           npm run prepare-web
           npx electron-builder --linux AppImage deb rpm --publish never
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
       - name: Empacotar .deb, .rpm e .tar.gz
         working-directory: desktop
         run: |
@@ -58,6 +61,9 @@ jobs:
           npm ci
           npm run prepare-web
           npx electron-builder --win nsis portable --publish never
+        env:
+          CSC_LINK: ${{ secrets.WINDOWS_CERTIFICATE }}
+          CSC_KEY_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
       - uses: actions/upload-artifact@v4
         with:
           name: windows-artifacts
@@ -80,6 +86,9 @@ jobs:
           java-version: '17'
       - name: Compilar Web + Android
         run: |
+          if [ -n "${ANDROID_KEYSTORE_BASE64:-}" ]; then
+            printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android/android/app/signing.keystore
+          fi
           npm ci
           npm run build
           cd android
@@ -91,6 +100,11 @@ jobs:
           mkdir -p ../artifacts
           cp app/build/outputs/apk/release/*.apk "../artifacts/Pad2PS-Android.apk"
           cp app/build/outputs/bundle/release/*.aab "../artifacts/Pad2PS-Android.aab"
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
       - uses: actions/upload-artifact@v4
         with:
           name: android-artifacts
@@ -115,10 +129,20 @@ jobs:
           path: pages
           fetch-depth: 0
       - name: Gerar índices APT e publicar no Pages
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
         run: |
-          sudo apt-get update && sudo apt-get install -y dpkg-dev
+          sudo apt-get update && sudo apt-get install -y dpkg-dev gnupg
           cd all-artifacts
           VERSION="${GITHUB_REF_NAME#v}"
+          python3 ../.github/scripts/generate_debian_changelog.py "${VERSION}" ../RELEASE_NOTES.md pad2ps_${VERSION}.txt
+          mkdir -p ../pages/apt/changelogs
+          cp pad2ps_${VERSION}.txt ../pages/apt/changelogs/
+          if [ -n "${GPG_PRIVATE_KEY:-}" ]; then
+            printf '%s' "$GPG_PRIVATE_KEY" | gpg --batch --quiet --import
+            GPG_FINGERPRINT=$(gpg --batch --with-colons --list-secret-keys | awk -F: '$1=="fpr"{print $10; exit}')
+          fi
           dpkg-scanpackages -m . /dev/null | sed 's#Filename: ./#Filename: #' > Packages
           gzip -n -9 -c Packages > Packages.gz
           PACKAGES_SHA=$(sha256sum Packages | cut -d' ' -f1)
@@ -135,6 +159,7 @@ jobs:
           Architectures: amd64
           Components: main
           Description: Official Pad2PS APT repository
+          Changelogs: https://rbtswift.github.io/Pad2PS/apt/changelogs/@CHANGEPATH@
           Acquire-By-Hash: no
           SHA256:
            ${PACKAGES_SHA} ${PACKAGES_SIZE} Packages
@@ -142,9 +167,13 @@ jobs:
           EOF
           mkdir -p ../pages/apt
           cp Packages Packages.gz Release ../pages/apt/
+          if [ -n "${GPG_PRIVATE_KEY:-}" ] && [ -n "${GPG_FINGERPRINT:-}" ]; then
+            gpg --batch --yes --pinentry-mode loopback --passphrase "$GPG_PASSPHRASE" --armor --detach-sign --default-key "$GPG_FINGERPRINT" -o ../pages/apt/Release.gpg ../pages/apt/Release
+            gpg --batch --yes --pinentry-mode loopback --passphrase "$GPG_PASSPHRASE" --default-key "$GPG_FINGERPRINT" --clearsign -o ../pages/apt/InRelease ../pages/apt/Release
+          fi
           git -C ../pages config user.name "github-actions[bot]"
           git -C ../pages config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git -C ../pages add apt/Packages apt/Packages.gz apt/Release
+          git -C ../pages add apt
           git -C ../pages commit -m "Update APT index for v${VERSION}"
           git -C ../pages push origin gh-pages
       - uses: softprops/action-gh-release@v2

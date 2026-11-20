@@ -1,7 +1,8 @@
-import {ArrowLeftRight, Download, RefreshCw, RotateCcw, SlidersHorizontal, Upload, X} from 'lucide-react';
+import {ArrowLeftRight, Copy, Download, ExternalLink, Github, Mail, RefreshCw, RotateCcw, ShieldCheck, SlidersHorizontal, Upload, X} from 'lucide-react';
 import {useEffect, useRef, useState} from 'react';
 import type {AppLanguage, Translations} from '../data/i18n';
 import type {StickState} from '../hooks/useGamepad';
+import {openExternalUrl} from '../hooks/useIsInstalledApp';
 import {checkForAppUpdate, type UpdateCheckResult} from '../utils/updateChecker';
 
 export const MIN_DEADZONE = 0.05;
@@ -50,6 +51,7 @@ export function SettingsPanel({
   const [importMessage, setImportMessage] = useState<string | null>(null);
   const [isCheckingUpdate, setIsCheckingUpdate] = useState(false);
   const [updateMessage, setUpdateMessage] = useState<string | null>(null);
+  const [copyStatus, setCopyStatus] = useState<'idle' | 'copied' | 'failed'>('idle');
 
   const presets =
     lang === 'en'
@@ -189,6 +191,19 @@ export function SettingsPanel({
           : 'Não foi possível ler o arquivo selecionado.'
       );
     }
+  };
+
+  const copySupportEmail = async () => {
+    try {
+      await navigator.clipboard.writeText('contato@pad2ps.com.br');
+      setCopyStatus('copied');
+    } catch {
+      setCopyStatus('failed');
+    }
+  };
+
+  const openOfficialLink = (url: string) => {
+    void openExternalUrl(url, true);
   };
 
   return (
@@ -465,12 +480,106 @@ export function SettingsPanel({
 
         {/* Verificação de Atualizações */}
         <div
+          className="pt-2 border-t flex flex-col gap-2.5"
+          style={{borderColor: 'rgba(var(--accent-rgb), 0.16)'}}
+        >
+          <div className="flex items-center justify-between gap-2">
+            <div>
+              <p className="text-xs font-semibold text-[#FAFAFA]">
+                {lang === 'en' ? 'About & Legal' : 'Sobre & Legal'}
+              </p>
+              <p className="mt-0.5 text-[11px] text-[#A1A1AA]">
+                Pad2PS - {lang === 'en' ? 'Controller Guide' : 'Guia de Controle'} · v1.0.6
+              </p>
+            </div>
+            <span
+              className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px]"
+              style={{
+                color: 'var(--accent-color)',
+                backgroundColor: 'rgba(var(--accent-rgb), 0.12)',
+                border: '1px solid rgba(var(--accent-rgb), 0.22)',
+              }}
+            >
+              <ShieldCheck className="w-3 h-3" />
+              {lang === 'en' ? '100% local' : '100% local'}
+            </span>
+          </div>
+
+          <p className="text-[11px] leading-relaxed text-[#A1A1AA]">
+            {lang === 'en'
+              ? 'No telemetry or data collection. All control and calibration data stays on this device.'
+              : 'Sem telemetria ou coleta de dados. Todos os dados de controles e calibração permanecem neste dispositivo.'}
+          </p>
+
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => openOfficialLink('https://www.pad2ps.com.br')}
+              className="inline-flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-lg border bg-[#09090B]/90 text-[11px] text-[#FAFAFA] hover:bg-white/5 cursor-pointer"
+              style={{borderColor: 'rgba(var(--accent-rgb), 0.28)'}}
+            >
+              <ExternalLink className="w-3.5 h-3.5" style={{color: 'var(--accent-color)'}} />
+              {lang === 'en' ? 'Official website' : 'Site oficial'}
+            </button>
+            <button
+              type="button"
+              onClick={() => openOfficialLink('https://www.pad2ps.com.br/termos-de-uso')}
+              className="inline-flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-lg border bg-[#09090B]/90 text-[11px] text-[#FAFAFA] hover:bg-white/5 cursor-pointer"
+              style={{borderColor: 'rgba(var(--accent-rgb), 0.28)'}}
+            >
+              <ShieldCheck className="w-3.5 h-3.5" style={{color: 'var(--accent-color)'}} />
+              {lang === 'en' ? 'Terms & Privacy' : 'Termos & Privacidade'}
+            </button>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <a
+              href="mailto:contato@pad2ps.com.br"
+              onClick={(event) => {
+                event.preventDefault();
+                openOfficialLink('mailto:contato@pad2ps.com.br');
+              }}
+              className="inline-flex flex-1 min-w-[175px] items-center gap-1.5 px-2.5 py-2 rounded-lg border text-[11px] text-[#FAFAFA] hover:bg-white/5"
+              style={{borderColor: 'rgba(var(--accent-rgb), 0.28)'}}
+            >
+              <Mail className="w-3.5 h-3.5" style={{color: 'var(--accent-color)'}} />
+              contato@pad2ps.com.br
+            </a>
+            <button
+              type="button"
+              onClick={() => void copySupportEmail()}
+              className="inline-flex items-center gap-1.5 px-2.5 py-2 rounded-lg border bg-[#09090B]/90 text-[11px] text-[#FAFAFA] hover:bg-white/5 cursor-pointer"
+              style={{borderColor: 'rgba(var(--accent-rgb), 0.28)'}}
+            >
+              <Copy className="w-3.5 h-3.5" style={{color: 'var(--accent-color)'}} />
+              {copyStatus === 'copied'
+                ? (lang === 'en' ? 'Copied' : 'Copiado')
+                : copyStatus === 'failed'
+                  ? (lang === 'en' ? 'Copy failed' : 'Falha ao copiar')
+                  : (lang === 'en' ? 'Copy' : 'Copiar')}
+            </button>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-4 border-t pt-2 text-[11px]" style={{borderColor: 'rgba(var(--accent-rgb), 0.12)'}}>
+            <button type="button" onClick={() => openOfficialLink('https://github.com/RbtSwift/Pad2PS')} className="inline-flex items-center gap-1.5 text-[#A1A1AA] hover:text-white cursor-pointer">
+              <Github className="w-3.5 h-3.5" /> GitHub
+            </button>
+            <button type="button" onClick={() => openOfficialLink('https://github.com/RbtSwift/Pad2PS/issues')} className="text-[#A1A1AA] hover:text-white cursor-pointer">
+              {lang === 'en' ? 'GitHub Issues' : 'GitHub Issues'}
+            </button>
+            <button type="button" onClick={() => openOfficialLink('https://discord.gg/TWfKNvGkcj')} className="text-[#A1A1AA] hover:text-white cursor-pointer">
+              Discord
+            </button>
+          </div>
+        </div>
+
+        <div
           className="pt-2 border-t flex flex-col gap-2"
           style={{borderColor: 'rgba(var(--accent-rgb), 0.16)'}}
         >
           <div className="flex items-center justify-between text-xs">
             <span className="text-[#A1A1AA]">
-              {lang === 'en' ? 'App Version:' : 'Versão do App:'} <strong className="text-white">v1.0.5</strong>
+              {lang === 'en' ? 'App Version:' : 'Versão do App:'} <strong className="text-white">v1.0.6</strong>
             </span>
             <button
               type="button"
@@ -479,7 +588,7 @@ export function SettingsPanel({
                 setIsCheckingUpdate(true);
                 setUpdateMessage(null);
                 try {
-                  const res = await checkForAppUpdate('RbtSwift/Pad2PS', '1.0.5');
+                  const res = await checkForAppUpdate('RbtSwift/Pad2PS', '1.0.6');
                   if (res.hasUpdate && onOpenUpdateModal) {
                     onOpenUpdateModal(res);
                   } else if (res.error) {
@@ -491,8 +600,8 @@ export function SettingsPanel({
                   } else {
                     setUpdateMessage(
                       lang === 'en'
-                        ? 'Pad2PS is up to date (v1.0.5)!'
-                        : 'Você já está usando a versão mais recente (v1.0.5)!'
+                        ? 'Pad2PS is up to date (v1.0.6)!'
+                        : 'Você já está usando a versão mais recente (v1.0.6)!'
                     );
                   }
                 } catch {

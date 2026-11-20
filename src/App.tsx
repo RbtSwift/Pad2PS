@@ -510,7 +510,7 @@ function MainApp() {
 
   useEffect(() => {
     let isMounted = true;
-    checkForAppUpdate('RbtSwift/Pad2PS', '1.0.5')
+    checkForAppUpdate('RbtSwift/Pad2PS', '1.0.6')
       .then((res) => {
         if (isMounted && res.hasUpdate) {
           setUpdateInfo(res);
@@ -1189,7 +1189,24 @@ function MainApp() {
           <div className="grid grid-cols-2 gap-3 mb-5"><div><h3 className="text-sm font-semibold mb-2">Idioma</h3><div className="flex rounded-xl bg-black/30 p-1"><button onClick={() => setLang('pt')} className={`flex-1 py-2 rounded-lg text-sm ${lang === 'pt' ? 'bg-white/10 text-white' : 'text-zinc-400'}`}>PT</button><button onClick={() => setLang('en')} className={`flex-1 py-2 rounded-lg text-sm ${lang === 'en' ? 'bg-white/10 text-white' : 'text-zinc-400'}`}>EN</button></div></div><div><h3 className="text-sm font-semibold mb-2">{lang === 'en' ? 'Sound' : 'Som'}</h3><button type="button" onClick={() => setSoundEnabled(!soundEnabled)} className="w-full py-2 rounded-xl bg-black/30 flex items-center justify-center gap-2 text-sm">{soundEnabled ? <Volume2 className="w-4 h-4"/> : <VolumeX className="w-4 h-4"/>}{soundEnabled ? (lang === 'en' ? 'On' : 'Ativado') : (lang === 'en' ? 'Off' : 'Desativado')}</button></div></div>
           <label className="block text-sm font-semibold mb-2">{t.deadzoneLabel}: {deadzone.toFixed(2)}</label><input type="range" min="0" max="0.5" step="0.01" value={deadzone} onChange={(event) => setDeadzone(clampDeadzone(Number(event.target.value)))} className="w-full accent-[var(--accent-color)] mb-5"/>
           <button type="button" onClick={() => {setIsRemapMode(true);setRemapTargetPsIndex(null);setAndroidSettingsOpen(false);}} className="w-full text-left py-3 border-t border-white/10 text-sm">{lang === 'en' ? 'Button remapping' : 'Mapeamento de botões'} <span className="float-right text-zinc-400">›</span></button>
-          <div className="flex flex-wrap gap-4 pt-3 border-t border-white/10 text-xs"><a href="https://x.com/Pad2PS" target="_blank" rel="noreferrer" className="text-zinc-300">X (@Pad2PS)</a><a href="https://pacoca.net/@Pad2PS" target="_blank" rel="noreferrer" className="text-zinc-300">Paçoca</a><a href="https://discord.gg/TWfKNvGkcj" target="_blank" rel="noreferrer" className="text-zinc-300">Discord</a><a href="https://github.com/RbtSwift/Pad2PS-Launcher" target="_blank" rel="noreferrer" className="text-zinc-300">GitHub</a><a href={`mailto:contato@pad2ps.com.br`} className="text-zinc-300">contato@pad2ps.com.br</a><a href={contactHref} onClick={(e) => {e.preventDefault();setAndroidSettingsOpen(false);navigateTo(CONTACT_ROUTE);}} className="text-zinc-300">{lang === 'en' ? 'Contact & Support' : 'Contato & Suporte'}</a><a href={termsHref} onClick={(e) => {e.preventDefault();setAndroidSettingsOpen(false);navigateTo(TERMS_ROUTE);}} className="text-zinc-300">{t.footerTermsButton}</a></div>
+          <div className="pt-3 border-t border-white/10 space-y-3">
+            <div>
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-sm font-semibold">Pad2PS - {lang === 'en' ? 'Controller Guide' : 'Guia de Controle'}</p>
+                <span className="text-[10px] text-emerald-400">v1.0.6 · 100% local</span>
+              </div>
+              <p className="mt-1 text-[11px] leading-relaxed text-zinc-400">{lang === 'en' ? 'No telemetry or data collection. Your control and calibration data stays on this device.' : 'Sem telemetria ou coleta de dados. Seus dados de controle e calibração permanecem neste dispositivo.'}</p>
+            </div>
+            <div className="flex flex-wrap gap-4 text-xs">
+              <a href="https://www.pad2ps.com.br" target="_blank" rel="noreferrer" className="text-zinc-300">{lang === 'en' ? 'Official website' : 'Site oficial'}</a>
+              <a href="https://github.com/RbtSwift/Pad2PS" target="_blank" rel="noreferrer" className="text-zinc-300">GitHub</a>
+              <a href="https://github.com/RbtSwift/Pad2PS/issues" target="_blank" rel="noreferrer" className="text-zinc-300">GitHub Issues</a>
+              <a href="https://discord.gg/TWfKNvGkcj" target="_blank" rel="noreferrer" className="text-zinc-300">Discord</a>
+              <a href="mailto:contato@pad2ps.com.br" className="text-zinc-300">contato@pad2ps.com.br</a>
+              <a href={contactHref} onClick={(e) => {e.preventDefault();setAndroidSettingsOpen(false);navigateTo(CONTACT_ROUTE);}} className="text-zinc-300">{lang === 'en' ? 'Contact & Support' : 'Contato & Suporte'}</a>
+              <a href={termsHref} onClick={(e) => {e.preventDefault();setAndroidSettingsOpen(false);navigateTo(TERMS_ROUTE);}} className="text-zinc-300">{t.footerTermsButton}</a>
+            </div>
+          </div>
         </section></div>}
       </div>
     );

@@ -7,8 +7,8 @@ android {
         applicationId "io.github.rbtswift.Pad2PS"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 6
-        versionName "1.0.5"
+        versionCode 7
+        versionName "1.0.6"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
             ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
@@ -19,15 +19,22 @@ android {
             def keystoreFile = file('signing.keystore')
             if (keystoreFile.exists()) {
                 storeFile keystoreFile
-                storePassword System.getenv("ANDROID_KEYSTORE_PASSWORD") ?: "e_8RBjHvAV5o"
-                keyAlias System.getenv("ANDROID_KEY_ALIAS") ?: "my-key-alias"
-                keyPassword System.getenv("ANDROID_KEY_PASSWORD") ?: "e_8RBjHvAV5o"
+                storePassword System.getenv("ANDROID_KEYSTORE_PASSWORD")
+                keyAlias System.getenv("ANDROID_KEY_ALIAS")
+                keyPassword System.getenv("ANDROID_KEY_PASSWORD")
             }
         }
     }
     buildTypes {
         release {
-            signingConfig file('signing.keystore').exists() ? signingConfigs.release : signingConfigs.debug
+            signingConfig (
+                file('signing.keystore').exists() &&
+                System.getenv("ANDROID_KEYSTORE_PASSWORD") &&
+                System.getenv("ANDROID_KEY_ALIAS") &&
+                System.getenv("ANDROID_KEY_PASSWORD")
+                    ? signingConfigs.release
+                    : signingConfigs.debug
+            )
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
