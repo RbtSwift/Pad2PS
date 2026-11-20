@@ -34,3 +34,9 @@ Pad2PS/
 
 Desenvolvido por **Pad2PS (Ravi Rosa)** — `<pad2ps@eusolravi.com.br>`  
 Repositório oficial: [https://github.com/RbtSwift/Pad2PS](https://github.com/RbtSwift/Pad2PS)
+
+## Website oficial
+
+O domínio canônico do site é `https://www.pad2ps.com.br`; o domínio `pad2ps.vercel.app` continua disponível como endereço alternativo. As funções Vercel `/api/latest-release` consultam as releases mais recentes dos repositórios Pad2PS e Pad2PS Launcher e usam cache CDN por cinco minutos com revalidação em segundo plano.
+
+O formulário de contato usa uma função Vercel e Web3Forms. Configure `WEB3FORMS_ACCESS_KEY` somente nas variáveis de ambiente do projeto Vercel, com uma chave Web3Forms que encaminhe as mensagens para `contato@pad2ps.com.br`. Sem essa variável, o formulário informa que o envio não está configurado e mantém as opções de copiar o e-mail e abrir o aplicativo de e-mail.

@@ -1,21 +1,27 @@
-import {Download, Scale} from 'lucide-react';
+import {Download, Mail, MessageCircle, Scale} from 'lucide-react';
 import type {MouseEvent} from 'react';
-import type {Translations} from '../data/i18n';
+import type {AppLanguage, Translations} from '../data/i18n';
 import {openExternalUrl} from '../hooks/useIsInstalledApp';
 
 interface SiteFooterProps {
   t: Translations;
+  lang: AppLanguage;
   isApp: boolean;
   termsHref: string;
+  contactHref: string;
   onNavigateTerms: () => void;
+  onNavigateContact: () => void;
   onOpenInstall: () => void;
 }
 
 export function SiteFooter({
   t,
+  lang,
   isApp,
   termsHref,
+  contactHref,
   onNavigateTerms,
+  onNavigateContact,
   onOpenInstall,
 }: SiteFooterProps) {
   const handleExternalLinkClick = (
@@ -43,16 +49,30 @@ export function SiteFooter({
     onNavigateTerms();
   };
 
+  const handleContactLinkClick = (event: MouseEvent<HTMLAnchorElement>) => {
+    if (
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey ||
+      event.button !== 0
+    ) {
+      return;
+    }
+    event.preventDefault();
+    onNavigateContact();
+  };
+
   return (
     <div
       className="w-full pt-1.5 sm:pt-2 border-t flex justify-between items-center flex-wrap gap-x-3 gap-y-1.5 text-[10px] sm:text-[11px] text-[#A1A1AA]"
       style={{borderColor: 'rgba(var(--accent-rgb), 0.14)'}}
     >
-      <p className="text-center sm:text-left text-zinc-500 leading-snug hidden sm:block">
+      <p className="hidden sm:block sm:max-w-[34%] text-center sm:text-left text-zinc-500 leading-snug">
         {t.footerNotice}
       </p>
 
-      <div className="flex flex-wrap items-center justify-center sm:justify-end gap-1.5 shrink-0 w-full sm:w-auto">
+      <div className="min-w-0 flex flex-wrap items-center justify-center sm:justify-end gap-1.5 w-full sm:flex-1">
         {/* Official X (Twitter) Link */}
         <a
           href="https://x.com/Pad2PS"
@@ -136,6 +156,72 @@ export function SiteFooter({
             />
           </svg>
           <span className="font-mono text-[11px]">Paçoca (@Pad2PS)</span>
+        </a>
+
+        <a
+          href="https://discord.gg/TWfKNvGkcj"
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={(event) =>
+            handleExternalLinkClick(event, 'https://discord.gg/TWfKNvGkcj')
+          }
+          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#121216]/90 border text-[#A1A1AA] hover:text-white transition-all whitespace-nowrap"
+          style={{borderColor: 'rgba(var(--accent-rgb), 0.22)'}}
+        >
+          <MessageCircle className="h-3.5 w-3.5 text-indigo-300" />
+          <span className="font-mono text-[11px]">Discord</span>
+        </a>
+
+        <a
+          href="https://github.com/RbtSwift/Pad2PS"
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={(event) =>
+            handleExternalLinkClick(event, 'https://github.com/RbtSwift/Pad2PS')
+          }
+          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#121216]/90 border text-[#A1A1AA] hover:text-white transition-all whitespace-nowrap"
+          style={{borderColor: 'rgba(var(--accent-rgb), 0.22)'}}
+        >
+          <span className="font-mono text-[11px]">GitHub · Pad2PS</span>
+        </a>
+
+        <a
+          href="https://github.com/RbtSwift/Pad2PS-Launcher"
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={(event) =>
+            handleExternalLinkClick(
+              event,
+              'https://github.com/RbtSwift/Pad2PS-Launcher'
+            )
+          }
+          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#121216]/90 border text-[#A1A1AA] hover:text-white transition-all whitespace-nowrap"
+          style={{borderColor: 'rgba(var(--accent-rgb), 0.22)'}}
+        >
+          <span className="font-mono text-[11px]">GitHub · Launcher</span>
+        </a>
+
+        <a
+          href="mailto:contato@pad2ps.com.br"
+          onClick={(event) =>
+            handleExternalLinkClick(event, 'mailto:contato@pad2ps.com.br')
+          }
+          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#121216]/90 border text-[#A1A1AA] hover:text-white transition-all whitespace-nowrap"
+          style={{borderColor: 'rgba(var(--accent-rgb), 0.22)'}}
+        >
+          <Mail className="h-3.5 w-3.5" />
+          <span className="font-mono text-[11px]">contato@pad2ps.com.br</span>
+        </a>
+
+        <a
+          href={contactHref}
+          onClick={handleContactLinkClick}
+          aria-label={lang === 'en' ? 'Contact and support' : 'Contato e suporte'}
+          title={lang === 'en' ? 'Contact and support' : 'Contato e suporte'}
+          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#121216]/90 border text-[#A1A1AA] hover:text-white transition-all whitespace-nowrap"
+          style={{borderColor: 'rgba(var(--accent-rgb), 0.22)'}}
+        >
+          <span className="font-mono text-[11px]">{lang === 'en' ? 'Support' : 'Suporte'}</span>
         </a>
 
         {/* Single Unified "Instalar App" Button (Browser Mode Only) */}

@@ -23,17 +23,40 @@ export interface ReleaseAsset {
 
 export interface LatestRelease {
   tag_name: string;
+  name: string;
   html_url: string;
+  published_at: string | null;
+  body: string;
   assets: ReleaseAsset[];
+  isFallback?: boolean;
 }
 
 export async function fetchLatestRelease(repo: string): Promise<LatestRelease> {
-  const response = await fetch(`https://api.github.com/repos/${repo}/releases/latest`, {
-    headers: {Accept: 'application/vnd.github+json'},
-    cache: 'no-store',
-  });
-  if (!response.ok) throw new Error(`GitHub release API returned ${response.status}`);
-  return response.json() as Promise<LatestRelease>;
+  const project = RELEASE_PROJECTS.find((item) => item.repo === repo);
+  if (!project) {
+    throw new Error(`Unsupported release repository: ${repo}`);
+  }
+
+  try {
+    const response = await fetch(
+      `/api/latest-release?${new URLSearchParams({repo})}`,
+      {cache: 'no-store'}
+    );
+    if (!response.ok) {
+      throw new Error(`Latest release endpoint returned ${response.status}`);
+    }
+    return (await response.json()) as LatestRelease;
+  } catch {
+    return {
+      tag_name: '',
+      name: project.name,
+      html_url: project.fallback,
+      published_at: null,
+      body: '',
+      assets: [],
+      isFallback: true,
+    };
+  }
 }
 
 export function installerType(filename: string): string | null {

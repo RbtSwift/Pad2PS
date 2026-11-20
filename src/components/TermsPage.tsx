@@ -42,7 +42,7 @@ const LEGAL_CONTENT: Record<AppLanguage, LegalContent> = {
       {
         title: '1. Escopo e Produtos Abrangidos',
         bullets: [
-          'Pad2PS: Aplicação multiplataforma (disponível via Web em pad2ps.vercel.app, Desktop e Mobile) voltada para tradução visual de botões, consulta de layouts interativos de controles (PlayStation, Xbox, Nintendo, entre outros), diagnóstico de entradas e referência rápida de comandos.',
+          'Pad2PS: Aplicação multiplataforma (disponível via Web em www.pad2ps.com.br, Desktop e Mobile) voltada para tradução visual de botões, consulta de layouts interativos de controles (PlayStation, Xbox, Nintendo, entre outros), diagnóstico de entradas e referência rápida de comandos.',
           'Pad2PS Launcher: Aplicação multiplataforma (Desktop, Mobile e Web) destinada à organização, catalogação e inicialização unificada de bibliotecas de jogos, plataformas digitais, mídias físicas/virtuais e emuladores configurados localmente pelo usuário.',
         ],
         note: 'Nota: Expressões descritivas utilizadas em lojas de aplicativos ou mecanismos de busca, como “Guia de Controle”, têm caráter meramente informativo para auxiliar na descoberta do software, não alterando o nome oficial Pad2PS.',
@@ -68,9 +68,9 @@ const LEGAL_CONTENT: Record<AppLanguage, LegalContent> = {
           'O Pad2PS e o Pad2PS Launcher foram projetados com foco em privacidade e funcionamento local, em conformidade com a Lei Geral de Proteção de Dados (Lei nº 13.709/2018 — LGPD):',
         ],
         bullets: [
-          'Não Coleta de Dados Pessoais Sensíveis: Não exigimos cadastro obrigatório nem coletamos nome, CPF, localização precisa, contatos ou dados financeiros para o funcionamento básico das aplicações.',
+          'Dados do Formulário de Contato: O formulário opcional solicita nome, e-mail, assunto e mensagem para responder a solicitações de suporte e privacidade. Quando configurado, o envio é processado pelo Web3Forms e encaminhado a contato@pad2ps.com.br; esses dados não são necessários para usar as aplicações.',
           'Armazenamento Local: Preferências de interface, layouts selecionados, caminhos de pastas de jogos, capas e configurações de controles são armazenados localmente no próprio dispositivo do usuário (via armazenamento local do navegador ou arquivos de configuração do sistema).',
-          'Logs Técnicos e Serviços de Distribuição: Ao acessar o portal web (pad2ps.vercel.app) ou baixar os aplicativos por lojas oficiais (como a Google Play Store) e repositórios (como o GitHub), dados técnicos básicos e anônimos (como endereço IP temporário, modelo do dispositivo, versão do sistema operacional e relatórios de falha) podem ser processados pelos respectivos provedores de infraestrutura e distribuição para fins de segurança, entrega de atualizações e estabilidade.',
+          'Logs Técnicos e Serviços de Distribuição: Ao acessar o portal web (www.pad2ps.com.br) ou baixar os aplicativos por lojas oficiais (como a Google Play Store) e repositórios (como o GitHub), dados técnicos básicos e anônimos (como endereço IP temporário, modelo do dispositivo, versão do sistema operacional e relatórios de falha) podem ser processados pelos respectivos provedores de infraestrutura e distribuição para fins de segurança, entrega de atualizações e estabilidade.',
           'Permissões do Sistema: Eventuais permissões solicitadas pelo Pad2PS ou pelo Pad2PS Launcher (como acesso a diretórios locais para leitura de bibliotecas de jogos ou leitura de dispositivos de entrada/gamepads) são utilizadas exclusivamente para executar as funcionalidades principais do aplicativo no dispositivo, sem envio dessas informações para servidores externos.',
         ],
       },
@@ -89,8 +89,10 @@ const LEGAL_CONTENT: Record<AppLanguage, LegalContent> = {
         ],
         links: [
           {label: 'E-mail: contato@pad2ps.com.br', href: 'mailto:contato@pad2ps.com.br'},
-          {label: 'Portal Oficial: https://pad2ps.vercel.app', href: 'https://pad2ps.vercel.app'},
-          {label: 'Repositórios Oficiais: https://github.com/RbtSwift', href: 'https://github.com/RbtSwift'},
+          {label: 'Portal Oficial: https://www.pad2ps.com.br', href: 'https://www.pad2ps.com.br'},
+          {label: 'Discord: discord.gg/TWfKNvGkcj', href: 'https://discord.gg/TWfKNvGkcj'},
+          {label: 'Pad2PS: github.com/RbtSwift/Pad2PS', href: 'https://github.com/RbtSwift/Pad2PS'},
+          {label: 'Pad2PS Launcher: github.com/RbtSwift/Pad2PS-Launcher', href: 'https://github.com/RbtSwift/Pad2PS-Launcher'},
         ],
       },
     ],
@@ -104,7 +106,7 @@ const LEGAL_CONTENT: Record<AppLanguage, LegalContent> = {
       {
         title: '1. Scope and Covered Products',
         bullets: [
-          'Pad2PS: A cross-platform application (available on the Web at pad2ps.vercel.app, Desktop, and Mobile) for visual button translation, interactive controller layout reference (PlayStation, Xbox, Nintendo, and others), input diagnostics, and quick command reference.',
+          'Pad2PS: A cross-platform application (available on the Web at www.pad2ps.com.br, Desktop, and Mobile) for visual button translation, interactive controller layout reference (PlayStation, Xbox, Nintendo, and others), input diagnostics, and quick command reference.',
           'Pad2PS Launcher: A cross-platform application (Desktop, Mobile, and Web) for organizing, cataloging, and launching unified libraries of games, digital platforms, physical/virtual media, and emulators configured locally by the user.',
         ],
         note: 'Note: Descriptive terms used in app stores or search engines, such as “Controller Guide,” are informational only and help users discover the software; they do not change the official name Pad2PS.',
@@ -130,9 +132,9 @@ const LEGAL_CONTENT: Record<AppLanguage, LegalContent> = {
           'Pad2PS and Pad2PS Launcher are designed with privacy and local operation in mind, in accordance with Brazil’s General Data Protection Law (Law No. 13,709/2018 — LGPD):',
         ],
         bullets: [
-          'No Collection of Sensitive Personal Data: We do not require mandatory registration or collect names, Brazilian CPF numbers, precise location, contacts, or financial data for basic app functionality.',
+          'Contact Form Data: The optional contact form asks for your name, email, subject, and message to respond to support and privacy requests. When configured, submissions are processed by Web3Forms and forwarded to contato@pad2ps.com.br; this data is not required to use the applications.',
           'Local Storage: Interface preferences, selected layouts, game folder paths, artwork, and controller settings are stored locally on the user’s device (in browser storage or system configuration files).',
-          'Technical Logs and Distribution Services: When accessing the web portal (pad2ps.vercel.app) or downloading apps from official stores (such as Google Play Store) and repositories (such as GitHub), basic technical and anonymous data (such as temporary IP address, device model, operating system version, and crash reports) may be processed by the respective infrastructure and distribution providers for security, update delivery, and stability.',
+          'Technical Logs and Distribution Services: When accessing the web portal (www.pad2ps.com.br) or downloading apps from official stores (such as Google Play Store) and repositories (such as GitHub), basic technical and anonymous data (such as temporary IP address, device model, operating system version, and crash reports) may be processed by the respective infrastructure and distribution providers for security, update delivery, and stability.',
           'System Permissions: Any permissions requested by Pad2PS or Pad2PS Launcher (such as access to local directories to read game libraries or access to input devices/gamepads) are used solely to provide the app’s main features on the device, without sending this information to external servers.',
         ],
       },
@@ -151,8 +153,10 @@ const LEGAL_CONTENT: Record<AppLanguage, LegalContent> = {
         ],
         links: [
           {label: 'Email: contato@pad2ps.com.br', href: 'mailto:contato@pad2ps.com.br'},
-          {label: 'Official Portal: https://pad2ps.vercel.app', href: 'https://pad2ps.vercel.app'},
-          {label: 'Official Repositories: https://github.com/RbtSwift', href: 'https://github.com/RbtSwift'},
+          {label: 'Official Portal: https://www.pad2ps.com.br', href: 'https://www.pad2ps.com.br'},
+          {label: 'Discord: discord.gg/TWfKNvGkcj', href: 'https://discord.gg/TWfKNvGkcj'},
+          {label: 'Pad2PS: github.com/RbtSwift/Pad2PS', href: 'https://github.com/RbtSwift/Pad2PS'},
+          {label: 'Pad2PS Launcher: github.com/RbtSwift/Pad2PS-Launcher', href: 'https://github.com/RbtSwift/Pad2PS-Launcher'},
         ],
       },
     ],
@@ -402,6 +406,15 @@ export function TermsPage({
           <p className="text-zinc-500 leading-snug">{t.footerNotice}</p>
 
           <div className="flex flex-wrap items-center gap-2 shrink-0">
+            <a
+              href="mailto:contato@pad2ps.com.br"
+              onClick={(event) =>
+                handleExternalLinkClick(event, 'mailto:contato@pad2ps.com.br')
+              }
+              className="text-zinc-300 hover:text-white"
+            >
+              contato@pad2ps.com.br
+            </a>
             <a
               href="https://x.com/Pad2PS"
               target="_blank"

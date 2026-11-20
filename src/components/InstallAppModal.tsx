@@ -41,6 +41,16 @@ const COPY = {
   pt: {
     intro: 'Do tradutor visual ao seu console de sala: conheça os apps oficiais e escolha o download ideal.',
     recommended: 'RECOMENDADO PARA VOCÊ',
+    repository: 'Repositório oficial',
+    published: 'Publicado em',
+    releaseNotes: 'Notas de lançamento',
+    aptTitle: 'Instalar via APT (Debian, Ubuntu e derivados)',
+    aptInstructions:
+      'Adicione o repositório, atualize a lista de pacotes e instale o Pad2PS Launcher:',
+    aptCommand:
+      'echo "deb [trusted=yes] https://github.com/RbtSwift/Pad2PS-Launcher/releases/latest/download/ ./" | sudo tee /etc/apt/sources.list.d/pad2ps-launcher.list\nsudo apt update\nsudo apt install pad2ps-launcher',
+    portuguese: 'Português (Brasil)',
+    english: 'English',
     size: 'Tamanho',
     alternatives: 'Outras opções para',
     noBuild: 'Não há um instalador desta plataforma nesta release.',
@@ -71,6 +81,16 @@ const COPY = {
   en: {
     intro: 'From visual controller translation to your living-room console: explore the official apps and choose a download.',
     recommended: 'RECOMMENDED FOR YOU',
+    repository: 'Official repository',
+    published: 'Published',
+    releaseNotes: 'Release notes',
+    aptTitle: 'Install with APT (Debian, Ubuntu, and derivatives)',
+    aptInstructions:
+      'Add the repository, refresh package indexes, and install Pad2PS Launcher:',
+    aptCommand:
+      'echo "deb [trusted=yes] https://github.com/RbtSwift/Pad2PS-Launcher/releases/latest/download/ ./" | sudo tee /etc/apt/sources.list.d/pad2ps-launcher.list\nsudo apt update\nsudo apt install pad2ps-launcher',
+    portuguese: 'Português (Brasil)',
+    english: 'English',
     size: 'File size',
     alternatives: 'More options for',
     noBuild: 'There is no installer for this platform in this release.',
@@ -152,6 +172,88 @@ function releaseVersion(release: LatestRelease | null | undefined): string {
   return release.tag_name.startsWith('v') ? release.tag_name : `v${release.tag_name}`;
 }
 
+function formatPublishedDate(date: string, lang: AppLanguage): string {
+  const parsed = new Date(date);
+  if (Number.isNaN(parsed.getTime())) return '';
+  return new Intl.DateTimeFormat(lang === 'pt' ? 'pt-BR' : 'en-US', {
+    dateStyle: 'medium',
+  }).format(parsed);
+}
+
+function splitReleaseNotes(body: string): {
+  portuguese: string;
+  english: string;
+  bilingual: boolean;
+} {
+  const normalized = body.replace(/\r\n/g, '\n');
+  const headings = [
+    ...normalized.matchAll(
+      /^#{1,6}\s*(Portugu[eê]s(?:\s*\(Brasil\))?|PT-BR|English|EN)\s*$/gim
+    ),
+  ];
+  let portuguese = '';
+  let english = '';
+
+  for (let index = 0; index < headings.length; index += 1) {
+    const heading = headings[index];
+    const start = heading.index! + heading[0].length;
+    const end = headings[index + 1]?.index ?? normalized.length;
+    const label = heading[1].toLowerCase();
+    const content = normalized.slice(start, end).trim();
+    if (/^(english|en)$/.test(label)) english = content;
+    else portuguese = content;
+  }
+
+  if (portuguese && english) {
+    return {portuguese, english, bilingual: true};
+  }
+  return {portuguese: normalized.trim(), english: '', bilingual: false};
+}
+
+function ReleaseNotes({
+  release,
+  lang,
+}: {
+  release: LatestRelease | null | undefined;
+  lang: AppLanguage;
+}) {
+  const c = COPY[lang];
+  if (!release?.body?.trim() || release.isFallback) return null;
+  const notes = splitReleaseNotes(release.body);
+
+  return (
+    <details className="rounded-xl border border-white/[.07] bg-black/20 px-3 py-2.5">
+      <summary className="cursor-pointer text-xs font-semibold text-fuchsia-100">
+        {c.releaseNotes}
+      </summary>
+      {notes.bilingual ? (
+        <div className="mt-3 grid gap-4 sm:grid-cols-2">
+          <section>
+            <h4 className="mb-1 text-[10px] font-bold uppercase tracking-wide text-zinc-400">
+              {c.portuguese}
+            </h4>
+            <p className="whitespace-pre-wrap break-words text-xs leading-relaxed text-zinc-300">
+              {notes.portuguese}
+            </p>
+          </section>
+          <section>
+            <h4 className="mb-1 text-[10px] font-bold uppercase tracking-wide text-zinc-400">
+              {c.english}
+            </h4>
+            <p className="whitespace-pre-wrap break-words text-xs leading-relaxed text-zinc-300">
+              {notes.english}
+            </p>
+          </section>
+        </div>
+      ) : (
+        <p className="mt-3 whitespace-pre-wrap break-words text-xs leading-relaxed text-zinc-300">
+          {notes.portuguese}
+        </p>
+      )}
+    </details>
+  );
+}
+
 function downloadLabel(platform: Platform, type: string, lang: AppLanguage): string {
   const c = COPY[lang];
   const suffix = type.toLowerCase() === '.deb' ? ' (.deb)'
@@ -194,13 +296,29 @@ function ProjectDownloads({
   const primary = recommendedAsset(files, platform);
   const alternatives = files.filter((file) => file !== primary);
   const fallback = release?.html_url ?? project.fallback;
+  const aptInstructions =
+    project.id === 'launcher' && platform === 'linux' ? (
+      <details className="rounded-xl border border-white/[.07] bg-black/20 px-3 py-2.5">
+        <summary className="cursor-pointer text-xs font-semibold text-zinc-200">
+          {c.aptTitle}
+        </summary>
+        <p className="mt-2 text-xs leading-relaxed text-zinc-400">
+          {c.aptInstructions}
+        </p>
+        <pre className="mt-2 overflow-x-auto rounded-lg bg-black/40 p-3 text-[10px] leading-relaxed text-zinc-200">
+          {c.aptCommand}
+        </pre>
+      </details>
+    ) : null;
 
   if (loading && !release) {
     return <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-black/30 p-4 text-xs text-zinc-400"><LoaderCircle className="h-4 w-4 animate-spin text-fuchsia-300"/>{c.loadingRelease}</div>;
   }
 
   if (!primary) {
-    return <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/10 bg-black/30 p-4"><p className="text-xs text-zinc-300">{release ? c.noBuild : c.apiFallback}</p><a href={fallback} target="_blank" rel="noopener noreferrer" className="inline-flex shrink-0 items-center gap-2 rounded-lg border border-fuchsia-300/40 bg-fuchsia-400/10 px-3 py-2 text-xs font-semibold text-fuchsia-100 hover:bg-fuchsia-400/20"><ExternalLink className="h-3.5 w-3.5"/>{c.fallback}</a></div>;
+    const fallbackMessage =
+      !release || release.isFallback ? c.apiFallback : c.noBuild;
+    return <div className="space-y-3"><div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/10 bg-black/30 p-4"><p className="text-xs text-zinc-300">{fallbackMessage}</p><a href={fallback} target="_blank" rel="noopener noreferrer" className="inline-flex shrink-0 items-center gap-2 rounded-lg border border-fuchsia-300/40 bg-fuchsia-400/10 px-3 py-2 text-xs font-semibold text-fuchsia-100 hover:bg-fuchsia-400/20"><ExternalLink className="h-3.5 w-3.5"/>{c.fallback}</a></div>{aptInstructions}</div>;
   }
 
   return <div className="space-y-3">
@@ -211,6 +329,7 @@ function ProjectDownloads({
 
     {alternatives.length > 0 && <div className="space-y-2"><p className="text-[10px] font-bold uppercase tracking-[.16em] text-zinc-500">{c.alternatives} {platform === 'linux' ? 'Linux' : platform === 'windows' ? 'Windows' : 'Android'}</p><div className="grid gap-2 sm:grid-cols-2">{alternatives.map(({asset, type}) => <a key={asset.browser_download_url} href={asset.browser_download_url} className="flex min-w-0 items-center justify-between gap-3 rounded-xl border border-white/10 bg-black/25 px-3 py-3 text-xs text-zinc-200 transition hover:border-fuchsia-300/40 hover:bg-fuchsia-500/[.07]"><span className="flex min-w-0 items-center gap-2.5"><span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-fuchsia-300/10 text-fuchsia-200"><DownloadIcon type={type}/></span><span className="min-w-0"><span className="block text-[11px] font-semibold leading-snug">{installerLabel(type, lang)}</span><span className="mt-0.5 block text-[10px] text-zinc-500">{formatSize(asset.size, lang)}</span></span></span><ArrowDownToLine className="h-4 w-4 shrink-0 text-fuchsia-300"/></a>)}</div></div>}
     <a href={fallback} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-[11px] text-zinc-500 transition hover:text-fuchsia-200"><ExternalLink className="h-3 w-3"/>{c.fallback}</a>
+    {aptInstructions}
   </div>;
 }
 
@@ -295,8 +414,11 @@ export function InstallAppModal({isOpen, onClose, isApp, lang, t}: InstallAppMod
             <div className="relative grid gap-4 lg:grid-cols-[1.1fr_.9fr] lg:gap-6">
               <div className="space-y-3">
                   <div className="flex flex-wrap items-center gap-2"><span className={`flex h-10 w-10 items-center justify-center rounded-xl border ${featured ? 'border-pink-200/30 bg-fuchsia-400/15 text-pink-200' : 'border-white/10 bg-white/[.04] text-zinc-300'}`}><ProjectIcon className="h-5 w-5"/></span><div><h3 className="text-base font-extrabold text-white sm:text-lg">{project.name}</h3><p className="text-[10px] uppercase tracking-[.15em] text-zinc-500">{featured ? c.sofa : lang === 'pt' ? 'TRADUTOR VISUAL' : 'LIVE TRANSLATOR'}</p></div><span className="ml-auto rounded-full border border-fuchsia-200/20 bg-black/20 px-2.5 py-1 font-mono text-[10px] font-semibold text-fuchsia-100">{releaseVersion(release) || (loading ? c.loading : 'GitHub Releases')}</span></div>
+                <a href={`https://github.com/${project.repo}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-fuchsia-200 underline decoration-fuchsia-300/30 underline-offset-4 hover:text-white"><ExternalLink className="h-3 w-3"/>{c.repository}: {project.repo}</a>
+                {release?.published_at && <p className="text-[11px] text-zinc-500">{c.published}: <time dateTime={release.published_at}>{formatPublishedDate(release.published_at, lang)}</time></p>}
                 <p className="text-xs leading-relaxed text-zinc-300 sm:text-sm">{featured ? (lang === 'pt' ? 'Transforme o PC em uma central de jogos estilo console, perfeita para jogar da cama ou do sofá.' : 'Turn your PC into a console-style game hub, made for playing from your bed or couch.') : c.pad2ps}</p>
                 {featured ? <LauncherHighlights lang={lang}/> : <div className="flex flex-wrap gap-2 text-[10px] text-zinc-400"><span className="rounded-full border border-white/10 bg-black/20 px-2.5 py-1.5">{lang === 'pt' ? 'Overlay em tempo real' : 'Live overlay'}</span><span className="rounded-full border border-white/10 bg-black/20 px-2.5 py-1.5">{lang === 'pt' ? 'Diagnóstico completo' : 'Full diagnostics'}</span><span className="rounded-full border border-white/10 bg-black/20 px-2.5 py-1.5">{lang === 'pt' ? 'Ícones PlayStation' : 'PlayStation icons'}</span></div>}
+                <ReleaseNotes release={release} lang={lang}/>
               </div>
               <div className={`rounded-2xl border p-3.5 sm:p-4 ${featured ? 'border-fuchsia-200/15 bg-black/25' : 'border-white/[.07] bg-black/20'}`}>
                 <div className="mb-3 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[.15em] text-zinc-400"><PlatformIcon className="h-3.5 w-3.5 text-pink-300"/>{platformNames[platform]} · {c.recommended}</div>

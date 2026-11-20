@@ -22,6 +22,7 @@ import {
 import {useEffect, useRef, useState} from 'react';
 import {ComboHistoryBar} from './components/ComboHistoryBar';
 import {ComboLibraryDrawer} from './components/ComboLibraryDrawer';
+import {ContactPage} from './components/ContactPage';
 import {ControllerNameEditor} from './components/ControllerNameEditor';
 import {DiagnosticsModal} from './components/DiagnosticsModal';
 import {DualShock2SVG} from './components/DualShock2SVG';
@@ -86,10 +87,16 @@ const CUSTOM_COMBOS_STORAGE_KEY = 'ps2-pad-guide:custom-combos';
 const LANG_STORAGE_KEY = 'pad2ps:lang';
 const REMAP_STORAGE_KEY = 'pad2ps:button-remap';
 const TERMS_ROUTE = '/termos-de-uso';
+const CONTACT_ROUTE = '/contato-e-suporte';
 
 function isTermsRoute(pathname: string): boolean {
   const normalized = pathname.replace(/\/+$/, '') || '/';
   return normalized === TERMS_ROUTE;
+}
+
+function isContactRoute(pathname: string): boolean {
+  const normalized = pathname.replace(/\/+$/, '') || '/';
+  return normalized === CONTACT_ROUTE;
 }
 
 function getCurrentPathname(): string {
@@ -551,6 +558,8 @@ function MainApp() {
     };
   }, [isAndroidMobile]);
   const isTermsPage = isTermsRoute(currentPath);
+  const isContactPage = isContactRoute(currentPath);
+  const isInfoPage = isTermsPage || isContactPage;
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -567,18 +576,36 @@ function MainApp() {
     if (typeof document === 'undefined') {
       return;
     }
+    const canonicalPath = currentPath.replace(/\/+$/, '') || '/';
+    const canonicalUrl = new URL(
+      canonicalPath,
+      'https://www.pad2ps.com.br'
+    ).toString();
+    const canonicalLink =
+      document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
+    const openGraphUrl = document.querySelector<HTMLMetaElement>(
+      'meta[property="og:url"]'
+    );
+    if (canonicalLink) canonicalLink.href = canonicalUrl;
+    if (openGraphUrl) openGraphUrl.content = canonicalUrl;
+
     if (isTermsPage) {
       document.title =
         lang === 'en'
           ? 'Terms of Use and Privacy Policy — Pad2PS Ecosystem'
           : 'Termos de Uso e Política de Privacidade — Ecossistema Pad2PS';
+    } else if (isContactPage) {
+      document.title =
+        lang === 'en'
+          ? 'Contact & Support — Pad2PS'
+          : 'Contato & Suporte — Pad2PS';
     } else {
       document.title =
         lang === 'en'
           ? 'Pad2PS — Visual X-Input to PlayStation Translator'
           : 'Pad2PS — Tradutor Visual X-Input para PlayStation';
     }
-  }, [isTermsPage, lang]);
+  }, [currentPath, isTermsPage, isContactPage, lang]);
 
   const navigateTo = (targetPath: string) => {
     if (typeof window === 'undefined') {
@@ -1098,8 +1125,9 @@ function MainApp() {
 
   const homeHref = buildRouteHref('/');
   const termsHref = buildRouteHref(TERMS_ROUTE);
+  const contactHref = buildRouteHref(CONTACT_ROUTE);
 
-  if (isAndroidMobile && !isTermsPage) {
+  if (isAndroidMobile && !isInfoPage) {
     const statusText = showActivatedStatus
       ? (lang === 'en' ? 'Connected' : 'Conectado')
       : (lang === 'en' ? 'Waiting for controller' : 'Aguardando controle');
@@ -1161,9 +1189,23 @@ function MainApp() {
           <div className="grid grid-cols-2 gap-3 mb-5"><div><h3 className="text-sm font-semibold mb-2">Idioma</h3><div className="flex rounded-xl bg-black/30 p-1"><button onClick={() => setLang('pt')} className={`flex-1 py-2 rounded-lg text-sm ${lang === 'pt' ? 'bg-white/10 text-white' : 'text-zinc-400'}`}>PT</button><button onClick={() => setLang('en')} className={`flex-1 py-2 rounded-lg text-sm ${lang === 'en' ? 'bg-white/10 text-white' : 'text-zinc-400'}`}>EN</button></div></div><div><h3 className="text-sm font-semibold mb-2">{lang === 'en' ? 'Sound' : 'Som'}</h3><button type="button" onClick={() => setSoundEnabled(!soundEnabled)} className="w-full py-2 rounded-xl bg-black/30 flex items-center justify-center gap-2 text-sm">{soundEnabled ? <Volume2 className="w-4 h-4"/> : <VolumeX className="w-4 h-4"/>}{soundEnabled ? (lang === 'en' ? 'On' : 'Ativado') : (lang === 'en' ? 'Off' : 'Desativado')}</button></div></div>
           <label className="block text-sm font-semibold mb-2">{t.deadzoneLabel}: {deadzone.toFixed(2)}</label><input type="range" min="0" max="0.5" step="0.01" value={deadzone} onChange={(event) => setDeadzone(clampDeadzone(Number(event.target.value)))} className="w-full accent-[var(--accent-color)] mb-5"/>
           <button type="button" onClick={() => {setIsRemapMode(true);setRemapTargetPsIndex(null);setAndroidSettingsOpen(false);}} className="w-full text-left py-3 border-t border-white/10 text-sm">{lang === 'en' ? 'Button remapping' : 'Mapeamento de botões'} <span className="float-right text-zinc-400">›</span></button>
-          <div className="flex gap-4 pt-3 border-t border-white/10 text-xs"><a href="https://x.com/Pad2PS" target="_blank" rel="noreferrer" className="text-zinc-300">X (@Pad2PS)</a><a href="https://pacoca.net/@Pad2PS" target="_blank" rel="noreferrer" className="text-zinc-300">Paçoca</a><a href={termsHref} onClick={(e) => {e.preventDefault();setAndroidSettingsOpen(false);navigateTo(TERMS_ROUTE);}} className="text-zinc-300">{t.footerTermsButton}</a></div>
+          <div className="flex flex-wrap gap-4 pt-3 border-t border-white/10 text-xs"><a href="https://x.com/Pad2PS" target="_blank" rel="noreferrer" className="text-zinc-300">X (@Pad2PS)</a><a href="https://pacoca.net/@Pad2PS" target="_blank" rel="noreferrer" className="text-zinc-300">Paçoca</a><a href="https://discord.gg/TWfKNvGkcj" target="_blank" rel="noreferrer" className="text-zinc-300">Discord</a><a href="https://github.com/RbtSwift/Pad2PS-Launcher" target="_blank" rel="noreferrer" className="text-zinc-300">GitHub</a><a href={`mailto:contato@pad2ps.com.br`} className="text-zinc-300">contato@pad2ps.com.br</a><a href={contactHref} onClick={(e) => {e.preventDefault();setAndroidSettingsOpen(false);navigateTo(CONTACT_ROUTE);}} className="text-zinc-300">{lang === 'en' ? 'Contact & Support' : 'Contato & Suporte'}</a><a href={termsHref} onClick={(e) => {e.preventDefault();setAndroidSettingsOpen(false);navigateTo(TERMS_ROUTE);}} className="text-zinc-300">{t.footerTermsButton}</a></div>
         </section></div>}
       </div>
+    );
+  }
+
+  if (isContactPage) {
+    return (
+      <>
+        <ContactPage
+          lang={lang}
+          isApp={isApp}
+          homeHref={homeHref}
+          onNavigateHome={() => navigateTo('/')}
+        />
+        <OfflineIndicator t={t} />
+      </>
     );
   }
 
@@ -1899,9 +1941,12 @@ function MainApp() {
             {!isPipActive && (
               <SiteFooter
                 t={t}
+                lang={lang}
                 isApp={isApp}
                 termsHref={termsHref}
+                contactHref={contactHref}
                 onNavigateTerms={() => navigateTo(TERMS_ROUTE)}
+                onNavigateContact={() => navigateTo(CONTACT_ROUTE)}
                 onOpenInstall={() => setIsInstallModalOpen(true)}
               />
             )}
