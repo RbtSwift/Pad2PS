@@ -1,13 +1,14 @@
 Origin: RbtSwift Pad2PS
 Label: RbtSwift Pad2PS
 Suite: stable
-Version: 1.0.5
+Version: 1.0.6
 Codename: stable
-Date: Fri, 20 Nov 2026 01:04:49 +0000
+Date: Fri, 20 Nov 2026 07:03:14 +0000
 Architectures: amd64
 Components: main
 Description: Official Pad2PS APT repository
+Changelogs: https://rbtswift.github.io/Pad2PS/apt/changelogs/@CHANGEPATH@
 Acquire-By-Hash: no
 SHA256:
- 16a92c57b28575db7dfba1e2c45e884587da3c86ea9dbd49063b6d792eafa650 833 Packages
- 4f3a081dd1782511f00980f334f4510e73c4346cee27f9e5ad731e2bfb35aed8 578 Packages.gz
+ 0b886b761855b27f3b8e3d9de65fa88908b22104fe04080a02dcdd6a6a4f87e3 833 Packages
+ f6bd9ad7ac51aeaa2a2dbecdb7ef3e55944e3d4d0daa309e063efa04d59a5388 579 Packages.gz

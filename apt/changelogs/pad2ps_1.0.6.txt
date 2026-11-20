@@ -1,0 +1,13 @@
+pad2ps (1.0.6) stable; urgency=medium
+
+  * Adiciona uma seção integrada "Sobre & Legal" ao painel de ajustes, com privacidade, termos, suporte e comunidade.
+  * Mantém os atalhos oficiais para site, e-mail, GitHub Issues, Discord e redes sociais no visual nativo do app.
+  * Publica changelogs no formato Debian no repositório APT para aparecer no Atualizador de Programas do Zorin OS e Ubuntu.
+  * Atualiza o Desktop e o Android para a versão 1.0.6.
+  * Redesenha a interface Android para smartphones e tablets, com layout em uma coluna no retrato e duas colunas em telas largas ou no modo paisagem.
+  * Organiza o cabeçalho, o seletor de layouts, o diagrama interativo do controle, a telemetria e os atalhos para referência e métricas.
+  * Adiciona navegação inferior que respeita as áreas seguras do Android e reúne tema, idioma, som e deadzone em uma gaveta de configurações.
+  * Remove o Picture-in-Picture do Android; o recurso continua disponível no Desktop.
+  * Atualiza a identificação offline de controles com o banco SDL GameControllerDB integrado ao app.
+
+ -- Pad2PS (Ravi Rosa) <contato@pad2ps.com.br>  Fri, 20 Nov 2026 07:03:13 +0000

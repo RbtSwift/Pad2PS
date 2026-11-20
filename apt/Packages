@@ -1,15 +1,15 @@
 Package: pad2ps
-Version: 1.0.5
+Version: 1.0.6
 Architecture: amd64
 Maintainer: Pad2PS (Ravi Rosa) <pad2ps@eusolravi.com.br>
-Installed-Size: 281506
+Installed-Size: 281529
 Depends: libgtk-3-0, libnotify4, libnss3, libxss1, libxtst6, xdg-utils, libatspi2.0-0, libuuid1, libsecret-1-0
 Recommends: libappindicator3-1
-Filename: Pad2PS-1.0.5-amd64.deb
-Size: 101807748
-MD5sum: 8715c8afdce5234f18f7a1a0e7dbcf5a
-SHA1: 0337d1a5b10d9d7f06fb1cde24f5cff337d67746
-SHA256: e3efba6a8f239c1c4e9dcf2d1c054a42e514430ea93ed5f850b801fcb27b2fb8
+Filename: Pad2PS-1.0.6-amd64.deb
+Size: 101799880
+MD5sum: b7df05659a3a6cc634ae8b24ac821b0b
+SHA1: ff7f695d2fa7052b3e8dace644df50ac709a6e40
+SHA256: cddb743b3ae9c3a2884bad7237d8ae19ddca2537c14c0b09d83711bdba4d93d1
 Section: default
 Priority: optional
 Homepage: https://github.com/RbtSwift/Pad2PS
