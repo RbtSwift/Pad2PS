@@ -503,7 +503,7 @@ function MainApp() {
 
   useEffect(() => {
     let isMounted = true;
-    checkForAppUpdate('RbtSwift/Pad2PS', '1.0.4')
+    checkForAppUpdate('RbtSwift/Pad2PS', '1.0.5')
       .then((res) => {
         if (isMounted && res.hasUpdate) {
           setUpdateInfo(res);

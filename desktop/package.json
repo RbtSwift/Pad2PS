@@ -1,7 +1,7 @@
 {
   "name": "pad2ps",
   "private": true,
-  "version": "1.0.4",
+  "version": "1.0.5",
   "main": "electron-main.cjs",
   "description": "Tradutor visual e diagnosticador avançado de controles (PS1, PS2, PS3, PSP, Xbox e Switch)",
   "author": {

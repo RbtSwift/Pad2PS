@@ -470,7 +470,7 @@ export function SettingsPanel({
         >
           <div className="flex items-center justify-between text-xs">
             <span className="text-[#A1A1AA]">
-              {lang === 'en' ? 'App Version:' : 'Versão do App:'} <strong className="text-white">v1.0.4</strong>
+              {lang === 'en' ? 'App Version:' : 'Versão do App:'} <strong className="text-white">v1.0.5</strong>
             </span>
             <button
               type="button"
@@ -479,7 +479,7 @@ export function SettingsPanel({
                 setIsCheckingUpdate(true);
                 setUpdateMessage(null);
                 try {
-                  const res = await checkForAppUpdate('RbtSwift/Pad2PS', '1.0.4');
+                  const res = await checkForAppUpdate('RbtSwift/Pad2PS', '1.0.5');
                   if (res.hasUpdate && onOpenUpdateModal) {
                     onOpenUpdateModal(res);
                   } else if (res.error) {
@@ -491,8 +491,8 @@ export function SettingsPanel({
                   } else {
                     setUpdateMessage(
                       lang === 'en'
-                        ? 'Pad2PS is up to date (v1.0.4)!'
-                        : 'Você já está usando a versão mais recente (v1.0.4)!'
+                        ? 'Pad2PS is up to date (v1.0.5)!'
+                        : 'Você já está usando a versão mais recente (v1.0.5)!'
                     );
                   }
                 } catch {
