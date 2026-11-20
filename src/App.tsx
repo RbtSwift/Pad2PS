@@ -12,6 +12,8 @@ import {
   Minimize2,
   PictureInPicture2,
   RotateCcw,
+  Settings2,
+  Home,
   SlidersHorizontal,
   Volume2,
   VolumeX,
@@ -71,6 +73,7 @@ import {
   type BatteryDeviceInfo,
   fetchControllerBatteries,
   isElectronDesktop,
+  isAndroidCapacitor,
   setNativePiPAlwaysOnTop,
 } from './utils/nativeBridge';
 
@@ -530,7 +533,23 @@ function MainApp() {
 
   const t = getTranslations(lang);
   const isApp = useIsInstalledApp();
-  const isPipActive = Boolean((pipWindow && !pipWindow.closed) || nativePiPActive);
+  const isAndroidMobile = isAndroidCapacitor();
+  const isPipActive = !isAndroidMobile && Boolean((pipWindow && !pipWindow.closed) || nativePiPActive);
+  const [androidPanel, setAndroidPanel] = useState<'home' | 'reference' | 'metrics'>('home');
+  const [androidWide, setAndroidWide] = useState(false);
+  const [androidSettingsOpen, setAndroidSettingsOpen] = useState(false);
+
+  useEffect(() => {
+    if (!isAndroidMobile) return;
+    const update = () => setAndroidWide(window.innerWidth > window.innerHeight || window.innerWidth >= 760);
+    update();
+    window.addEventListener('resize', update);
+    window.addEventListener('orientationchange', update);
+    return () => {
+      window.removeEventListener('resize', update);
+      window.removeEventListener('orientationchange', update);
+    };
+  }, [isAndroidMobile]);
   const isTermsPage = isTermsRoute(currentPath);
 
   useEffect(() => {
@@ -710,6 +729,7 @@ function MainApp() {
   }
 
   useEffect(() => {
+    if (isAndroidMobile) return;
     if (typeof BroadcastChannel === 'undefined') {
       return;
     }
@@ -737,7 +757,7 @@ function MainApp() {
     } catch {
       return undefined;
     }
-  }, []);
+  }, [isAndroidMobile]);
 
   useEffect(() => {
     if (!nativePiPActive || !pipChannelRef.current || !latestPiPStateRef.current) {
@@ -996,6 +1016,7 @@ function MainApp() {
   };
 
   const handleTogglePiP = async () => {
+    if (isAndroidMobile) return;
     if (isElectronDesktop()) {
       const next = !nativePiPActive;
       const ok = await setNativePiPAlwaysOnTop(next);
@@ -1077,6 +1098,74 @@ function MainApp() {
 
   const homeHref = buildRouteHref('/');
   const termsHref = buildRouteHref(TERMS_ROUTE);
+
+  if (isAndroidMobile && !isTermsPage) {
+    const statusText = showActivatedStatus
+      ? (lang === 'en' ? 'Connected' : 'Conectado')
+      : (lang === 'en' ? 'Waiting for controller' : 'Aguardando controle');
+    const battery = batteryDevices[0];
+    const layouts = LAYOUT_OPTIONS;
+    const chooseLayout = (layout: ConsoleLayout) => {
+      setAutoControllerLayout(false);
+      setConsoleLayout(layout);
+    };
+
+    return (
+      <div className="h-dvh w-full overflow-hidden bg-[#09090D] text-[#FAFAFA] flex flex-col" style={{paddingTop: 'env(safe-area-inset-top)'}}>
+        <header className="shrink-0 flex items-center justify-between px-4 py-2 border-b border-white/10 bg-[#101015]/95">
+          <div className="flex items-center gap-2"><Pad2PSIcon className="w-9 h-9"/><span className="text-xl font-black tracking-tight">Pad<span style={{color:'var(--accent-color)'}}>2</span>PS</span></div>
+          <div className="flex gap-2">
+            <button type="button" onClick={() => { const idx = layouts.indexOf(consoleLayout); chooseLayout(layouts[(idx + 1) % layouts.length]); }} className="h-10 px-3 rounded-xl border border-white/10 bg-white/5 flex items-center gap-2 text-sm"><ArrowLeftRight className="w-4 h-4"/><span>{CONSOLE_META[consoleLayout].shortLabel}</span></button>
+            <button type="button" aria-label={lang === 'en' ? 'Settings' : 'Configurações'} onClick={() => setAndroidSettingsOpen(true)} className="h-10 w-10 rounded-xl border border-white/10 bg-white/5 grid place-items-center"><Settings2 className="w-5 h-5"/></button>
+          </div>
+        </header>
+
+        <main className={`mx-auto w-full max-w-[1400px] flex-1 min-h-0 overflow-y-auto p-3 sm:p-4 ${androidWide ? 'grid grid-cols-2 gap-3' : 'flex flex-col gap-3'}`}>
+          {androidPanel === 'home' ? <>
+            <section className="rounded-3xl border border-white/10 bg-[#121218] p-3 sm:p-4 flex flex-col min-h-[320px] sm:min-h-0" style={{boxShadow:'0 10px 40px rgba(0,0,0,.25)'}}>
+              <div className="flex items-center justify-between gap-2 px-1 pb-3">
+                <div className="min-w-0"><h1 className="font-bold text-base sm:text-lg truncate">{effectiveControllerName || (lang === 'en' ? 'Game controller' : 'Controle')}</h1><p className={`text-xs ${showActivatedStatus ? 'text-emerald-400' : 'text-zinc-400'}`}>{statusText}</p></div>
+                <div className="flex items-center gap-2 text-xs text-zinc-300">{battery && <><BatteryMedium className="w-4 h-4 text-emerald-400"/>{battery.percentage}%</>}</div>
+              </div>
+              <div className="flex gap-1.5 overflow-x-auto pb-2 shrink-0" role="tablist" aria-label={lang === 'en' ? 'Controller layout' : 'Layout do controle'}>
+                {layouts.map((layout) => <button key={layout} type="button" role="tab" aria-selected={!autoControllerLayout && consoleLayout === layout} onClick={() => chooseLayout(layout)} className={`px-3 py-1.5 rounded-full border whitespace-nowrap text-xs font-semibold ${!autoControllerLayout && consoleLayout === layout ? 'text-white border-[var(--accent-color)] bg-[rgba(var(--accent-rgb),.18)]' : 'border-white/10 text-zinc-400 bg-black/20'}`}>{CONSOLE_META[layout].shortLabel}</button>)}
+              </div>
+              <div className="flex-1 min-h-[220px] sm:min-h-[280px] flex items-center justify-center overflow-hidden py-2"><DualShock2SVG layout={consoleLayout} pressedButtons={pressedButtons} l2Value={l2Value} r2Value={r2Value} leftStick={leftStick} rightStick={rightStick} isCompact={false} isRemapMode={isRemapMode} remapTargetIndex={remapTargetPsIndex} onSelectRemapTarget={handleSelectRemapTarget} onButtonDown={(idx) => pressSimulated(idx)} onButtonUp={(idx) => releaseSimulated(idx)}/></div>
+              {isRemapMode ? <div className="flex items-center justify-between gap-2 rounded-xl bg-[rgba(var(--accent-rgb),.12)] px-3 py-2 text-xs"><span>{lang === 'en' ? 'Tap a controller button to remap it.' : 'Toque em um botão do controle para remapeá-lo.'}</span><button type="button" onClick={() => {setIsRemapMode(false);setRemapTargetPsIndex(null);}} className="font-bold" style={{color:'var(--accent-color)'}}>{lang === 'en' ? 'Done' : 'Concluir'}</button></div> : <p className="text-center text-[11px] text-zinc-500">{lang === 'en' ? 'Touch the diagram to test buttons' : 'Toque no diagrama para testar os botões'}</p>}
+            </section>
+            <div className="flex flex-col gap-3 min-h-0">
+              <section className="rounded-2xl border border-white/10 bg-[#121218] p-3">
+                <div className="flex items-center justify-between"><span className="text-xs text-zinc-400">{lang === 'en' ? 'Active mapping' : 'Tradução ativa'}</span><span className="text-sm font-semibold" style={{color:'var(--accent-color)'}}>X-Input → {CONSOLE_META[consoleLayout].hardwareName}</span></div>
+                <div className="grid grid-cols-2 gap-2 mt-3 text-xs font-mono"><span className="text-zinc-400">L2 / LT <b className="text-white">{l2Value.toFixed(2)}</b></span><span className="text-right text-zinc-400">R2 / RT <b className="text-white">{r2Value.toFixed(2)}</b></span><span className="text-zinc-400">Eixo L <b className="text-white">{leftStick.x.toFixed(2)}, {leftStick.y.toFixed(2)}</b></span><span className="text-right text-zinc-400">Eixo R <b className="text-white">{rightStick.x.toFixed(2)}, {rightStick.y.toFixed(2)}</b></span></div>
+                {lastPressed && <div className="mt-2 pt-2 border-t border-white/10 text-xs text-zinc-300">{lang === 'en' ? 'Last button' : 'Último botão'}: <b style={{color:'var(--accent-color)'}}>{getConsoleButtonDisplayName(lastPressed, consoleLayout, lang)}</b></div>}
+              </section>
+              <div className="grid grid-cols-2 gap-3">
+                <button type="button" onClick={() => setAndroidPanel('reference')} className="min-h-28 rounded-2xl border border-white/10 bg-[#121218] p-4 text-left hover:border-[var(--accent-color)]"><BookOpen className="w-6 h-6 mb-3" style={{color:'var(--accent-color)'}}/><b className="block text-sm">{t.quickRefTitle}</b><span className="text-xs text-zinc-400">{lang === 'en' ? 'Button mapping' : 'Mapa de botões'}</span></button>
+                <button type="button" onClick={() => setAndroidPanel('metrics')} className="min-h-28 rounded-2xl border border-white/10 bg-[#121218] p-4 text-left hover:border-[var(--accent-color)]"><Activity className="w-6 h-6 mb-3" style={{color:'var(--accent-color)'}}/><b className="block text-sm">{lang === 'en' ? 'History & metrics' : 'Histórico & métricas'}</b><span className="text-xs text-zinc-400">{sessionStats.totalClicks} {t.statsClicks} · {sessionStats.apm} APM</span></button>
+              </div>
+            </div>
+          </> : <section className="rounded-3xl border border-white/10 bg-[#121218] p-3 sm:p-4 min-h-0 overflow-hidden flex flex-col">
+            <div className="flex items-center gap-3 pb-3"><button type="button" onClick={() => setAndroidPanel('home')} className="rounded-xl p-2 bg-white/5"><Home className="w-4 h-4"/></button><h1 className="font-bold">{androidPanel === 'reference' ? t.quickRefTitle : (lang === 'en' ? 'History & metrics' : 'Histórico & métricas')}</h1></div>
+            <div className="min-h-0 overflow-y-auto flex flex-col gap-3">{androidPanel === 'reference' ? <QuickReferencePanel layout={consoleLayout} pressedButtons={pressedButtons} remapMap={remapMap} t={t} onTestButtonDown={pressSimulated} onTestButtonUp={releaseSimulated}/> : <><LastPressedCard layout={consoleLayout} activeButtons={activeButtons} lastPressed={lastPressed} l2Value={l2Value} r2Value={r2Value} leftStick={leftStick} rightStick={rightStick} remapMap={remapMap} lang={lang} t={t}/><SessionStatsWidget stats={sessionStats} t={t} onReset={resetStats}/><ComboHistoryBar history={comboHistory} controllerName={effectiveControllerName} deadzone={deadzone} layout={consoleLayout} lang={lang} t={t} onClear={clearHistory}/></>}</div>
+          </section>}
+        </main>
+
+        <nav className="shrink-0 px-3 pt-2 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] border-t border-white/10 bg-[#101015] flex justify-around">
+          <button type="button" onClick={() => setAndroidPanel('home')} className={`flex flex-col items-center gap-1 px-5 py-1 text-xs ${androidPanel === 'home' ? 'text-[var(--accent-color)]' : 'text-zinc-400'}`}><Gamepad2 className="w-5 h-5"/>{lang === 'en' ? 'Control' : 'Controle'}</button>
+          <button type="button" onClick={() => setAndroidPanel('reference')} className={`flex flex-col items-center gap-1 px-5 py-1 text-xs ${androidPanel === 'reference' ? 'text-[var(--accent-color)]' : 'text-zinc-400'}`}><BookOpen className="w-5 h-5"/>{lang === 'en' ? 'Reference' : 'Tabela'}</button>
+          <button type="button" onClick={() => setAndroidPanel('metrics')} className={`flex flex-col items-center gap-1 px-5 py-1 text-xs ${androidPanel === 'metrics' ? 'text-[var(--accent-color)]' : 'text-zinc-400'}`}><Activity className="w-5 h-5"/>{lang === 'en' ? 'Metrics' : 'Métricas'}</button>
+        </nav>
+
+        {androidSettingsOpen && <div className="fixed inset-0 z-[100] bg-black/70 flex items-end sm:items-center justify-center" onClick={(event) => { if (event.target === event.currentTarget) setAndroidSettingsOpen(false); }}><section className="w-full max-w-xl max-h-[88dvh] overflow-y-auto rounded-t-3xl sm:rounded-3xl border border-white/10 bg-[#14141B] p-5 pb-[calc(env(safe-area-inset-bottom)+1.25rem)]"><div className="flex items-center justify-between mb-5"><h2 className="text-lg font-bold">{lang === 'en' ? 'Settings' : 'Configurações'}</h2><button type="button" onClick={() => setAndroidSettingsOpen(false)} className="p-2 rounded-xl bg-white/5">×</button></div>
+          <h3 className="text-sm font-semibold mb-2">{lang === 'en' ? 'Color theme' : 'Tema de cor'}</h3><div className="flex gap-3 mb-5">{NEON_THEMES.map((theme) => <button key={theme.id} type="button" onClick={() => setThemeId(theme.id)} title={theme.name} aria-label={theme.name} className={`w-9 h-9 rounded-full border-2 ${themeId === theme.id ? 'border-white scale-110' : 'border-white/20'}`} style={{backgroundColor:theme.hex}}/>)}</div>
+          <div className="grid grid-cols-2 gap-3 mb-5"><div><h3 className="text-sm font-semibold mb-2">Idioma</h3><div className="flex rounded-xl bg-black/30 p-1"><button onClick={() => setLang('pt')} className={`flex-1 py-2 rounded-lg text-sm ${lang === 'pt' ? 'bg-white/10 text-white' : 'text-zinc-400'}`}>PT</button><button onClick={() => setLang('en')} className={`flex-1 py-2 rounded-lg text-sm ${lang === 'en' ? 'bg-white/10 text-white' : 'text-zinc-400'}`}>EN</button></div></div><div><h3 className="text-sm font-semibold mb-2">{lang === 'en' ? 'Sound' : 'Som'}</h3><button type="button" onClick={() => setSoundEnabled(!soundEnabled)} className="w-full py-2 rounded-xl bg-black/30 flex items-center justify-center gap-2 text-sm">{soundEnabled ? <Volume2 className="w-4 h-4"/> : <VolumeX className="w-4 h-4"/>}{soundEnabled ? (lang === 'en' ? 'On' : 'Ativado') : (lang === 'en' ? 'Off' : 'Desativado')}</button></div></div>
+          <label className="block text-sm font-semibold mb-2">{t.deadzoneLabel}: {deadzone.toFixed(2)}</label><input type="range" min="0" max="0.5" step="0.01" value={deadzone} onChange={(event) => setDeadzone(clampDeadzone(Number(event.target.value)))} className="w-full accent-[var(--accent-color)] mb-5"/>
+          <button type="button" onClick={() => {setIsRemapMode(true);setRemapTargetPsIndex(null);setAndroidSettingsOpen(false);}} className="w-full text-left py-3 border-t border-white/10 text-sm">{lang === 'en' ? 'Button remapping' : 'Mapeamento de botões'} <span className="float-right text-zinc-400">›</span></button>
+          <div className="flex gap-4 pt-3 border-t border-white/10 text-xs"><a href="https://x.com/Pad2PS" target="_blank" rel="noreferrer" className="text-zinc-300">X (@Pad2PS)</a><a href="https://pacoca.net/@Pad2PS" target="_blank" rel="noreferrer" className="text-zinc-300">Paçoca</a><a href={termsHref} onClick={(e) => {e.preventDefault();setAndroidSettingsOpen(false);navigateTo(TERMS_ROUTE);}} className="text-zinc-300">{t.footerTermsButton}</a></div>
+        </section></div>}
+      </div>
+    );
+  }
 
   if (isTermsPage) {
     return (
@@ -1938,6 +2027,7 @@ function MainApp() {
 export default function App() {
   const isPiPWindow =
     typeof window !== 'undefined' &&
+    !isAndroidCapacitor() &&
     new URLSearchParams(window.location.search).get('pip') === '1';
 
   return (
