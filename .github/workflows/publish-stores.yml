@@ -1,0 +1,151 @@
+name: Publish Snap Store and AUR
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Tag da release a publicar
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  publish-snap:
+    name: Build and publish Snap
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.event.release.tag_name }}
+      - name: Baixar o tarball da release e atualizar os metadados
+        env:
+          RELEASE_TAG: ${{ inputs.tag || github.event.release.tag_name }}
+        run: |
+          VERSION="${RELEASE_TAG#v}"
+          URL="https://github.com/RbtSwift/Pad2PS/releases/download/${RELEASE_TAG}/Pad2PS-${VERSION}-x86_64.tar.gz"
+          curl --fail --location --silent --show-error "$URL" --output /tmp/pad2ps.tar.gz
+          SHA=$(sha256sum /tmp/pad2ps.tar.gz | cut -d' ' -f1)
+          python3 - "$VERSION" "$URL" "$SHA" <<'PY'
+          import pathlib
+          import re
+          import sys
+
+          version, url, checksum = sys.argv[1:]
+          path = pathlib.Path("snap/snapcraft.yaml")
+          content = path.read_text()
+          content, version_count = re.subn(r"(?m)^version: .+$", f"version: '{version}'", content, count=1)
+          content, url_count = re.subn(r"(?m)^    source: https://github\.com/RbtSwift/Pad2PS/releases/download/.+$", f"    source: {url}", content, count=1)
+          content, checksum_count = re.subn(r"(?m)^    source-checksum: sha256/[0-9a-f]{64}$", f"    source-checksum: sha256/{checksum}", content, count=1)
+          if (version_count, url_count, checksum_count) != (1, 1, 1):
+              raise SystemExit("Unable to update Snap package metadata")
+          path.write_text(content)
+          PY
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+      - uses: snapcore/action-build@v1
+        id: snapcraft
+      - uses: snapcore/action-publish@v1
+        env:
+          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_STORE_CREDENTIALS }}
+        with:
+          snap: ${{ steps.snapcraft.outputs.snap }}
+          release: stable
+
+  publish-aur:
+    name: Publish to AUR
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.event.release.tag_name }}
+      - name: Prepare AUR package metadata
+        env:
+          RELEASE_TAG: ${{ inputs.tag || github.event.release.tag_name }}
+        run: |
+          VERSION="${RELEASE_TAG#v}"
+          BASE_URL="https://github.com/RbtSwift/Pad2PS/releases/download/${RELEASE_TAG}"
+          RAW_URL="https://raw.githubusercontent.com/RbtSwift/Pad2PS/${RELEASE_TAG}/desktop"
+          curl --fail --location --silent --show-error "$BASE_URL/Pad2PS-${VERSION}-x86_64.tar.gz" --output /tmp/pad2ps.tar.gz
+          curl --fail --location --silent --show-error "$RAW_URL/io.github.rbtswift.Pad2PS.desktop" --output /tmp/pad2ps.desktop
+          curl --fail --location --silent --show-error "$RAW_URL/icon.png" --output /tmp/pad2ps-icon.png
+          python3 - "$VERSION" "$RELEASE_TAG" "$(sha256sum /tmp/pad2ps.tar.gz | cut -d' ' -f1)" "$(sha256sum /tmp/pad2ps.desktop | cut -d' ' -f1)" "$(sha256sum /tmp/pad2ps-icon.png | cut -d' ' -f1)" <<'PY'
+          import pathlib
+          import re
+          import sys
+
+          version, tag, *checksums = sys.argv[1:]
+          pkgbuild = pathlib.Path("PKGBUILD")
+          content = pkgbuild.read_text()
+          content, version_count = re.subn(r"(?m)^pkgver=.+$", f"pkgver={version}", content, count=1)
+          content, checksum_count = re.subn(
+              r"(?ms)^sha256sums=\(\n.*?\n\)",
+              "sha256sums=(\n" + "".join(f"  '{checksum}'\n" for checksum in checksums) + ")",
+              content,
+              count=1,
+          )
+          if version_count != 1 or checksum_count != 1 or len(checksums) != 3:
+              raise SystemExit("Unable to update PKGBUILD")
+          pkgbuild.write_text(content)
+
+          srcinfo = pathlib.Path(".SRCINFO")
+          content = srcinfo.read_text()
+          content, version_count = re.subn(r"(?m)^(\s*pkgver = ).+$", rf"\g<1>{version}", content, count=1)
+          content, tarball_count = re.subn(
+              r"(?m)^(\s*source = ).+Pad2PS-[^/\s]+-x86_64\.tar\.gz$",
+              rf"\g<1>Pad2PS-{version}-x86_64.tar.gz::https://github.com/RbtSwift/Pad2PS/releases/download/{tag}/Pad2PS-{version}-x86_64.tar.gz",
+              content,
+              count=1,
+          )
+          content, desktop_count = re.subn(
+              r"(?m)^(\s*source = pad2ps\.desktop::).+$",
+              rf"\g<1>https://raw.githubusercontent.com/RbtSwift/Pad2PS/{tag}/desktop/io.github.rbtswift.Pad2PS.desktop",
+              content,
+              count=1,
+          )
+          content, icon_count = re.subn(
+              r"(?m)^(\s*source = icon\.png::).+$",
+              rf"\g<1>https://raw.githubusercontent.com/RbtSwift/Pad2PS/{tag}/desktop/icon.png",
+              content,
+              count=1,
+          )
+
+          checksum_index = iter(checksums)
+          def replace_checksum(match):
+              try:
+                  return f"{match.group(1)}{next(checksum_index)}"
+              except StopIteration:
+                  raise SystemExit("Not enough checksums for .SRCINFO")
+
+          content, checksum_count = re.subn(r"(?m)^(\s*sha256sums = ).+$", replace_checksum, content)
+          if (version_count, tarball_count, desktop_count, icon_count, checksum_count) != (1, 1, 1, 1, 3):
+              raise SystemExit("Unable to update .SRCINFO metadata")
+          if version_count != 1 or content.count(f"pkgver = {version}") != 1:
+              raise SystemExit("Unable to update .SRCINFO version")
+          srcinfo.write_text(content)
+          PY
+      - name: Publish to AUR
+        env:
+          RELEASE_TAG: ${{ inputs.tag || github.event.release.tag_name }}
+          AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+          AUR_KNOWN_HOSTS: ${{ secrets.AUR_KNOWN_HOSTS }}
+        run: |
+          mkdir -p "$HOME/.ssh"
+          chmod 700 "$HOME/.ssh"
+          printf '%s\n' "$AUR_SSH_PRIVATE_KEY" > "$HOME/.ssh/id_ed25519"
+          chmod 600 "$HOME/.ssh/id_ed25519"
+          printf '%s\n' "$AUR_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/known_hosts"
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git clone ssh://aur@aur.archlinux.org/pad2ps.git /tmp/aur-pad2ps
+          cp PKGBUILD .SRCINFO /tmp/aur-pad2ps/
+          git -C /tmp/aur-pad2ps add PKGBUILD .SRCINFO
+          if git -C /tmp/aur-pad2ps diff --cached --quiet; then
+            echo "AUR package is already current"
+            exit 0
+          fi
+          git -C /tmp/aur-pad2ps commit -m "Update to ${RELEASE_TAG#v}"
+          git -C /tmp/aur-pad2ps push origin master

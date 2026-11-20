@@ -1,0 +1,43 @@
+name: pad2ps
+base: core24
+version: '1.0.6'
+summary: Tradutor visual e diagnosticador de controles
+description: |
+  Pad2PS traduz entradas de controles em tempo real e oferece ferramentas de
+  diagnóstico para controles PlayStation, Xbox e Switch, incluindo leitura de
+  bateria.
+grade: stable
+confinement: strict
+license: MIT
+platforms:
+  amd64:
+    build-on: [amd64]
+    build-for: [amd64]
+parts:
+  pad2ps:
+    plugin: nil
+    source: https://github.com/RbtSwift/Pad2PS/releases/download/v1.0.6/Pad2PS-1.0.6-x86_64.tar.gz
+    source-type: tar
+    source-checksum: sha256/a3d1e65204090647ca4d6a3560cb51af3dfec231f8c535898c149d926f3efef8
+    override-build: |
+      install -d "$CRAFT_PART_INSTALL/opt/Pad2PS"
+      cp -a linux-unpacked/. "$CRAFT_PART_INSTALL/opt/Pad2PS/"
+      install -Dm755 "$CRAFT_PROJECT_DIR/snap/launch" "$CRAFT_PART_INSTALL/bin/pad2ps"
+      install -Dm644 "$CRAFT_PROJECT_DIR/desktop/io.github.rbtswift.Pad2PS.desktop" "$CRAFT_PART_INSTALL/usr/share/applications/io.github.rbtswift.Pad2PS.desktop"
+      install -Dm644 "$CRAFT_PROJECT_DIR/desktop/icon.png" "$CRAFT_PART_INSTALL/usr/share/icons/hicolor/512x512/apps/io.github.rbtswift.Pad2PS.png"
+      install -Dm644 "$CRAFT_PROJECT_DIR/io.github.rbtswift.Pad2PS.metainfo.xml" "$CRAFT_PART_INSTALL/usr/share/metainfo/io.github.rbtswift.Pad2PS.metainfo.xml"
+apps:
+  pad2ps:
+    command: bin/pad2ps
+    desktop: usr/share/applications/io.github.rbtswift.Pad2PS.desktop
+    common-id: io.github.rbtswift.Pad2PS
+    plugs:
+      - desktop
+      - desktop-legacy
+      - wayland
+      - x11
+      - opengl
+      - network
+      - home
+      - joystick
+      - hardware-observe

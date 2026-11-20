@@ -21,8 +21,6 @@ Tradutor visual em tempo real e suíte avançada de diagnóstico de controles pa
 - [Adicionar Pad2PS ao Obtainium](https://apps.obtainium.imranr.dev/redirect.html?r=obtainium://add/https://github.com/RbtSwift/Pad2PS)
 - [Ver releases do Pad2PS no GitHub](https://github.com/RbtSwift/Pad2PS/releases)
 
-O Pad2PS e o Pad2PS Launcher estão em revisão para publicação no repositório IzzyOnDroid.
-
 ---
 
 ## 📁 Estrutura do Repositório

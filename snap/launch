@@ -1,0 +1,4 @@
+#!/bin/sh
+export TMPDIR="${XDG_RUNTIME_DIR:-/tmp}/snap.${SNAP_NAME:-pad2ps}"
+mkdir -p "$TMPDIR"
+exec "$SNAP/opt/Pad2PS/pad2ps" --no-sandbox "$@"

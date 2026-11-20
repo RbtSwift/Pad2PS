@@ -23,7 +23,12 @@
   <releases>
     <release version="1.0.6" date="2026-11-20">
       <description>
-        <p>Release v1.0.6: Nova seção Sobre &amp; Legal integrada ao app e suporte a changelogs no repositório APT.</p>
+        <p>Adiciona a seção Sobre &amp; Legal integrada ao app e suporte a changelogs no repositório APT.</p>
+      </description>
+    </release>
+    <release version="1.0.5" date="2026-11-19">
+      <description>
+        <p>Interface Android reorganizada para smartphones e tablets, com layout adaptável, controles de acesso rápido e navegação inferior. O Picture-in-Picture continua disponível apenas no Desktop.</p>
       </description>
     </release>
     <release version="1.0.4" date="2026-11-19">

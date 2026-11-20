@@ -4,16 +4,24 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Tag da release que deve ser reconstruída
+        required: true
+        type: string
 
 permissions:
   contents: write
 
 jobs:
   build-linux:
-    name: Desktop Linux (.AppImage, .deb, .rpm, .tar.gz)
+    name: Desktop Linux (.AppImage, .deb, .rpm, .tar.gz, .flatpak)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref }}
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -40,6 +48,44 @@ jobs:
           tar -czf "artifacts/Pad2PS-${VERSION}-x86_64.tar.gz" -C release linux-unpacked
           cp release/*.deb "artifacts/Pad2PS-${VERSION}-amd64.deb"
           cp release/*.rpm "artifacts/Pad2PS-${VERSION}-x86_64.rpm"
+      - name: Construir bundle Flatpak
+        working-directory: desktop
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y flatpak flatpak-builder
+          flatpak remote-add --system --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+          flatpak install --system --noninteractive flathub org.freedesktop.Platform//25.08 org.freedesktop.Sdk//25.08
+          VERSION=$(node -p "require('./package.json').version")
+          SOURCE="Pad2PS-${VERSION}-x86_64.tar.gz"
+          SOURCE_SHA=$(sha256sum "artifacts/${SOURCE}" | cut -d' ' -f1)
+          cp io.github.rbtswift.Pad2PS.yml flatpak-ci.yml
+          python3 - "$SOURCE" "$SOURCE_SHA" <<'PY'
+          import pathlib
+          import re
+          import sys
+
+          source, checksum = sys.argv[1:]
+          manifest = pathlib.Path("flatpak-ci.yml")
+          content = manifest.read_text()
+          content, url_count = re.subn(
+              r"(?m)^(\s*url:\s*).+Pad2PS-[^\s]+-x86_64\.tar\.gz\s*$",
+              rf"\g<1>file://{pathlib.Path('artifacts', source).resolve()}",
+              content,
+              count=1,
+          )
+          content, checksum_count = re.subn(
+              r"(?m)^(\s*sha256:\s*)[0-9a-f]{64}\s*$",
+              rf"\g<1>{checksum}",
+              content,
+              count=1,
+          )
+          if url_count != 1 or checksum_count != 1:
+              raise SystemExit("Unable to prepare the Flatpak source manifest")
+          manifest.write_text(content)
+          PY
+          flatpak-builder --force-clean --default-branch=stable --repo=flatpak_repo flatpak_build flatpak-ci.yml
+          flatpak build-bundle --arch=x86_64 flatpak_repo "artifacts/Pad2PS-${VERSION}-x86_64.flatpak" io.github.rbtswift.Pad2PS stable
+          rm flatpak-ci.yml
       - uses: actions/upload-artifact@v4
         with:
           name: linux-artifacts
@@ -50,6 +96,8 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref }}
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -77,6 +125,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref }}
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -118,7 +168,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.ref_name }}
+          ref: ${{ inputs.tag || github.ref }}
       - uses: actions/checkout@v4
         with:
           ref: gh-pages
@@ -135,7 +185,8 @@ jobs:
         run: |
           sudo apt-get update && sudo apt-get install -y dpkg-dev gnupg
           cd "$GITHUB_WORKSPACE/all-artifacts"
-          VERSION="${GITHUB_REF_NAME#v}"
+          RELEASE_TAG="${{ inputs.tag || github.ref_name }}"
+          VERSION="${RELEASE_TAG#v}"
           python3 ../.github/scripts/generate_debian_changelog.py "${VERSION}" ../RELEASE_NOTES.md pad2ps_${VERSION}.txt
           mkdir -p ../pages/apt/changelogs
           cp pad2ps_${VERSION}.txt ../pages/apt/changelogs/
@@ -178,6 +229,7 @@ jobs:
           git -C ../pages push origin gh-pages
       - uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ inputs.tag || github.ref_name }}
           files: all-artifacts/*
           body_path: RELEASE_NOTES.md
           generate_release_notes: false
