@@ -29,9 +29,9 @@ jobs:
       - name: Send release embed
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
-          RELEASE_NAME: ${{ github.event.release.name || github.event.release.tag_name }}
-          RELEASE_BODY: ${{ github.event.release.body }}
-          RELEASE_URL: ${{ github.event.release.html_url }}
+          RELEASE_NAME: ${{ github.event.release.name || inputs.release_name || github.event.release.tag_name }}
+          RELEASE_BODY: ${{ github.event.release.body || inputs.release_body }}
+          RELEASE_URL: ${{ github.event.release.html_url || inputs.release_url }}
           REPOSITORY_NAME: ${{ github.event.repository.name }}
         run: |
           python3 - <<'PY'
