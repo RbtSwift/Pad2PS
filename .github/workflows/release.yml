@@ -108,6 +108,9 @@ jobs:
           merge-multiple: true
       - uses: actions/checkout@v4
         with:
+          ref: ${{ github.ref_name }}
+      - uses: actions/checkout@v4
+        with:
           ref: gh-pages
           path: pages
           fetch-depth: 0

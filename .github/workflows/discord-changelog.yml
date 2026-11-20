@@ -3,6 +3,20 @@ name: Discord release notification
 on:
   release:
     types: [published]
+  workflow_dispatch:
+    inputs:
+      release_name:
+        description: Nome ou tag da release
+        required: true
+        type: string
+      release_body:
+        description: Notas bilingues da release
+        required: true
+        type: string
+      release_url:
+        description: Link da release
+        required: true
+        type: string
 
 permissions:
   contents: read
