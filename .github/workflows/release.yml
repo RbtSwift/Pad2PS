@@ -53,8 +53,8 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y flatpak flatpak-builder
-          flatpak remote-add --system --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-          flatpak install --system --noninteractive flathub org.freedesktop.Platform//25.08 org.freedesktop.Sdk//25.08
+          flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+          flatpak install --user --noninteractive flathub org.freedesktop.Platform//25.08 org.freedesktop.Sdk//25.08
           VERSION=$(node -p "require('./package.json').version")
           SOURCE="Pad2PS-${VERSION}-x86_64.tar.gz"
           SOURCE_SHA=$(sha256sum "artifacts/${SOURCE}" | cut -d' ' -f1)
@@ -83,8 +83,8 @@ jobs:
               raise SystemExit("Unable to prepare the Flatpak source manifest")
           manifest.write_text(content)
           PY
-          flatpak-builder --force-clean --default-branch=stable --repo=flatpak_repo flatpak_build flatpak-ci.yml
-          flatpak build-bundle --arch=x86_64 flatpak_repo "artifacts/Pad2PS-${VERSION}-x86_64.flatpak" io.github.rbtswift.Pad2PS stable
+          flatpak-builder --user --force-clean --default-branch=stable --repo=flatpak_repo flatpak_build flatpak-ci.yml
+          flatpak build-bundle --user --arch=x86_64 flatpak_repo "artifacts/Pad2PS-${VERSION}-x86_64.flatpak" io.github.rbtswift.Pad2PS stable
           rm flatpak-ci.yml
       - uses: actions/upload-artifact@v4
         with:
