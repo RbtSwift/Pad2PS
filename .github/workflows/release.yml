@@ -85,7 +85,7 @@ jobs:
           manifest.write_text(content)
           PY
           flatpak-builder --user --force-clean --default-branch=stable --repo=flatpak_repo flatpak_build flatpak-ci.yml
-          flatpak build-bundle --user --arch=x86_64 flatpak_repo "artifacts/Pad2PS-${VERSION}-x86_64.flatpak" io.github.rbtswift.Pad2PS stable
+          flatpak build-bundle --arch=x86_64 flatpak_repo "artifacts/Pad2PS-${VERSION}-x86_64.flatpak" io.github.rbtswift.Pad2PS stable
           rm flatpak-ci.yml
       - uses: actions/upload-artifact@v4
         with:
@@ -139,7 +139,7 @@ jobs:
           VERSION="${RELEASE_TAG#v}"
           mkdir -p artifacts
           flatpak-builder --user --force-clean --default-branch=stable --repo=flatpak_repo flatpak_build desktop/io.github.rbtswift.Pad2PS.yml
-          flatpak build-bundle --user --arch=x86_64 flatpak_repo "artifacts/Pad2PS-${VERSION}-x86_64.flatpak" io.github.rbtswift.Pad2PS stable
+          flatpak build-bundle --arch=x86_64 flatpak_repo "artifacts/Pad2PS-${VERSION}-x86_64.flatpak" io.github.rbtswift.Pad2PS stable
           gh release upload "$RELEASE_TAG" "artifacts/Pad2PS-${VERSION}-x86_64.flatpak" --clobber
 
   build-windows:
